@@ -1,0 +1,17 @@
+[package]
+name = "ll-pipeline"
+description = "Session state machine, stage orchestration, queues, degradation and fault injection."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+ll-core = { workspace = true }
+ll-config = { workspace = true }
+ll-audio = { workspace = true }
+ll-asr = { workspace = true }
+ll-llm = { workspace = true }
+serde = { workspace = true }

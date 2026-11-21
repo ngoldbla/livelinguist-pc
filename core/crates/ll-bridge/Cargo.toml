@@ -1,0 +1,19 @@
+[package]
+name = "ll-bridge"
+description = "napi-rs addon exposing the core protocol to the GPUIX UI."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+ll-core = { workspace = true }
+ll-config = { workspace = true }
+ll-pipeline = { workspace = true }
+ll-protocol = { workspace = true }
+napi = { workspace = true }
+napi-derive = { workspace = true }

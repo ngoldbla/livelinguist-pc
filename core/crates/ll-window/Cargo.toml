@@ -1,0 +1,11 @@
+[package]
+name = "ll-window"
+description = "Native window policy: Win32 primary overlay, X11/XWayland dev-only."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]

@@ -16,3 +16,14 @@
 # Local models and eval artifacts
 /models/
 /eval/
+
+# JS / UI
+node_modules/
+/ui/dist/
+*.tsbuildinfo
+
+# Native addon build output
+*.node
+
+# Local QA captures (published screenshots live in docs/screenshots)
+/qa/

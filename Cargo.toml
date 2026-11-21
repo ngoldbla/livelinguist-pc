@@ -1,0 +1,53 @@
+[workspace]
+resolver = "2"
+members = ["core/crates/*"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.85"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/ngoldbla/livelinguist-pc"
+authors = ["Live Linguist contributors"]
+
+[workspace.dependencies]
+ll-core = { path = "core/crates/ll-core" }
+ll-config = { path = "core/crates/ll-config" }
+ll-audio = { path = "core/crates/ll-audio" }
+ll-asr = { path = "core/crates/ll-asr" }
+ll-llm = { path = "core/crates/ll-llm" }
+ll-models = { path = "core/crates/ll-models" }
+ll-pipeline = { path = "core/crates/ll-pipeline" }
+ll-protocol = { path = "core/crates/ll-protocol" }
+ll-bridge = { path = "core/crates/ll-bridge" }
+ll-eval = { path = "core/crates/ll-eval" }
+ll-window = { path = "core/crates/ll-window" }
+
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+thiserror = "2.0.21"
+sha2 = "0.10.9"
+reqwest = { version = "0.12.28", default-features = false, features = ["blocking", "rustls-tls", "gzip"] }
+ringbuf = "0.6.0"
+rubato = "5.1.0"
+cpal = "0.18.2"
+rfd = "0.18.0"
+ts-rs = "12.0.1"
+napi = { version = "3.16.2", default-features = false, features = ["napi9"] }
+napi-derive = "3.7.1"
+x11rb = { version = "0.14.0", features = ["allow-unsafe-code"] }
+windows = { version = "0.62.2", features = [
+  "Win32_Foundation",
+  "Win32_Graphics_Dwm",
+  "Win32_System_Threading",
+  "Win32_UI_WindowsAndMessaging",
+] }
+tempfile = "3.27.0"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = "symbols"
+
+[profile.dev]
+debug = 1
