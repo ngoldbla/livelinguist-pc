@@ -30,6 +30,9 @@ jobs:
         run: cargo clippy --workspace --all-targets -- -D warnings
       - name: Test
         run: cargo test --workspace
+      - name: Build napi addon
+        if: matrix.os == 'windows-latest'
+        run: cargo build -p ll-bridge --release
       - name: Eval mock scenario
         if: matrix.os == 'ubuntu-latest'
         run: cargo run -p ll-eval -- --scenario mock --language fr-FR --out target/eval-mock
@@ -65,3 +68,53 @@ jobs:
           for n in 0001 0002 0003 0004 0005 0006 0007 0008 0009 0010 0011 0012 0013 0014 0015 0016; do
             test -s "docs/decisions/$n.md"
           done
+
+  bridge:
+    name: Bridge and event delivery
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Build addon
+        run: cargo build -p ll-bridge --release
+      - name: Stage addon
+        run: cp target/release/liblivelinguist_core.so tests/bridge/livelinguist-core.node
+      - name: Functional bridge smoke (Node)
+        run: node tests/bridge/bridge-smoke.mjs
+      - name: 100 events/s x 10 s (Node)
+        run: node tests/bridge/event-delivery.mjs 10
+      - name: 100 events/s x 10 s (Bun)
+        run: bun tests/bridge/event-delivery.mjs 10
+
+  x11:
+    name: X11 overlay policy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: sudo apt-get update && sudo apt-get install -y xvfb libxkbcommon-x11-0
+      - run: xvfb-run -a cargo test -p ll-window
+
+  ui:
+    name: UI typecheck and logic tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ui
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.5
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck
+      - run: bun test
+      - run: bun run check

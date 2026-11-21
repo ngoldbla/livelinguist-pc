@@ -10,9 +10,9 @@ This file is the live status board. Each merged PR is a validated stage.
 | 1 | S-0 pins, ADRs, AGENTS, skills, Rust workspace skeleton, CI | #2 | in progress | `docs/qa/2026-11-21-version-verification.md` |
 | 2 | `ll-core` deterministic parity + 29 packs + golden inventory | #3 | in progress | `tests/golden/INVENTORY.md`, 149 tests |
 | 3 | `ll-protocol`, `ll-config`, `ll-audio`, `ll-asr`, `ll-llm`, `ll-models`, `ll-pipeline`, `ll-eval` | #4 | in progress | `docs/qa/2026-11-21-pipeline.md` |
-| 4 | `ll-bridge` napi + envelope + event-delivery harness + X11 window policy | — | pending | — |
-| 5 | UI shell: Aurora, onboarding, console, store, i18n | — | pending | — |
-| 6 | UI overlay, transcript, settings, summary, licenses, dev panel | — | pending | — |
+| 4 | `ll-bridge` napi + envelope + event-delivery harness + X11 window policy + UI screens | #5 | in progress | `docs/qa/2026-11-21-{ui,overlay,event-delivery}.md` |
+| 5 | UI shell: Aurora, onboarding, console, store, i18n | #5 | in progress | `docs/screenshots/m2/` |
+| 6 | UI overlay, transcript, settings, summary, licenses, dev panel | #5 | in progress | `docs/screenshots/m2/` |
 | 7 | Packaging, CI release workflow, final QA | — | pending | — |
 
 ## Milestone mapping
@@ -30,13 +30,13 @@ This file is the live status board. Each merged PR is a validated stage.
 | ID | Result | Date | Evidence |
 |---|---|---|---|
 | S-0 | PASS — all pins resolve | 2026-11-21 | `docs/qa/2026-11-21-version-verification.md` |
-| S-2 | Linux dev harness: 100 ev/s x 10 min, p50/p99 recorded | — | `docs/qa/2026-11-21-event-delivery.md` |
+| S-2 | Linux dev harness: 100 ev/s x 10 min, p50/p99 recorded; 10-min rerun in progress | 2026-11-21 | `docs/qa/2026-11-21-event-delivery.md` |
 | S-3A | Partial: mock/eval path + 29-row matrix; real export/WER blocked on model access | 2026-11-21 | `docs/qa/2026-11-21-asr-coverage.md` |
 | S-4 | Partial: calibration/ladder/queue implemented; mock measured; real GPU pending | 2026-11-21 | `docs/qa/2026-11-21-llm-backends.md` |
 | S-5L | Partial: file/demo/silence + ring/VAD/chunker tested; device capture pending | 2026-11-21 | `docs/qa/2026-11-21-audio.md` |
-| S-6L | X11 EWMH overlay verified on Linux dev | — | `docs/qa/2026-11-21-overlay.md` |
+| S-6L | PASS — X11 EWMH overlay verified on Linux dev | 2026-11-21 | `docs/qa/2026-11-21-overlay.md` |
 | S-7 | Dev settings + runtime health implemented | — | UI settings |
-| S-8 | UI screens captured on Linux dev | — | `docs/screenshots/` |
+| S-8 | UI screens captured on Linux dev | 2026-11-21 | `docs/screenshots/m2/` |
 
 ## Decisions
 

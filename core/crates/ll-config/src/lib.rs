@@ -663,7 +663,7 @@ impl RuntimeStatus {
                 DevicePreference::Integrated => "integrated-gpu".to_string(),
                 DevicePreference::Auto => "cpu".to_string(),
             },
-            effective_gpu_layers: if config.backend == Backend::Cpu {
+            effective_gpu_layers: if matches!(config.backend, Backend::Cpu | Backend::Auto) {
                 0
             } else {
                 config.gpu_layers.effective(28)
