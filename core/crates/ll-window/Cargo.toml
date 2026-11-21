@@ -9,3 +9,11 @@ repository.workspace = true
 authors.workspace = true
 
 [dependencies]
+serde = { workspace = true }
+ll-config = { workspace = true }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+x11rb = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }

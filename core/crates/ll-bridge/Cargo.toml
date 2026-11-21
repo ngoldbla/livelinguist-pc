@@ -9,11 +9,21 @@ repository.workspace = true
 authors.workspace = true
 [lib]
 crate-type = ["cdylib", "rlib"]
+name = "livelinguist_core"
 
 [dependencies]
+serde_json = { workspace = true }
+serde = { workspace = true }
+ll-window = { workspace = true }
+ll-llm = { workspace = true }
+ll-asr = { workspace = true }
+ll-audio = { workspace = true }
 ll-core = { workspace = true }
 ll-config = { workspace = true }
 ll-pipeline = { workspace = true }
 ll-protocol = { workspace = true }
 napi = { workspace = true }
 napi-derive = { workspace = true }
+
+[build-dependencies]
+napi-build = "2.3.1"

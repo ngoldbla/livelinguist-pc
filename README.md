@@ -57,7 +57,8 @@ docs/           plan, ADRs, QA evidence
 
 Linux dev prerequisites: Rust 1.98 (pinned by `rust-toolchain.toml`), Bun 1.4.5,
 Node 22+, Vulkan (lavapipe works for headless CI; a real GPU is better for the
-window), and X11 for the dev overlay.
+window), X11 for the dev overlay, and the XCB development headers:
+`sudo apt install libxcb1-dev libxcb-shape0-dev libxcb-xfixes0-dev`.
 
 ```bash
 cargo test --workspace
@@ -71,7 +72,7 @@ bun run start
 On a Wayland desktop, force X11 for overlay development:
 
 ```bash
-env -u WAYLAND_DISPLAY bun ui/src/app.tsx
+env -u WAYLAND_DISPLAY bun ui/src/main.tsx
 ```
 
 ## Status
@@ -80,6 +81,20 @@ Implementation follows the master plan in validated stages. The core, bridge,
 and UI are exercised on Linux dev; Windows hardware acceptance (Win32 overlay,
 WASAPI loopback, D3D, packaging) is recorded when run on the Windows side.
 See the progress board for the current stage and evidence.
+
+Implemented and tested on Linux dev:
+
+- 29 framework packs ported verbatim; deterministic core (prompts, segmenter,
+  validators, reversion, metrics, exports) with golden tests.
+- Protocol/config/audio/ASR/LLM/model/pipeline crates and a headless `ll-eval`
+  CLI with content-free diagnostics.
+- napi bridge with monotonic envelopes and a 100 events/s TSFN harness.
+- GPUIX UI: onboarding, console, live/expanded transcript, compact overlay,
+  settings, developer health card, summary, licenses; 29 locale catalogs.
+- X11 EWMH overlay policy verified; Win32 policy compiles for the Windows target.
+- NSIS/portable packaging configuration and a Windows release workflow.
+
+UI portfolio: [`docs/screenshots/m2/`](docs/screenshots/m2/README.md).
 
 ## Design invariants (inherited)
 
