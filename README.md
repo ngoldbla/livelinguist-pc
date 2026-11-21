@@ -96,6 +96,12 @@ Implemented and tested on Linux dev:
 
 UI portfolio: [`docs/screenshots/m2/`](docs/screenshots/m2/README.md).
 
+![Console](docs/screenshots/m2/console.png)
+
+![Live transcript](docs/screenshots/m2/live.png)
+
+![Caption overlay](docs/screenshots/m2/overlay.png)
+
 ## Design invariants (inherited)
 
 - Never translate; same-language rewriting only.

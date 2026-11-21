@@ -16,7 +16,9 @@ const [defaultWidth, defaultHeight] =
         ? [1180, 880]
         : screen === "summary"
           ? [1180, 840]
-          : [1180, 820];
+          : screen === "expanded"
+            ? [1180, 900]
+            : [1180, 820];
 
 const width = Number(process.env.LL_WIDTH ?? defaultWidth);
 const height = Number(process.env.LL_HEIGHT ?? defaultHeight);

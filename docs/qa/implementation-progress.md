@@ -10,10 +10,10 @@ This file is the live status board. Each merged PR is a validated stage.
 | 1 | S-0 pins, ADRs, AGENTS, skills, Rust workspace skeleton, CI | #2 | in progress | `docs/qa/2026-11-21-version-verification.md` |
 | 2 | `ll-core` deterministic parity + 29 packs + golden inventory | #3 | in progress | `tests/golden/INVENTORY.md`, 149 tests |
 | 3 | `ll-protocol`, `ll-config`, `ll-audio`, `ll-asr`, `ll-llm`, `ll-models`, `ll-pipeline`, `ll-eval` | #4 | in progress | `docs/qa/2026-11-21-pipeline.md` |
-| 4 | `ll-bridge` napi + envelope + event-delivery harness + X11 window policy + UI screens | #5 | in progress | `docs/qa/2026-11-21-{ui,overlay,event-delivery}.md` |
-| 5 | UI shell: Aurora, onboarding, console, store, i18n | #5 | in progress | `docs/screenshots/m2/` |
-| 6 | UI overlay, transcript, settings, summary, licenses, dev panel | #5 | in progress | `docs/screenshots/m2/` |
-| 7 | Packaging, CI release workflow, final QA | — | pending | — |
+| 4 | `ll-bridge` napi + envelope + event-delivery harness + X11 window policy + UI screens | #5 | merged | `docs/qa/2026-11-21-{ui,overlay,event-delivery}.md` |
+| 5 | UI shell: Aurora, onboarding, console, store, i18n | #5 | merged | `docs/screenshots/m2/` |
+| 6 | UI overlay, transcript, settings, summary, licenses, dev panel | #5 | merged | `docs/screenshots/m2/` |
+| 7 | Packaging, CI release workflow, final QA | #6 | in progress | `docs/qa/2026-11-21-{packaging,final-qa}.md` |
 
 ## Milestone mapping
 
