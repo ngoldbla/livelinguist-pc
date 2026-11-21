@@ -1,0 +1,97 @@
+{
+  "framework": "lettlest",
+  "language": "nb",
+  "displayName": "Lettlest (Inclusion Europe ETR framework)",
+  "languageName": "Norsk bokmål",
+  "script": "Latin",
+  "baseLang": "nb",
+  "standardName": "Lettlest / lettlest informasjon",
+  "standardTier": "easy_to_read_etr",
+  "standardCitation": "Inclusion Europe: Information for All: European standards for making information easy to read and understand (2009); applied to Norwegian easy-to-read practice ('lettlest')",
+  "standardConfidence": 0.56,
+  "systemPrompt": "You rewrite live speech transcripts into easy-to-read Norwegian Bokmål for people with reading difficulties, cognitive disabilities, or limited Norwegian proficiency. Follow the Easy-to-Read / lettlest approach based on Inclusion Europe's 'Information for All' guidance, adapted to Norwegian Bokmål.\n\nYour task:\n- Keep the same meaning.\n- Make the text easy to read and easy to understand.\n- Output only Norwegian Bokmål.\n- Do not explain your choices.\n\nRules:\n1. Write very short sentences.\n2. Put only one main idea in each sentence.\n3. Aim for 10 words or fewer per sentence. Never exceed 12 words.\n4. Use common everyday Norwegian Bokmål words.\n5. Prefer active sentences with a clear subject.\n6. Avoid passive forms, especially -s passive and formal passive wording, unless unavoidable.\n7. Prefer present tense or simple past.\n8. Split long sentences and remove subordinate-clause chains.\n9. Replace abstract nouns and bureaucratic wording with simple verbs and concrete words.\n10. Avoid long compounds when possible. Split or explain them.\n11. Keep who-does-what clear. Repeat nouns if pronouns may be unclear.\n12. Remove fillers, hesitations, self-corrections, and spoken repetitions.\n13. Keep important information early.\n14. Write dates, times, numbers, and prices in a simple form.\n15. If a difficult word is necessary, add a very short explanation in the next sentence.\n\nFormatting:\n- Use plain sentences.\n- No bullets unless the input is clearly a list.\n- Preserve names, places, times, and key facts.\n- Do not add new information.\n- If the transcript is broken or incomplete, write the clearest faithful version possible.\n\nExamples of preferred style:\n- 'Søknaden må leveres innen 1. mai.' -> 'Du må søke innen 1. mai.'\n- 'Det vil bli foretatt en vurdering av saken.' -> 'Kommunen vurderer saken.'\n\nNow rewrite into lettlest norsk bokmål.",
+  "retryPromptTemplate": "Your rewrite broke these Lettlest (Inclusion Europe ETR framework) rules: {violations}. Rewrite the sentence again in Norsk bokmål, keep the meaning, and follow every rule.",
+  "thresholds": {
+    "maxWordsHard": 12,
+    "maxWordsSoft": 10
+  },
+  "lengthUnit": "words",
+  "rulesOneliner": "Use one idea per sentence; keep sentences short, soft cap 10 words and hard cap 12; prefer normal Norwegian Bokmål SVO order; use active voice, avoid passive -s and bli-passive when possible; prefer present or simple past; split long subordinate clauses; avoid nominalizations and abstract bureaucratic nouns; replace rare words with common words and explain needed terms; avoid dense compounds and genitive chains by splitting or rephrasing; keep references explicit and repeat nouns when pronouns are unclear; use direct instructions; format numbers and dates simply; remove fillers and false starts. Norsk bokmål in, Norsk bokmål out.",
+  "fillers": [
+    "eh",
+    "øh",
+    "altså",
+    "liksom",
+    "på en måte",
+    "ikke sant",
+    "sånn",
+    "ja da"
+  ],
+  "numberWordsRegex": "\\b(?:null|ingen|intet|ei|en|ett|to|tre|fire|fem|seks|sju|syv|åtte|ni|ti|elleve|tolv|tretten|fjorten|femten|seksten|sytten|atten|nitten|tjue|tretti|førti|femti|seksti|sytti|åtti|nitti|hundre|hundret|hundrede|tusen|million|millioner|milliard|milliarder|første|annen|andre|tredje|fjerde|femte|sjette|sjuende|syvende|åttende|niende|tiende|ellevte|tolvte|trettende|fjortende|femtende|sekstende|syttende|attende|nittende|tjuende|trettiende|førtiende|femtiende|sekstiende|syttiende|åttiende|nittiende|hundrede|hundrende|tusende|millionte|milliardte|halv|halvt|halve|kvart|par|dusin)\\b",
+  "stopwords": [
+    "og",
+    "i",
+    "på",
+    "at",
+    "som",
+    "er",
+    "det",
+    "de",
+    "en",
+    "et",
+    "ei",
+    "til",
+    "for",
+    "av",
+    "med",
+    "om",
+    "ikke",
+    "jeg",
+    "du",
+    "han",
+    "hun",
+    "vi",
+    "dere",
+    "man",
+    "den",
+    "der",
+    "så",
+    "har",
+    "hadde",
+    "skal"
+  ],
+  "fewShots": [
+    {
+      "source": "Eh, altså vi tenkte jo at møtet, liksom, kunne flyttes til torsdag fordi mange ikke kan komme i morgen.",
+      "simplified": "Møtet blir på torsdag.\nMange kan ikke komme i morgen."
+    },
+    {
+      "source": "Øh jeg var på kontoret, ikke sant, og så fikk jeg beskjed om at søknaden egentlig måtte sendes digitalt.",
+      "simplified": "Jeg var på kontoret.\nJeg fikk en beskjed.\nDu må sende søknaden digitalt."
+    },
+    {
+      "source": "Ja da, sånn, bussen var forsinket og jeg rakk ikke timen, altså, så jeg må vel bestille ny tid.",
+      "simplified": "Bussen var forsinket.\nJeg rakk ikke timen.\nJeg må bestille ny tid."
+    },
+    {
+      "source": "På grunn av manglende dokumentasjon vil behandlingen av saken kunne bli forsinket inntil ytterligere opplysninger foreligger.",
+      "simplified": "Saken kan ta lengre tid.\nVi mangler dokumenter.\nDu må sende flere opplysninger."
+    },
+    {
+      "source": "Dersom brukeren ikke har anledning til å møte personlig, kan fullmakt fremlegges av representant ved oppmøte.",
+      "simplified": "Du kan gi fullmakt til en annen person.\nDen personen kan møte for deg."
+    },
+    {
+      "source": "Kommunen har igangsatt en evaluering av tjenestetilbudet med sikte på å optimalisere ressursutnyttelsen i kommende periode.",
+      "simplified": "Kommunen vurderer tjenestene sine.\nMålet er å bruke ressursene bedre."
+    },
+    {
+      "source": "Altså jeg vet ikke helt, men den avtalen som vi snakket om i sted, den gjelder vel bare hvis begge parter har signert.",
+      "simplified": "Avtalen gjelder bare i ett tilfelle.\nBegge må ha signert."
+    },
+    {
+      "source": "Pasienter som ikke har mottatt innkallingsbrev innen utgangen av uken, bes kontakte avdelingen for nærmere informasjon.",
+      "simplified": "Har du ikke fått brev innen uken er slutt?\nDa må du kontakte avdelingen.\nDu kan få mer informasjon der."
+    }
+  ]
+}

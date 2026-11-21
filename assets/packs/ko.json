@@ -1,0 +1,97 @@
+{
+  "framework": "easyToRead",
+  "language": "ko",
+  "displayName": "쉬운 정보 / 읽기 쉬운 한국어 (Inclusion Europe ETR)",
+  "languageName": "Korean",
+  "script": "Hangul",
+  "baseLang": "ko",
+  "standardName": "쉬운 정보 / 읽기 쉬운 정보 (Easy-to-Read Korean, based on Inclusion Europe ETR framework)",
+  "standardTier": "easy_to_read_etr",
+  "standardCitation": "Inclusion Europe. Information for All: European standards for making information easy to read and understand (2009). Applied to Korean easy-to-read practice; specific Korean national member/document not confidently verified.",
+  "standardConfidence": 0.46,
+  "systemPrompt": "You rewrite live Korean speech transcripts into EASY-TO-READ Korean for people with reading difficulties, cognitive disabilities, or limited Korean proficiency. Follow an easy-to-read register aligned with Inclusion Europe 'Information for All' principles, adapted to Korean grammar.\n\nGoal:\n- Make the text easy to read and easy to understand.\n- Preserve the original meaning.\n- Remove speech noise.\n- Output only simplified Korean in Hangul.\n\nCore rules:\n1. Use very short sentences. One idea per sentence.\n2. Target 8 words or fewer per sentence. Hard limit 12 words unless unavoidable.\n3. Use consistent polite spoken style with '-요'. Do not mix speech levels.\n4. Prefer active, direct sentences.\n5. Avoid passive, causative-passive, and bureaucratic written expressions when a simple form is possible.\n6. Replace difficult Sino-Korean or administrative vocabulary with common everyday Korean.\n7. Avoid long modifier chains, nested clauses, and heavy connective endings. Split them into separate sentences.\n8. Restore omitted subjects or objects if the meaning would otherwise be unclear.\n9. Keep tense and modality simple.\n10. Remove fillers, hesitations, repetitions, false starts, and discourse clutter.\n11. If a technical word is necessary, explain it with an easier word right away.\n12. Format instructions and sequences as short ordered steps when helpful.\n13. Use standard Korean spacing and punctuation. Prefer full stops over long comma chains.\n\nKorean-specific guidance:\n- Prefer '할 수 있어요' over more formal or abstract alternatives.\n- Prefer '해야 해요' or '하세요' over legalistic command forms.\n- Prefer '문을 닫아요' over passive-like '문이 닫히게 됩니다' unless passive meaning is essential.\n- Prefer '비가 와서 길이 미끄러워요' over clause-heavy written forms.\n- Avoid excessive subject omission when it creates ambiguity.\n\nOutput constraints:\n- Do not add new facts.\n- Do not summarize away important content.\n- Do not translate to another language.\n- Do not include explanations about what you changed.\n- Output only the final easy-to-read Korean text.",
+  "retryPromptTemplate": "Your rewrite broke these 쉬운 정보 / 읽기 쉬운 한국어 (Inclusion Europe ETR) rules: {violations}. Rewrite the sentence again in Korean, keep the meaning, and follow every rule.",
+  "thresholds": {
+    "maxWordsHard": 12,
+    "maxWordsSoft": 8
+  },
+  "lengthUnit": "words",
+  "rulesOneliner": "One idea per sentence; 8 words soft cap, 12 hard cap; use consistent polite '-요' style; prefer active voice; replace bureaucratic Sino-Korean compounds with everyday words; avoid heavy connective endings and embedded clauses; restore omitted subjects when needed; keep tense simple; use clear direct instructions; write numbers and steps clearly; explain technical words with easy synonyms; remove fillers and repetitions; use standard spacing and frequent full stops. Korean in, Korean out.",
+  "fillers": [
+    "어",
+    "음",
+    "그",
+    "그러니까",
+    "저기",
+    "아",
+    "뭐랄까",
+    "이제"
+  ],
+  "numberWordsRegex": "",
+  "stopwords": [
+    "이",
+    "그",
+    "저",
+    "은",
+    "는",
+    "이",
+    "가",
+    "을",
+    "를",
+    "에",
+    "에서",
+    "에게",
+    "한테",
+    "의",
+    "와",
+    "과",
+    "도",
+    "만",
+    "로",
+    "으로",
+    "그리고",
+    "하지만",
+    "그래서",
+    "또",
+    "더",
+    "아니",
+    "안",
+    "못",
+    "있다",
+    "없다"
+  ],
+  "fewShots": [
+    {
+      "source": "어, 오늘 일정은요 그러니까 오전에 회의가 있고요 그다음에 뭐 고객사 방문이 아마 있을 것 같고, 네, 끝나면 다시 들어와서 보고서 정리하시면 됩니다.",
+      "simplified": "오늘 일정이 있어요.\n오전에 회의가 있어요.\n그다음에 고객사를 방문해요.\n끝나면 돌아와요.\n그 뒤에 보고서를 정리해요."
+    },
+    {
+      "source": "음 이거는 제가 아까도 말씀드렸는데요, 신청서 작성이 완료되지 않은 경우에는 시스템 접속이 제한될 수 있어서 먼저 본인 확인을 하셔야 됩니다.",
+      "simplified": "먼저 본인 확인을 하세요.\n그다음에 신청서를 쓰세요.\n신청서를 다 쓰지 않으면\n시스템을 사용할 수 없어요."
+    },
+    {
+      "source": "저기 버스가, 아, 아니 지하철이 더 빨라요. 그래서 거기로 가면 한 스무 분? 정도면 도착할 거예요.",
+      "simplified": "지하철이 더 빨라요.\n지하철로 가세요.\n약 20분 걸려요."
+    },
+    {
+      "source": "그러니까 이 약은요 식후 30분 이내에 복용하시는 게 좋고요, 혹시 어지러움이나 메스꺼움이 있으면 바로 복용을 중단하시고 병원에 연락하셔야 해요.",
+      "simplified": "이 약은 밥을 먹은 뒤에 드세요.\n30분 안에 드세요.\n어지럽거나 메스꺼우면\n바로 약을 끊으세요.\n그리고 병원에 연락하세요."
+    },
+    {
+      "source": "본 서비스는 이용자의 개인정보 보호를 위하여 관련 법령 및 내부 관리기준에 따라 수집·이용·보관되며, 동의 철회 시 일부 기능의 이용이 제한될 수 있습니다.",
+      "simplified": "이 서비스는 개인정보를 모아요.\n또 사용하고 보관해요.\n법과 내부 기준을 지켜요.\n동의를 취소할 수 있어요.\n하지만 일부 기능은 못 쓸 수 있어요."
+    },
+    {
+      "source": "재난 발생 시에는 엘리베이터 사용을 자제하시고 관계 직원의 안내 및 비상방송에 따라 침착하게 옥외 대피장소로 이동하여 주시기 바랍니다.",
+      "simplified": "재난이 나면 엘리베이터를 타지 마세요.\n직원의 안내를 들으세요.\n비상방송도 들으세요.\n침착하게 밖으로 나가세요.\n대피 장소로 이동하세요."
+    },
+    {
+      "source": "금번 교육과정은 디지털 기기 활용 역량 강화를 목적으로 편성되었으며, 참석자께서는 사전 배포된 매뉴얼을 숙지한 뒤 실습에 참여하여 주시기 바랍니다.",
+      "simplified": "이번 교육은 디지털 기기를 배우는 시간이에요.\n먼저 나눠 준 안내문을 읽으세요.\n그다음에 실습에 참여하세요."
+    },
+    {
+      "source": "아 그 서류는요 오늘 안으로만 내시면 되는 게 아니라, 그러니까 담당자 확인이 끝난 다음에 접수가 되는 거라서 내일 오전까지는 보내 주셔야 해요.",
+      "simplified": "그 서류는 오늘만 내면 끝나지 않아요.\n담당자가 먼저 확인해요.\n접수는 그 뒤에 돼요.\n내일 오전까지 보내세요."
+    }
+  ]
+}

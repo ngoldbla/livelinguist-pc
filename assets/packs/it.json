@@ -1,0 +1,99 @@
+{
+  "framework": "easyToRead",
+  "language": "it",
+  "displayName": "Easy to Read italiano (Inclusion Europe / Informazioni per tutti)",
+  "languageName": "Italiano (Italia)",
+  "script": "Latin",
+  "baseLang": "it",
+  "standardName": "Easy to Read / Informazioni per tutti (linee guida europee usate in italiano)",
+  "standardTier": "easy_to_read_etr",
+  "standardCitation": "Inclusion Europe. Information for All: European standards for making information easy to read and understand (2009). Italian easy-to-read practice aligns with these European Easy-to-Read guidelines where a single dominant national official Italian standard is not clearly established.",
+  "standardConfidence": 0.63,
+  "systemPrompt": "You rewrite live speech transcripts into Easy-to-Read Italian for people with reading difficulties, cognitive disabilities, or limited Italian proficiency. Follow the European Easy-to-Read approach from Inclusion Europe 'Information for All' as used for Italian easy-to-read content.\n\nGoal:\n- Produce very easy Italian.\n- Preserve the speaker's meaning.\n- Make the text easy to read and easy to understand.\n\nOutput rules:\n- Output only the rewritten Italian text.\n- Keep one idea per sentence.\n- Prefer sentences of 10 words or fewer. Never go above 12 words.\n- Use common, concrete words from daily life.\n- Replace jargon, legal terms, abstractions, and idioms with simple wording.\n- If a difficult word must stay, explain it in the same sentence with easier words.\n- Use active voice and say who does the action.\n- Prefer present tense, passato prossimo, or simple future when needed.\n- Avoid congiuntivo, literary tenses, and complex conditional structures when a simpler indicative form works.\n- Break long sentences into short sentences.\n- Reduce subordinate clauses. Avoid stacked clauses with che, il quale, sebbene, qualora, affinché, nonché.\n- Prefer subject + verb + object.\n- Prefer verbs over noun-heavy expressions.\n- Avoid double negatives and avoid ambiguity.\n- Repeat the noun instead of using unclear pronouns.\n- Keep article, noun, adjective, and participle agreement correct and simple.\n- Remove fillers, hesitations, repeated starts, and repair speech unless essential to meaning.\n- If the transcript is incomplete or broken, infer the simplest safe wording without adding new facts.\n\nFormatting:\n- Use normal Italian spelling and punctuation.\n- Short paragraphs are allowed only if the input clearly contains multiple topics.\n- Do not use bullets unless the input is clearly a list.\n\nRemember: this is easy-to-read Italian, not generic formal simplification. Italian in, Italian out.",
+  "retryPromptTemplate": "Your rewrite broke these Easy to Read italiano (Inclusion Europe / Informazioni per tutti) rules: {violations}. Rewrite the sentence again in Italiano (Italia), keep the meaning, and follow every rule.",
+  "thresholds": {
+    "maxWordsHard": 12,
+    "maxWordsSoft": 10
+  },
+  "lengthUnit": "words",
+  "rulesOneliner": "One idea per sentence; aim for very short sentences (soft 10 words, hard 12); use common everyday words; explain any necessary difficult word right away; prefer active voice and name the actor; prefer present, passato prossimo, and simple future; avoid congiuntivo when a clear indicative rewrite works; avoid long subordinate clauses and split them; use direct SVO order; prefer verbs over abstract nouns; avoid double negatives; repeat nouns when pronouns are unclear; keep gender/number agreement simple and clear; remove fillers and false starts. Italian in, Italian out.",
+  "fillers": [
+    "eh",
+    "ehm",
+    "allora",
+    "diciamo",
+    "cioè",
+    "praticamente",
+    "insomma",
+    "boh"
+  ],
+  "numberWordsRegex": "\\b(?:zero|un[oa]?|due|tre|quattro|cinque|sei|sette|otto|nove|dieci|undici|dodici|tredici|quattordici|quindici|sedici|diciassette|diciotto|diciannove|venti|trenta|quaranta|cinquanta|sessanta|settanta|ottanta|novanta|cento|mille|mila|milione|milioni|miliardo|miliardi|mezz[oa]|mezzo|met[aà]|dozzina|paio|decina|ventina|trentina|quarantina|cinquantina|sessantina|settantina|ottantina|novantina|centinaio|centinaia|migliaio|migliaia|prim[oaie]?|second[oaie]?|terz[oaie]?|quart[oaie]?|quint[oaie]?|sest[oaie]?|settim[oaie]?|ottav[oaie]?|non[oaie]?|decim[oaie]?|undicesim[oaie]?|dodicesim[oaie]?|tredicesim[oaie]?|quattordicesim[oaie]?|quindicesim[oaie]?|sedicesim[oaie]?|diciassettesim[oaie]?|diciottesim[oaie]?|diciannovesim[oaie]?|ventesim[oaie]?|trentesim[oaie]?|quarantesim[oaie]?|cinquantesim[oaie]?|sessantesim[oaie]?|settantesim[oaie]?|ottantesim[oaie]?|novantesim[oaie]?|centesim[oaie]?|millesim[oaie]?|milionesim[oaie]?|miliardesim[oaie]?)\\b",
+  "stopwords": [
+    "e",
+    "o",
+    "ma",
+    "che",
+    "di",
+    "a",
+    "da",
+    "in",
+    "con",
+    "su",
+    "per",
+    "tra",
+    "fra",
+    "il",
+    "lo",
+    "la",
+    "i",
+    "gli",
+    "le",
+    "un",
+    "una",
+    "uno",
+    "del",
+    "della",
+    "dei",
+    "delle",
+    "al",
+    "alla",
+    "ai",
+    "alle",
+    "mi",
+    "ti"
+  ],
+  "fewShots": [
+    {
+      "source": "Allora eh domani praticamente ci vediamo in comune, cioè verso le dieci, se non cambia niente.",
+      "simplified": "Domani ci vediamo in comune. Ci vediamo verso le dieci."
+    },
+    {
+      "source": "Ehm il modulo, boh, lo compili online oppure, insomma, vieni qui e ti aiutiamo noi.",
+      "simplified": "Puoi compilare il modulo online. Oppure vieni qui. Noi ti aiutiamo."
+    },
+    {
+      "source": "La procedura di attivazione del servizio sarà effettuata successivamente alla verifica della documentazione presentata dall'utente.",
+      "simplified": "Noi controlliamo i documenti dell'utente. Poi attiviamo il servizio."
+    },
+    {
+      "source": "Qualora il richiedente non fosse in possesso della certificazione, l'istanza non potrà essere accolta.",
+      "simplified": "Se il richiedente non ha il certificato, noi non accettiamo la domanda."
+    },
+    {
+      "source": "Cioè io ieri eh sono andato allo sportello, però mi hanno detto che mancava un foglio, quindi niente.",
+      "simplified": "Ieri sono andato allo sportello. Mancava un foglio. Per questo la pratica non è andata avanti."
+    },
+    {
+      "source": "L'accesso al beneficio è subordinato alla sussistenza dei requisiti economici previsti dalla normativa vigente.",
+      "simplified": "Hai il beneficio solo con i requisiti economici richiesti dalla legge."
+    },
+    {
+      "source": "Insomma per il pagamento, ehm, se vuoi puoi fare il bonifico, oppure paghi qui con la carta.",
+      "simplified": "Puoi pagare con bonifico. Oppure puoi pagare qui con la carta."
+    },
+    {
+      "source": "Si comunica che eventuali variazioni anagrafiche dovranno essere tempestivamente comunicate agli uffici competenti.",
+      "simplified": "Se i tuoi dati cambiano, avvisa subito l'ufficio."
+    }
+  ]
+}

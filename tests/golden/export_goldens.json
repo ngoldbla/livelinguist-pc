@@ -1,0 +1,27 @@
+{
+  "csv_header": "segment_index,audio_start_s,audio_end_s,verbatim,simplified,is_simplified,fallback_reason,is_english_reversion,soft_violations,tier1_latency_ms,tier2_latency_ms,simplify_duration_ms,confidence,flag_reasons",
+  "markdown_required": [
+    "# Live Linguist — Transcript",
+    "| Time | Verbatim | Simplified |",
+    "| [00:01] | Bonjour. | Salut. |",
+    "≡ Au revoir.",
+    "| — |"
+  ],
+  "plain_required": [
+    "[00:01] V: Bonjour.",
+    "        S: Salut.",
+    "        S: ≡ Au revoir.",
+    "        S: —"
+  ],
+  "fallback_reasons": {
+    "timeout": "timeout",
+    "retry_failed": "retry_failed",
+    "wrong_language": "wrong_language",
+    "unfaithful": "unfaithful",
+    "backend_error": "backend_error",
+    "degradation_skip": "degradation_skip",
+    "off_target": "skipped_off_target_language",
+    "not_requested": "not_requested",
+    "fragment": "skipped_fragment"
+  }
+}

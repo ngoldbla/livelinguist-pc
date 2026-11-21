@@ -1,0 +1,97 @@
+{
+  "framework": "konnyenErthetoKommunikacio",
+  "language": "hu",
+  "displayName": "Könnyen érthető magyar (Easy-to-Read)",
+  "languageName": "Hungarian",
+  "script": "Latin",
+  "baseLang": "hu",
+  "standardName": "Könnyen érthető kommunikáció / könnyen érthető információ (Easy-to-Read)",
+  "standardTier": "easy_to_read_etr",
+  "standardCitation": "Inclusion Europe: Information for All (2009); Hungarian easy-to-read practice uses the 'könnyen érthető kommunikáció' framework aligned with European Easy-to-Read guidance.",
+  "standardConfidence": 0.63,
+  "systemPrompt": "Rewrite live spoken Hungarian transcripts into easy-to-read Hungarian for people with reading difficulties, cognitive disabilities, or limited proficiency. Follow the European Easy-to-Read / 'könnyen érthető kommunikáció' approach. Output only simplified Hungarian.\n\nCore goals:\n- Make the text easy to read, easy to understand, and easy to act on.\n- Preserve the original meaning.\n- Prefer clarity over completeness when spoken disfluencies add no meaning.\n\nSentence rules:\n- One idea per sentence.\n- Aim for 8 words or fewer per sentence.\n- Hard limit: 12 words per sentence.\n- Split long sentences aggressively.\n\nWord choice:\n- Use common everyday Hungarian words.\n- Replace abstract, bureaucratic, legalistic, or foreign terms with familiar words.\n- If a difficult word is necessary, keep it and explain it in the next short sentence.\n- Keep the same term for the same concept throughout.\n\nHungarian grammar rules:\n- Prefer simple active clauses.\n- Avoid passive-like official phrasing such as 'megvalósításra kerül', 'sor kerül', 'kiadásra kerül'. Rewrite with a clear actor.\n- Prefer present tense or simple past.\n- Avoid long conditional chains and heavy modal phrasing.\n- Avoid long subordinate clauses with 'hogy', 'amely', 'ami', 'mivel', 'amennyiben'. Split into separate sentences.\n- Avoid participial and compressed nominal constructions. Turn them into full sentences.\n- Avoid long words overloaded with many suffixes when a short phrase is clearer.\n- Avoid case-heavy noun chains and stacked modifiers.\n- Keep subjects explicit when omission could confuse the reader.\n\nSpeech cleanup:\n- Remove fillers, hesitations, false starts, repeated words, and self-corrections: for example 'öö', 'izé', 'hát', 'ugye', 'tehát', 'na'.\n- Keep only information that changes meaning.\n- If the speaker rambles, extract the clear message.\n\nFormatting:\n- Use digits for numbers.\n- Write dates and times clearly.\n- Use short paragraphs or lists when helpful.\n- Do not add new information.\n\nQuality check before finalizing:\n- Every sentence expresses one idea.\n- No sentence is over 12 words.\n- Wording is concrete and familiar.\n- Actor and action are clear.\n- Output is fully in Hungarian.\n\nHungarian in, Hungarian out.",
+  "retryPromptTemplate": "Your rewrite broke these Könnyen érthető magyar (Easy-to-Read) rules: {violations}. Rewrite the sentence again in Hungarian, keep the meaning, and follow every rule.",
+  "thresholds": {
+    "maxWordsHard": 12,
+    "maxWordsSoft": 8
+  },
+  "lengthUnit": "words",
+  "rulesOneliner": "One idea per sentence; aim for 8 words, max 12; use common everyday Hungarian words; keep subjects explicit when needed; prefer active voice; prefer present or simple past; avoid long subordinate clauses; expand participles and bureaucratic noun phrases into full sentences; reduce suffix stacking and case-heavy noun chains; use clear digits and dates; remove fillers and repetitions from speech; explain any unavoidable difficult word immediately; use lists for 3+ items; keep terms consistent. Hungarian in, Hungarian out.",
+  "fillers": [
+    "öö",
+    "őő",
+    "hm",
+    "hát",
+    "izé",
+    "ugye",
+    "tehát",
+    "na"
+  ],
+  "numberWordsRegex": "\\b(?:nulla|egy|kett(?:ő|o)|két|három|harminc|negyven|ötven|hatvan|hetven|nyolcvan|kilencven|tíz|húsz|huszon|harminc|negyven|ötven|hatvan|hetven|nyolcvan|kilencven|száz|ezer|millió|milliárd|els(?:ő|o)|második|harmadik|negyedik|ötödik|hatodik|hetedik|nyolcadik|kilencedik|tizedik|huszadik|harmincadik|negyvenedik|ötvenedik|hatvanadik|hetvenedik|nyolcvanadik|kilencvenedik|századik|ezredik|fél|fele|negyed|tucat)\\b",
+  "stopwords": [
+    "a",
+    "az",
+    "és",
+    "vagy",
+    "de",
+    "hogy",
+    "ha",
+    "mert",
+    "mint",
+    "is",
+    "sem",
+    "nem",
+    "ne",
+    "már",
+    "még",
+    "csak",
+    "én",
+    "te",
+    "ő",
+    "mi",
+    "ti",
+    "ők",
+    "ez",
+    "az",
+    "aki",
+    "ami",
+    "van",
+    "volt",
+    "lesz",
+    "egy"
+  ],
+  "fewShots": [
+    {
+      "source": "Öö hát a rendelés, izé, meg fog érkezni valamikor délután, ugye, ha minden jól megy.",
+      "simplified": "A rendelés délután érkezik.\nHa gond lesz, szólunk."
+    },
+    {
+      "source": "Na most tehát aki, öö, nem hozta el a papírt, az majd később tudja leadni, hát a recepción vagy hol.",
+      "simplified": "Ha nem hozta el a papírt,\nkésőbb is leadhatja.\nA recepción adja le."
+    },
+    {
+      "source": "Hát én, izé, tegnap beszéltem velük, és azt mondták, hogy akkor jöjjek vissza pénteken, mert most nincs ügyintéző.",
+      "simplified": "Tegnap beszéltem velük.\nAzt mondták:\nPénteken menjek vissza.\nMost nincs ügyintéző."
+    },
+    {
+      "source": "Öö igen, a busz, tehát nem itt áll meg, hanem hát a másik utcában, ugye a posta mellett.",
+      "simplified": "A busz nem itt áll meg.\nA másik utcában áll meg.\nA posta mellett."
+    },
+    {
+      "source": "A támogatási kérelem benyújtását követően a jogosultsági feltételek vizsgálatára kerül sor.",
+      "simplified": "Ön beadja a kérelmet.\nUtána megnézzük,\njár-e a támogatás."
+    },
+    {
+      "source": "Az intézmény a szolgáltatás igénybevételének lehetőségéről elektronikus úton értesítést küld a jogosultak részére.",
+      "simplified": "Az intézmény üzenetet küld.\nAz üzenet elektronikus.\nA jogosult emberek kapják meg.\nAz üzenetben leírjuk,\nhogyan lehet használni a szolgáltatást."
+    },
+    {
+      "source": "Amennyiben a befizetés a megadott határidőig nem teljesül, a szerződés megszüntetésére kerülhet sor.",
+      "simplified": "Fizesse be az összeget határidőre.\nHa nem fizet,\na szerződés megszűnhet."
+    },
+    {
+      "source": "A személyazonosság megállapítására szolgáló okmányok hiányában az eljárás lefolytatása nem biztosítható.",
+      "simplified": "Hozza el a személyi okmányát.\nEnélkül nem tudjuk elindítani az ügyet."
+    }
+  ]
+}

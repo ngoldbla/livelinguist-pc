@@ -1,0 +1,97 @@
+{
+  "framework": "isoPlainLanguage",
+  "language": "zh-CN",
+  "displayName": "Easy-to-read Mandarin Chinese (ISO 24495-1 fallback)",
+  "languageName": "Mandarin Chinese",
+  "script": "Han (Simplified)",
+  "baseLang": "zh",
+  "standardName": "国际标准 plain language（作为中文易读改写的最后保底映射）",
+  "standardTier": "international_iso",
+  "standardCitation": "ISO 24495-1:2023, Plain language — Part 1: Governing principles and guidelines",
+  "standardConfidence": 0.72,
+  "systemPrompt": "You rewrite live speech transcripts into easy-to-read Mandarin Chinese for people with reading difficulties, cognitive disabilities, or limited Chinese proficiency. Output only simplified Mandarin Chinese in Simplified Han characters. Follow an easy-to-read register grounded conservatively in ISO 24495-1 plain-language principles and easy-to-read practice.\n\nGoals:\n- Make the text easy to read, easy to understand, and easy to act on.\n- Preserve the speaker's meaning, facts, and intent.\n- Prefer clarity over completeness of spoken texture.\n\nCore rewriting rules:\n1. Put the main point first.\n2. Write one idea per sentence.\n3. Keep most sentences within 18 Chinese characters. Split anything above 25 characters unless unavoidable.\n4. Use common everyday words. Replace formal or technical words with simple ones. If a technical term is necessary, explain it immediately.\n5. Prefer basic subject-verb-object order.\n6. Use active voice and name the agent clearly.\n7. Use simple time/aspect marking only when needed: 了, 在, 过.\n8. Avoid Classical Chinese, idioms/chengyu, rare abbreviations, and bureaucratic or political set phrases.\n9. Avoid double negatives and indirect phrasing.\n10. Keep conditions and reasons short: 如果…就…, 因为…所以…\n11. Use only a few clear connectors: 和, 但, 因为, 所以, 然后.\n12. Use Arabic numerals for dates, times, and amounts when possible.\n13. For steps, instructions, or lists, give one step at a time in chronological order.\n14. Remove fillers, hesitations, repetitions, false starts, discourse particles used only for spoken flow, and self-corrections.\n\nTranscript handling:\n- Clean ASR noise if the intended meaning is clear.\n- If a sentence contains several clauses, split them.\n- If a pronoun is unclear, replace it with the real noun when recoverable from context.\n- If the source is vague, do not invent facts; keep the wording simple and faithful.\n- If important information is missing, do not add it.\n\nStyle:\n- Calm, direct, respectful.\n- Short paragraphs.\n- No literary flourish.\n- No slang unless needed to preserve meaning and still easy to understand.\n\nOutput:\n- Output only the rewritten Mandarin Chinese text.\n- Do not explain your edits.\n- Do not translate to another language.\n- Mandarin Chinese in, Mandarin Chinese out.",
+  "retryPromptTemplate": "Your rewrite broke these Easy-to-read Mandarin Chinese (ISO 24495-1 fallback) rules: {violations}. Rewrite the sentence again in Mandarin Chinese, keep the meaning, and follow every rule.",
+  "thresholds": {
+    "maxWordsHard": 25,
+    "maxWordsSoft": 18
+  },
+  "lengthUnit": "characters",
+  "rulesOneliner": "Main point first; one idea per sentence; keep most sentences within 18 characters and split above 25; use common everyday words; prefer basic SVO order; use active voice and clear agents; use simple aspect only when needed; avoid Classical Chinese, chengyu, obscure abbreviations, and bureaucratic set phrases; avoid double negatives; keep conditions short and explicit; use only helpful connectors; write numbers in familiar Arabic numerals with clear units; format steps as short chronological items; remove fillers and repetitions. Mandarin Chinese in, Mandarin Chinese out.",
+  "fillers": [
+    "嗯",
+    "那个",
+    "就是",
+    "然后",
+    "呃",
+    "怎么说呢",
+    "这个",
+    "对吧"
+  ],
+  "numberWordsRegex": "",
+  "stopwords": [
+    "的",
+    "了",
+    "在",
+    "是",
+    "我",
+    "你",
+    "他",
+    "她",
+    "它",
+    "我们",
+    "你们",
+    "他们",
+    "这",
+    "那",
+    "和",
+    "跟",
+    "与",
+    "也",
+    "都",
+    "就",
+    "还",
+    "很",
+    "把",
+    "被",
+    "给",
+    "对",
+    "从",
+    "到",
+    "向",
+    "里"
+  ],
+  "fewShots": [
+    {
+      "source": "嗯这个事情呢，就是我们今天下午大概三点左右吧，要不然这样，你先去那个服务台问一下，然后如果他们说可以，你再回来找我。",
+      "simplified": "今天下午3点。\n你先去服务台问。\n如果可以，\n你再来找我。"
+    },
+    {
+      "source": "呃我刚才不是那个意思，我是说这个表现在不用马上交，但是最好今天交，因为明天系统可能会关。",
+      "simplified": "这个表不用马上交。\n最好今天交。\n因为明天系统可能会关。"
+    },
+    {
+      "source": "那个老人家啊，怎么说呢，他昨天已经来了两次了，然后都没有办成，所以今天你们要是看到他，就帮他先取号。",
+      "simplified": "那位老人昨天来了2次。\n都没有办成。\n今天你们看到他，\n先帮他取号。"
+    },
+    {
+      "source": "嗯我们这边原则上是可以申请的，但是材料如果不全的话，审核时间就会比较长，这个你要有心理准备。",
+      "simplified": "你可以申请。\n如果材料不全，\n审核会更久。\n请你先准备好材料。"
+    },
+    {
+      "source": "为进一步提升社区治理效能，现就相关事项通知如下，请各有关单位严格依照本方案组织实施。",
+      "simplified": "现在通知有关事项。\n请各单位按这个方案做。"
+    },
+    {
+      "source": "申请人须于受理之日起十个工作日内提交完整证明材料，逾期未提交者，视为自动放弃本次申请资格。",
+      "simplified": "申请后10个工作日内，\n你要交齐材料。\n过期不交，\n这次申请会作废。"
+    },
+    {
+      "source": "本产品若因不可抗力或其他非归责于本公司的事由导致服务中断，本公司不承担由此产生之任何间接损失。",
+      "simplified": "如果因为不可抗力，\n服务中断，\n本公司不承担\n间接损失。\n比如停电、地震。"
+    },
+    {
+      "source": "鉴于近期持续强降雨，部分路段存在山体滑坡风险，建议市民非必要不前往山区，并及时关注最新预警信息。",
+      "simplified": "最近雨很大。\n一些山路有滑坡风险。\n没有必要，\n不要去山区。\n请及时看最新预警。"
+    }
+  ]
+}

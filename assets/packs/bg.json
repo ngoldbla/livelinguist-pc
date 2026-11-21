@@ -1,0 +1,97 @@
+{
+  "framework": "easyToRead",
+  "language": "bg",
+  "displayName": "Лесен за четене (Inclusion Europe ETR)",
+  "languageName": "Bulgarian",
+  "script": "Cyrillic",
+  "baseLang": "bg",
+  "standardName": "Лесен за четене / Easy-to-Read",
+  "standardTier": "easy_to_read_etr",
+  "standardCitation": "Inclusion Europe. Information for All: European standards for making information easy to read and understand (2009). Used as the core Easy-to-Read framework for Bulgarian in the absence of a clearly verifiable higher-tier national Bulgarian easy-language standard.",
+  "standardConfidence": 0.56,
+  "systemPrompt": "You rewrite LIVE SPEECH transcripts into Bulgarian Easy-to-Read text for people with reading difficulties, cognitive disabilities, or limited Bulgarian proficiency. Follow the Easy-to-Read approach based on Inclusion Europe 'Information for All' (2009), adapted to Bulgarian grammar.\n\nYour task:\n- Keep the meaning, but make the text much easier to read.\n- Remove spoken noise: fillers, hesitations, repetitions, false starts, discourse markers, and self-corrections.\n- Break long speech turns into very short sentences.\n- Write one idea per sentence.\n\nBulgarian Easy-to-Read rules:\n1. Use common everyday Bulgarian words.\n2. Keep most sentences at 8 words or fewer. Never go beyond 12 words unless a fixed name requires it.\n3. Use direct word order when possible: subject + verb + object.\n4. Prefer active voice. Name who does the action.\n5. Prefer present tense. Use simple future with 'ще' or simple past only when needed for time.\n6. Avoid passive forms, legal style, bureaucratic style, verbal nouns, and abstract nouns when a simple verb is possible.\n7. Avoid long subordinate clauses. Split sentences instead of using many clauses with 'който', 'защото', 'въпреки че', 'след като', etc.\n8. Avoid ambiguity. Repeat the noun instead of using an unclear pronoun.\n9. Use simple connectors only: 'и', 'но', 'или', 'после', 'затова'.\n10. Keep instructions concrete and step-by-step.\n11. Keep important numbers, dates, times, and prices clear, usually in digits.\n12. Do not add new information. Do not explain beyond what is needed for clarity.\n\nOutput format:\n- Output only the rewritten Bulgarian text.\n- Use short paragraphs or line breaks if they improve readability.\n- Do not mention the rules.\n- Do not preserve transcript disfluencies.\n\nGoal:\nProduce clear, calm, concrete Bulgarian Easy-to-Read text that is easy to follow at first reading.\n\nBulgarian in, Bulgarian out.",
+  "retryPromptTemplate": "Your rewrite broke these Лесен за четене (Inclusion Europe ETR) rules: {violations}. Rewrite the sentence again in Bulgarian, keep the meaning, and follow every rule.",
+  "thresholds": {
+    "maxWordsHard": 12,
+    "maxWordsSoft": 8
+  },
+  "lengthUnit": "words",
+  "rulesOneliner": "One idea per sentence; keep sentences short, soft cap 8 words and hard cap 12; use common everyday Bulgarian words; prefer direct SVO order; prefer present, simple future with 'ще', or simple past only when needed; avoid passive voice; avoid nominalizations and abstract bureaucratic nouns; split subordinate clauses; avoid complex negation chains; repeat subjects and nouns when pronouns are unclear; use only simple connectors; format key numbers in digits; remove fillers and self-corrections; Bulgarian in, Bulgarian out.",
+  "fillers": [
+    "ами",
+    "ъъ",
+    "значи",
+    "такова",
+    "нали",
+    "де",
+    "абе",
+    "общо взето"
+  ],
+  "numberWordsRegex": "\\b(?:нула|едно|един|една|две|два|три|четири|пет|шест|седем|осем|девет|десет|единадесет|дванадесет|тринадесет|четиринадесет|петнадесет|шестнадесет|седемнадесет|осемнадесет|деветнадесет|двадесет|тридесет|четиридесет|петдесет|шестдесет|седемдесет|осемдесет|деветдесет|сто|двеста|триста|четиристотин|петстотин|шестстотин|седемстотин|осемстотин|деветстотин|хиляда|хиляди|милион|милиона|милиард|милиарда|половин|половина|дузина|първи|първа|първо|втори|втора|второ|трети|трета|трето|четвърти|четвърта|четвърто|пети|пета|пето|шести|шеста|шесто|седми|седма|седмо|осми|осма|осмо|девети|девета|девето|десети|десета|десето|единадесети|единадесета|единадесето|дванадесети|дванадесета|дванадесето|тринадесети|тринадесета|тринадесето|четиринадесети|четиринадесета|четиринадесето|петнадесети|петнадесета|петнадесето|шестнадесети|шестнадесета|шестнадесето|седемнадесети|седемнадесета|седемнадесето|осемнадесети|осемнадесета|осемнадесето|деветнадесети|деветнадесета|деветнадесето|двадесети|двадесета|двадесето|тридесети|тридесета|тридесето|четиридесети|четиридесета|четиридесето|петдесети|петдесета|петдесето|шестдесети|шестдесета|шестдесето|седемдесети|седемдесета|седемдесето|осемдесети|осемдесета|осемдесето|деветдесети|деветдесета|деветдесето|стотен|стотна|стотно|хиляден|хилядна|хилядно|милионен|милионна|милионно|милиарден|милиардна|милиардно)\\b",
+  "stopwords": [
+    "и",
+    "а",
+    "но",
+    "или",
+    "че",
+    "ако",
+    "за",
+    "с",
+    "в",
+    "на",
+    "по",
+    "от",
+    "до",
+    "при",
+    "към",
+    "без",
+    "не",
+    "се",
+    "ще",
+    "съм",
+    "е",
+    "са",
+    "беше",
+    "бяха",
+    "като",
+    "да",
+    "му",
+    "ѝ",
+    "им",
+    "това"
+  ],
+  "fewShots": [
+    {
+      "source": "Ами утре, значи, ще се съберем към десет и после, ъъ, ще говорим какво точно правим.",
+      "simplified": "Утре ще се съберем в 10 часа.\nПосле ще говорим.\nЩе решим какво правим."
+    },
+    {
+      "source": "Такова, ако не успеете днес, нали, може и утре, ама трябва да се обадите.",
+      "simplified": "Ако не успеете днес,\nможе утре.\nНо първо се обадете."
+    },
+    {
+      "source": "Общо взето документите, които са необходими за кандидатстването, следва да бъдат предоставени в тридневен срок от уведомяването.",
+      "simplified": "Трябват документи за кандидатстване.\nДайте документите до 3 дни.\nСрокът тече след уведомяването."
+    },
+    {
+      "source": "Средствата ще бъдат преведени след извършване на проверка и потвърждаване на допустимостта на разходите.",
+      "simplified": "Ще преведем парите след проверка.\nПърво проверяваме разходите.\nПосле потвърждаваме разходите."
+    },
+    {
+      "source": "Абе аз, де, мислех да тръгнем по-рано, ама после, значи, видях, че автобусът е в осем и половина.",
+      "simplified": "Автобусът е в 8:30.\nЗатова тръгваме по-рано."
+    },
+    {
+      "source": "Лицата, подали заявления след посочения краен срок, няма да бъдат включени в процедурата по разглеждане.",
+      "simplified": "Хората след крайния срок не участват.\nАко подадете заявление късно,\nняма да го разгледаме."
+    },
+    {
+      "source": "Нали, ако детето има температура и, ъъ, кашля много, по-добре да не идва днес.",
+      "simplified": "Ако детето има температура,\nнека не идва днес.\nСъщото важи и при силна кашлица."
+    },
+    {
+      "source": "В случай че желаете да прекратите договора, е необходимо да подадете писмено уведомление не по-късно от 30 дни преди датата на прекратяване.",
+      "simplified": "Ако искате да спрете договора,\nподайте писмено уведомление.\nНаправете това 30 дни по-рано."
+    }
+  ]
+}

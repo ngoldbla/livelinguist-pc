@@ -1,0 +1,97 @@
+{
+  "framework": "easyToRead",
+  "language": "et",
+  "displayName": "Easy-to-Read Estonian (Inclusion Europe ETR)",
+  "languageName": "Estonian",
+  "script": "Latin",
+  "baseLang": "et",
+  "standardName": "Easy-to-Read (Lihtsasti loetav / easy-to-read guidelines used via Inclusion Europe framework)",
+  "standardTier": "easy_to_read_etr",
+  "standardCitation": "Inclusion Europe. Information for All: European standards for making information easy to read and understand (2009). Used as the core Easy-to-Read framework where no better-verified Estonian national easy-language standard could be confirmed.",
+  "standardConfidence": 0.58,
+  "systemPrompt": "You rewrite live speech transcripts into Easy-to-Read Estonian for people with reading difficulties, cognitive disabilities, or limited Estonian proficiency. Follow the Easy-to-Read principles from Inclusion Europe 'Information for All' and adapt them to natural Estonian.\n\nGoal:\n- Keep the meaning.\n- Make the text easy to read and easy to understand.\n- Output only simplified Estonian.\n\nCore rules:\n1. Keep one idea in one sentence.\n2. Prefer 4-8 words per sentence. Hard maximum: 12 words.\n3. Use common everyday words. Replace formal, abstract, bureaucratic, and foreign words with familiar Estonian words.\n4. Use direct word order, usually subject + verb + object.\n5. Prefer active voice. Avoid impersonal forms in -takse/-ti if you can name the actor.\n6. Prefer present tense or simple past. Avoid complicated tense and mood patterns.\n7. Avoid unnecessary conditional forms (-ks, oleks, teeks) and indirect distancing style.\n8. Avoid long noun phrases, nominalizations, and long compounds. Split them into shorter phrases.\n9. If a pronoun could be unclear, repeat the noun.\n10. Remove fillers, hesitations, false starts, and repeated words from speech transcripts.\n11. If the source has several actions, split them into separate sentences or bullet-like lines.\n12. Keep names, dates, times, and numbers clear. Use digits when helpful.\n13. Do not add new facts. If something is missing or unclear, keep it simple and neutral.\n14. If a technical word is necessary, keep it and add a very short explanation in easy Estonian.\n\nStyle:\n- Calm, respectful, concrete.\n- Short paragraphs.\n- No slang unless it is needed from the source.\n- No babyish tone.\n\nTranscript handling:\n- Remove spoken fillers like \"ee\", \"noh\", \"ütleme\".\n- Remove restarts and broken syntax.\n- Resolve obvious speech-recognition errors only when the meaning is clear.\n- If a sentence is incomplete, rewrite only the part that is understandable.\n\nOutput:\n- Output plain Easy-to-Read Estonian only.\n- Preserve line breaks when they help understanding.\n- No commentary, no labels, no explanation of edits.",
+  "retryPromptTemplate": "Your rewrite broke these Easy-to-Read Estonian (Inclusion Europe ETR) rules: {violations}. Rewrite the sentence again in Estonian, keep the meaning, and follow every rule.",
+  "thresholds": {
+    "maxWordsHard": 12,
+    "maxWordsSoft": 8
+  },
+  "lengthUnit": "words",
+  "rulesOneliner": "One idea per sentence; prefer 4-8 words and never more than 12; use common everyday Estonian words; keep direct SVO order; prefer affirmative sentences; use active voice instead of impersonal -takse/-ti when possible; prefer present or simple past; avoid unnecessary conditional -ks forms and distancing/quotative style; avoid nominalizations, long compounds, and dense case chains; repeat nouns when pronouns are unclear; write numbers simply; format steps as short chronological lines; remove fillers and false starts. Estonian in, Estonian out.",
+  "fillers": [
+    "ee",
+    "öö",
+    "noh",
+    "noh jah",
+    "ütleme",
+    "nagu",
+    "eks",
+    "ehk siis"
+  ],
+  "numberWordsRegex": "\\b(?:null|üks|esimene|teine|kolmas|neljas|viies|kuues|seitsmes|kaheksas|üheksas|kümnes|üksteist|kaksteist|kolmteist|neliteist|viisteist|kuusteist|seitseteist|kaheksateist|üheksateist|kakskümmend|kolmkümmend|nelikümmend|viiskümmend|kuuskümmend|seitsekümmend|kaheksakümmend|üheksakümmend|sada|saja|tuhat|miljon|miljard|pool|veerand|tosin)\\b",
+  "stopwords": [
+    "ja",
+    "ning",
+    "aga",
+    "või",
+    "et",
+    "kui",
+    "siis",
+    "kas",
+    "ei",
+    "on",
+    "oli",
+    "ole",
+    "olen",
+    "oled",
+    "me",
+    "te",
+    "nad",
+    "ta",
+    "see",
+    "need",
+    "selle",
+    "kes",
+    "mis",
+    "mida",
+    "kus",
+    "kuidas",
+    "ka",
+    "ära",
+    "ju",
+    "jaoks"
+  ],
+  "fewShots": [
+    {
+      "source": "Noh, me siis, ee, homme vist alustame selle teenuse ümberkorraldamise protsessiga ja inimesed saavad nagu hiljem täpsema info.",
+      "simplified": "Homme alustame muudatustega.\nInimesed saavad hiljem täpse info."
+    },
+    {
+      "source": "Ee ma mõtlen, et kui sa tuled pärast lõunat, siis arst võib-olla jõuab sind veel vastu võtta.",
+      "simplified": "Tule pärast lõunat.\nArst võib sind veel vastu võtta."
+    },
+    {
+      "source": "Nagu, see buss noh ei lähe otse, eks, peab seal keskuses ümber istuma.",
+      "simplified": "See buss ei lähe otse.\nSa pead keskuses ümber istuma."
+    },
+    {
+      "source": "Ütleme nii, et me tegelikult ei saanud andmeid kätte, sest süsteem noh oli maas.",
+      "simplified": "Me ei saanud andmeid kätte.\nSüsteem ei töötanud."
+    },
+    {
+      "source": "Taotluste menetlemine toimub pärast nõutud dokumentatsiooni nõuetekohast esitamist ning otsusest teavitatakse taotlejat kirjalikult.",
+      "simplified": "Esita kõik vajalikud dokumendid.\nSiis vaatame taotluse läbi.\nPärast saad kirjaliku vastuse."
+    },
+    {
+      "source": "Tulenevalt eelarveliste vahendite piiratusest ei ole võimalik nimetatud tegevusi käesoleval perioodil finantseerida.",
+      "simplified": "Praegu ei ole selleks raha.\nSeepärast me neid tegevusi nüüd ei toeta."
+    },
+    {
+      "source": "Lepingu ennetähtaegse lõpetamise korral kohaldatakse üldjuhul leppetrahvi, välja arvatud seaduses sätestatud juhtudel.",
+      "simplified": "Kui leping lõpeb varem,\nsiis tuleb tavaliselt maksta trahvi.\nMõnel juhul seadus seda ei nõua."
+    },
+    {
+      "source": "Kliendil on õigus esitada vaie 30 päeva jooksul arvates päevast, mil ta sai või pidi teada saama haldusakti andmisest.",
+      "simplified": "Klient võib esitada vaide.\nTähtaeg on 30 päeva.\nAeg algab päevast,\nkui klient sai otsusest teada."
+    }
+  ]
+}

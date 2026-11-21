@@ -1,0 +1,101 @@
+{
+  "framework": "lahkoCitatelneA",
+  "language": "sk",
+  "displayName": "Easy-to-Read Slovak (Inclusion Europe ETR)",
+  "languageName": "Slovak",
+  "script": "Latin",
+  "baseLang": "sk",
+  "standardName": "Ľahko čitateľné a zrozumiteľné informácie / Easy-to-Read",
+  "standardTier": "easy_to_read_etr",
+  "standardCitation": "Inclusion Europe. Information for All: European standards for making information easy to read and understand (2009). Applied for Slovak easy-to-read practice; specific Slovak national member name unverified.",
+  "standardConfidence": 0.63,
+  "systemPrompt": "You rewrite live speech transcripts into EASY-TO-READ Slovak for people with reading difficulties, cognitive disabilities, or limited Slovak proficiency. Follow the Easy-to-Read approach based on Inclusion Europe's 'Information for All' guidance, adapted to Slovak grammar.\n\nGoal:\n- Make the text very easy to read and understand.\n- Preserve the important meaning.\n- Remove speech noise.\n- Output only Slovak.\n\nMain rules:\n1. Write one idea per sentence.\n2. Keep sentences very short. Target 8 words or fewer. Never go above 12 words in one sentence.\n3. Use common everyday Slovak words.\n4. Prefer concrete words over abstract words.\n5. If a difficult word is necessary, keep it and explain it in the next short sentence.\n6. Use direct word order when natural: subject, verb, object.\n7. Use active voice. Name who does the action.\n8. Prefer present tense or simple future. Use past tense only when needed for meaning.\n9. Avoid conditional, long hypotheticals, and legalistic style unless essential.\n10. Replace nominalizations with verbs. Example: 'vykonanie kontroly' -> 'skontrolujeme'.\n11. Split long sentences. Do not keep chains of subordinate clauses.\n12. Avoid impersonal phrases such as 'bude vykonané', 'je potrebné realizovať', 'došlo k'. Write a clear subject and verb instead.\n13. Prefer positive statements. Avoid dense negation and double negatives.\n14. Remove fillers, hesitations, false starts, repeated words, and self-corrections from speech.\n15. Keep names, places, dates, times, and numbers accurate, but present them in the easiest readable form.\n16. Do not add new information.\n\nSpeech cleanup:\n- Remove fillers like 'ehm', 'no', 'vlastne', 'akože'.\n- Remove repeated starts and broken fragments.\n- If the speaker changes topic, start a new sentence.\n- If the transcript is incomplete, produce the clearest faithful short sentence possible from the available meaning.\n\nStyle for Slovak:\n- Respect Slovak grammar and agreement.\n- Prefer simple finite verbs over noun-heavy official style.\n- Prefer common prepositions and simple case patterns.\n- Avoid long strings of genitives and abstract nouns.\n- Keep punctuation simple.\n\nOutput format:\n- Output only the rewritten Slovak text.\n- Use short sentences.\n- Use line breaks if they help readability.\n\nSlovak in, Slovak out.",
+  "retryPromptTemplate": "Your rewrite broke these Easy-to-Read Slovak (Inclusion Europe ETR) rules: {violations}. Rewrite the sentence again in Slovak, keep the meaning, and follow every rule.",
+  "thresholds": {
+    "maxWordsHard": 12,
+    "maxWordsSoft": 8
+  },
+  "lengthUnit": "words",
+  "rulesOneliner": "One idea per sentence; keep sentences short, soft max 8 words and hard max 12; use common everyday Slovak words; prefer direct subject-verb-object order; use active voice and name the actor; prefer present or simple future, use past only when needed, avoid conditional if possible; replace nominalizations with verbs; split subordinate clauses into separate sentences; avoid participial and impersonal constructions; prefer positive statements and avoid double negatives; keep register respectful but not official; prefer simpler case patterns and common verb government; format numbers and dates for quick reading; remove fillers and repetitions. Slovak in, Slovak out.",
+  "fillers": [
+    "ehm",
+    "no",
+    "teda",
+    "vlastne",
+    "akože",
+    "proste",
+    "hej",
+    "čiže"
+  ],
+  "numberWordsRegex": "\\b(?:nula|jeden|jedna|jedno|dva|dve|tri|štyri|päť|šesť|sedem|osem|deväť|desať|jedenásť|dvanásť|trinásť|štrnásť|pätnásť|šestnásť|sedemnásť|osemnásť|devätnásť|dvadsať|tridsať|štyridsať|päťdesiat|šesťdesiat|sedemdesiat|osemdesiat|deväťdesiat|sto|dvesto|tristo|štyristo|päťsto|šesťsto|sedemsto|osemsto|deväťsto|tisíc|milión|milióny|miliónov|miliarda|miliardy|miliárd|prvý|prvá|prvé|druhý|druhá|druhé|tretí|tretia|tretie|štvrtý|štvrtá|štvrté|piaty|piata|piate|šiesty|šiesta|šieste|siedmy|siedma|siedme|ôsmy|ôsma|ôsme|deviaty|deviata|deviate|desiaty|desiata|desiate|jedenásty|jedenásta|jedenáste|dvanásty|dvanásta|dvanáste|trinásty|trinásta|trináste|štrnásty|štrnásta|štrnáste|pätnásty|pätnásta|pätnáste|šestnásty|šestnásta|šestnáste|sedemnásty|sedemnásta|sedemnáste|osemnásty|osemnásta|osemnáste|devätnásty|devätnásta|devätnáste|dvadsiaty|dvadsiata|dvadsiate|tridsiaty|tridsiata|tridsiate|štyridsiaty|štyridsiata|štyridsiate|päťdesiaty|päťdesiata|päťdesiate|šesťdesiaty|šesťdesiata|šesťdesiate|sedemdesiaty|sedemdesiata|sedemdesiate|osemdesiaty|osemdesiata|osemdesiate|deväťdesiaty|deväťdesiata|deväťdesiate|stý|stá|sté|tisíci|tisíca|tisíceho|pol|polovica|tucet|pár|niekoľko|mnoho|veľa)\\b",
+  "stopwords": [
+    "a",
+    "aj",
+    "ale",
+    "alebo",
+    "aby",
+    "ako",
+    "že",
+    "sa",
+    "si",
+    "som",
+    "sme",
+    "ste",
+    "je",
+    "sú",
+    "bol",
+    "bola",
+    "bolo",
+    "v",
+    "na",
+    "do",
+    "od",
+    "pre",
+    "po",
+    "z",
+    "zo",
+    "k",
+    "ku",
+    "u",
+    "o",
+    "i",
+    "to",
+    "ten",
+    "tá",
+    "toho"
+  ],
+  "fewShots": [
+    {
+      "source": "Ehm, no, vlastne zajtra by sme mali, akože, začať s opravou cesty, lebo sa to už dosť zhoršilo.",
+      "simplified": "Zajtra začneme opravovať cestu.\nCesta je v zlom stave."
+    },
+    {
+      "source": "No hej, ja som vám chcel povedať, že autobus asi nepríde načas, lebo vodič uviazol v zápche.",
+      "simplified": "Autobus príde neskoro.\nVodič stojí v zápche."
+    },
+    {
+      "source": "Čiže, ehm, keď prídete na úrad, tak si vlastne najprv zoberiete číslo a potom budete čakať.",
+      "simplified": "Keď prídete na úrad,\nzoberte si číslo.\nPotom čakajte."
+    },
+    {
+      "source": "Proste ten formulár, no, netreba hneď vypĺňať celý, stačí najprv meno a adresu.",
+      "simplified": "Formulár nemusíte vyplniť celý.\nNajprv napíšte meno.\nPotom napíšte adresu."
+    },
+    {
+      "source": "V prípade nedodržania stanoveného termínu podania žiadosti nebude možné predmetnú žiadosť zaradiť do ďalšieho hodnotiaceho procesu.",
+      "simplified": "Ak žiadosť pošlete neskoro,\nneprijmeme ju.\nNebude v ďalšom hodnotení."
+    },
+    {
+      "source": "Realizácia projektu je podmienená predchádzajúcim schválením finančných prostriedkov zo strany ministerstva.",
+      "simplified": "Projekt sa začne až potom,\nkeď ministerstvo schváli peniaze."
+    },
+    {
+      "source": "S cieľom zabezpečiť plynulosť poskytovaných služieb dochádza od budúceho týždňa k dočasnej reorganizácii pracovísk.",
+      "simplified": "Od budúceho týždňa\nbudú pracoviská dočasne inak rozdelené.\nChceme tak zachovať plynulé služby."
+    },
+    {
+      "source": "Účastníci, ktorí nepredložili požadovanú dokumentáciu v úplnom rozsahu, budú vyzvaní na jej doplnenie v dodatočne určenej lehote.",
+      "simplified": "Niektorým účastníkom chýbajú doklady.\nTých vyzveme na doplnenie.\nDostanú nový termín."
+    }
+  ]
+}

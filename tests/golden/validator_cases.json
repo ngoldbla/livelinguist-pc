@@ -1,0 +1,148 @@
+{
+  "cases": [
+    {
+      "name": "falc_hard_length",
+      "framework": "falc",
+      "output": "Je pense que nous devrions aller voir le nouveau film ensemble demain soir vers huit heures.",
+      "source": "Je pense que nous devrions aller voir le nouveau film ensemble demain soir vers huit heures.",
+      "expected": [
+        {
+          "rule": "sentence_length",
+          "severity": "hard"
+        }
+      ]
+    },
+    {
+      "name": "falc_soft_length",
+      "framework": "falc",
+      "output": "Nous allons voir le nouveau film ensemble demain soir vers huit heures trente.",
+      "source": "Nous allons voir le nouveau film ensemble demain soir vers huit heures trente.",
+      "expected": [
+        {
+          "rule": "sentence_length",
+          "severity": "soft"
+        }
+      ]
+    },
+    {
+      "name": "falc_subjunctive",
+      "framework": "falc",
+      "output": "Il faut que tu fasses attention.",
+      "source": "fais attention",
+      "expected": [
+        {
+          "rule": "subjunctive",
+          "severity": "soft"
+        }
+      ]
+    },
+    {
+      "name": "falc_wrong_language",
+      "framework": "falc",
+      "output": "The discussions went well and I am very happy with them.",
+      "source": "Les discussions se sont bien passées.",
+      "expected": [
+        {
+          "rule": "wrong_language",
+          "severity": "hard"
+        }
+      ]
+    },
+    {
+      "name": "falc_passive",
+      "framework": "falc",
+      "output": "La réunion a été annulée par le directeur.",
+      "source": "le directeur a annulé la réunion",
+      "expected": [
+        {
+          "rule": "passive_voice",
+          "severity": "soft"
+        }
+      ]
+    },
+    {
+      "name": "de_konjunktiv",
+      "framework": "leichte_sprache",
+      "output": "Ich würde gerne kommen.",
+      "source": "ich komme gern",
+      "expected": [
+        {
+          "rule": "konjunktiv",
+          "severity": "soft"
+        }
+      ]
+    },
+    {
+      "name": "de_passive",
+      "framework": "leichte_sprache",
+      "output": "Das Haus wurde gebaut.",
+      "source": "man baute das Haus",
+      "expected": [
+        {
+          "rule": "passive_voice",
+          "severity": "soft"
+        }
+      ]
+    },
+    {
+      "name": "de_genitive",
+      "framework": "leichte_sprache",
+      "output": "Das Auto des Lehrers ist neu.",
+      "source": "der Lehrer hat ein neues Auto",
+      "expected": [
+        {
+          "rule": "genitive",
+          "severity": "soft"
+        }
+      ]
+    },
+    {
+      "name": "en_passive",
+      "framework": "easy_english",
+      "output": "The meeting was cancelled by the director.",
+      "source": "the director cancelled the meeting",
+      "expected": [
+        {
+          "rule": "passive_voice",
+          "severity": "soft"
+        }
+      ]
+    },
+    {
+      "name": "en_readability",
+      "framework": "easy_english",
+      "output": "Organizational restructuring necessitates comprehensive stakeholder communication initiatives.",
+      "source": "Organizational restructuring necessitates comprehensive stakeholder communication initiatives.",
+      "expected": [
+        {
+          "rule": "readability",
+          "severity": "soft"
+        }
+      ]
+    },
+    {
+      "name": "es_subjunctive",
+      "framework": "lectura_facil",
+      "output": "Espero que vengas pronto.",
+      "source": "ven pronto",
+      "expected": [
+        {
+          "rule": "subjunctive",
+          "severity": "soft"
+        }
+      ]
+    },
+    {
+      "name": "es_passive",
+      "framework": "lectura_facil",
+      "output": "La reunión fue cancelada por la dirección.",
+      "source": "la dirección canceló la reunión",
+      "expected": [
+        {
+          "rule": "passive_voice",
+          "severity": "soft"
+        }
+      ]
+    }
+  ]
+}

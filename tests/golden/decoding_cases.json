@@ -1,0 +1,92 @@
+{
+  "cases": [
+    {
+      "fn": "reached_sentence_stop",
+      "input": "On peut attendre.",
+      "expected": true
+    },
+    {
+      "fn": "reached_sentence_stop",
+      "input": "Attendons.",
+      "expected": false
+    },
+    {
+      "fn": "reached_sentence_stop",
+      "input": "On peut attendre",
+      "expected": false
+    },
+    {
+      "fn": "reached_sentence_stop",
+      "input": "Viens voir\nOriginal:",
+      "expected": true
+    },
+    {
+      "fn": "reached_sentence_stop",
+      "input": "<think>\nLet me think.\n",
+      "expected": false
+    },
+    {
+      "fn": "reached_sentence_stop",
+      "input": "<think>court</think>\nOn peut attendre.",
+      "expected": true
+    },
+    {
+      "fn": "reached_sentence_stop",
+      "input": "Il parle avec M.",
+      "expected": false
+    },
+    {
+      "fn": "reached_sentence_stop",
+      "input": "Le prix est 3.",
+      "expected": false
+    },
+    {
+      "fn": "reached_sentence_stop",
+      "input": "Le prix est 3.50 euros.",
+      "expected": true
+    },
+    {
+      "fn": "reached_stop",
+      "style": "single_line",
+      "input": "Satz eins. Satz zwei.",
+      "expected": false
+    },
+    {
+      "fn": "reached_stop",
+      "style": "single_line",
+      "input": "Satz eins. Satz zwei.\nOriginal:",
+      "expected": true
+    },
+    {
+      "fn": "reached_stop",
+      "style": "single_line",
+      "input": "Wir haben eine Frage über unsere Vernunft. Wir haben eine Frage über unsere Vernunft.",
+      "expected": true
+    },
+    {
+      "fn": "first_line",
+      "input": "Une ligne.\nOriginal: deux",
+      "expected": "Une ligne."
+    },
+    {
+      "fn": "collapse",
+      "input": "Wir haben eine Frage über unsere Vernunft. Wir haben eine Frage über unsere Vernunft.",
+      "expected": "Wir haben eine Frage über unsere Vernunft."
+    },
+    {
+      "fn": "collapse",
+      "input": "A ist gut. B ist da. A ist gut.",
+      "expected": "A ist gut. B ist da. A ist gut."
+    },
+    {
+      "fn": "strip_think",
+      "input": "<think>\n\n</think>\n\nViens voir.",
+      "expected": "Viens voir."
+    },
+    {
+      "fn": "strip_think",
+      "input": "<think>only reasoning",
+      "expected": ""
+    }
+  ]
+}

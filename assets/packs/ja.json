@@ -1,0 +1,97 @@
+{
+  "framework": "easyToRead",
+  "language": "ja",
+  "displayName": "やさしい日本語 (Yasashii Nihongo)",
+  "languageName": "Japanese",
+  "script": "Japanese",
+  "baseLang": "ja",
+  "standardName": "やさしい日本語 (Yasashii Nihongo)",
+  "standardTier": "national_recognized",
+  "standardCitation": "庵功雄『やさしい日本語―多文化共生社会へ』(岩波新書, 2016); 弘前大学社会言語学研究室の「やさしい日本語」指針・実践",
+  "standardConfidence": 0.83,
+  "systemPrompt": "You rewrite live speech transcripts into やさしい日本語 for readers with reading difficulties, cognitive disabilities, or limited Japanese proficiency. Follow the nationally recognized Japanese easy-language tradition of やさしい日本語, especially the short-sentence, everyday-word, explicit-information approach used in public information and support communication.\n\nYour task:\n- Rewrite only in Japanese.\n- Preserve the speaker's meaning, intent, and important facts.\n- Make the text easy to read, easy to process, and unambiguous.\n- Prefer accessibility over literal wording.\n\nOutput requirements:\n- Use short sentences. Aim for 25 Japanese characters or fewer per sentence. Never let a sentence go beyond 40 characters unless impossible; split instead.\n- Keep one idea per sentence.\n- Put the main point first.\n- Use common, everyday vocabulary.\n- If a difficult word is necessary, keep it and add a very short explanation in easy Japanese.\n- Use simple polite style: です／ます.\n- Avoid honorific/business expressions such as 〜いたします, 〜させていただきます, 〜でございます.\n- Avoid passive, causative-passive, double negatives, and indirect bureaucratic phrasing.\n- Prefer active sentences that clearly say who does what.\n- Make time, place, numbers, conditions, and the actor explicit when needed.\n- Remove fillers, hesitations, repetitions, false starts, and self-corrections.\n- Break long spoken run-ons into separate sentences or short list items.\n- Prefer visually easy Japanese: avoid rare kanji and dense kanji compounds; use familiar wording and readable mixed script.\n\nFormatting:\n- Output clean rewritten text only.\n- Use short paragraphs or one item per line if the source contains steps, warnings, or multiple actions.\n- Do not add new facts.\n- Do not summarize away important instructions, risks, dates, numbers, or exceptions.\n\nWhen the source is unclear:\n- Keep only information supported by the source.\n- If something is ambiguous, choose the simplest wording that does not invent details.\n- If a clause is incomplete and unusable, omit it rather than guessing.\n\nGoal:\nProduce Japanese text that a person can read quickly and understand on first reading. Japanese in, Japanese out.",
+  "retryPromptTemplate": "Your rewrite broke these やさしい日本語 (Yasashii Nihongo) rules: {violations}. Rewrite the sentence again in Japanese, keep the meaning, and follow every rule.",
+  "thresholds": {
+    "maxWordsHard": 40,
+    "maxWordsSoft": 25
+  },
+  "lengthUnit": "characters",
+  "rulesOneliner": "Main point first; one sentence = one idea; target 25 characters, hard cap 40, then split; use basic everyday words and explain difficult terms; prefer polite です／ます, avoid keigo like 〜いたします／〜させていただきます; avoid double negatives and indirect phrases; prefer active voice over passive/causative-passive; avoid nominalized bureaucratic patterns like 〜において／〜こととなります; use simple connectives and split long clause chains; make actor, time, place, number, and conditions explicit; limit difficult kanji and prefer easy mixed script; use clear instruction forms 〜してください／〜が必要です; remove fillers, repetitions, and self-repairs; Japanese in, Japanese out.",
+  "fillers": [
+    "えー",
+    "あの",
+    "その",
+    "えっと",
+    "まあ",
+    "なんか",
+    "こう",
+    "そのー"
+  ],
+  "numberWordsRegex": "",
+  "stopwords": [
+    "の",
+    "に",
+    "は",
+    "を",
+    "が",
+    "と",
+    "で",
+    "も",
+    "へ",
+    "から",
+    "まで",
+    "より",
+    "や",
+    "か",
+    "ね",
+    "よ",
+    "な",
+    "です",
+    "ます",
+    "だ",
+    "た",
+    "て",
+    "する",
+    "した",
+    "して",
+    "ある",
+    "いる",
+    "ない",
+    "この",
+    "その"
+  ],
+  "fewShots": [
+    {
+      "source": "えー、明日の説明会なんですけど、あの、たぶん二時からで、まあ場所は市役所の三階、えっと大会議室になります。",
+      "simplified": "説明会は明日です。\n午後2時からです。\n場所は市役所3階です。\n大会議室です。"
+    },
+    {
+      "source": "あの、この紙、なんかあとで出してもらえれば大丈夫で、えっと名前と住所を書いて、できれば今日中にお願いします。",
+      "simplified": "この紙を出してください。\n名前と住所を書きます。\nできれば今日出してください。"
+    },
+    {
+      "source": "そのー電車が止まったので、まあ来るのが遅れる人もいると思うんですけど、始めます。",
+      "simplified": "電車が止まりました。\n遅れる人がいます。\nでも、始めます。"
+    },
+    {
+      "source": "本事業は、地域住民の生活環境の向上を目的として、関係機関との連携のもと、段階的に実施することとなっております。",
+      "simplified": "この事業の目的は、生活をよくすることです。\n地域の人のためです。\n関係する機関といっしょに進めます。\n少しずつ行います。"
+    },
+    {
+      "source": "ご来庁の際には、本人確認書類をご持参いただき、所定の申請書に必要事項をご記入の上、窓口にご提出ください。",
+      "simplified": "来るときは、本人確認の書類を持ってきてください。\n申請書に書いてください。\n書いたら、窓口に出してください。"
+    },
+    {
+      "source": "台風の接近に伴い、不要不急の外出は控えていただきますようお願いいたします。",
+      "simplified": "台風が近づいています。\n急ぎでない外出は、しないでください。"
+    },
+    {
+      "source": "えっと、パスワードはその、前に配った紙の右上に書いてあって、なんかアルファベット三文字と数字四つです。",
+      "simplified": "パスワードは、前に配った紙にあります。\n右上を見てください。\n英字3文字と数字4つです。"
+    },
+    {
+      "source": "申込者が未成年者である場合には、親権者による同意書の提出が必要となることがあります。",
+      "simplified": "申し込む人が18歳未満のときがあります。\nそのときは、親の同意書が必要です。"
+    }
+  ]
+}

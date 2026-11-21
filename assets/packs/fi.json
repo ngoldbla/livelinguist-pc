@@ -1,0 +1,97 @@
+{
+  "framework": "selkokieli",
+  "language": "fi",
+  "displayName": "Selkokieli (Selkokeskus)",
+  "languageName": "Finnish",
+  "script": "Latin",
+  "baseLang": "fi",
+  "standardName": "Selkokieli",
+  "standardTier": "national_recognized",
+  "standardCitation": "Selkokeskus: selkokielen ohjeet; Selkokeskus: Selkokielen mittari",
+  "standardConfidence": 0.98,
+  "systemPrompt": "You rewrite live spoken Finnish transcripts into selkokieli for readers with reading difficulties, cognitive disabilities, or limited Finnish proficiency. Follow Selkokeskus-style selkokieli principles.\n\nGoals:\n- Make the text easy to read and easy to understand.\n- Keep all important meaning.\n- Remove spoken noise.\n- Produce natural Finnish in selkokieli.\n\nOutput rules:\n1. Write only in Finnish.\n2. Use very short sentences. One main idea per sentence.\n3. Target 5-8 words per sentence. Never exceed 10 words.\n4. Use common everyday words.\n5. Prefer active voice.\n6. Prefer present tense or simple past.\n7. Avoid conditional, potential mood, and complex modal chains unless absolutely necessary for meaning.\n8. Avoid long subordinate clauses. Split into separate sentences.\n9. Avoid participles and non-finite compressed constructions. Use finite verbs instead.\n10. State the subject clearly when needed.\n11. Prefer neutral, common Finnish word order.\n12. Avoid difficult compounds and bureaucratic words. Replace or split them.\n13. If a difficult term must stay, explain it briefly in simple words.\n14. Remove fillers, hesitations, repeated words, false starts, and discourse noise.\n15. Keep names, key facts, times, places, and instructions accurate.\n16. Use simple punctuation.\n17. Do not add new information.\n\nSpeech-transcript handling:\n- Delete fillers such as \"öö\", \"niinku\", \"tota\", \"tavallaan\" when they do not add meaning.\n- Resolve broken starts into one clear sentence.\n- If the source sentence is long and tangled, split it into several short sentences.\n- If the speaker implies the actor but it is recoverable, make the actor explicit.\n\nStyle:\n- Calm, concrete, direct.\n- Accessible for easy-language readers.\n- No formal bureaucracy style.\n\nReturn only the rewritten Finnish text in selkokieli.",
+  "retryPromptTemplate": "Your rewrite broke these Selkokieli (Selkokeskus) rules: {violations}. Rewrite the sentence again in Finnish, keep the meaning, and follow every rule.",
+  "thresholds": {
+    "maxWordsHard": 10,
+    "maxWordsSoft": 8
+  },
+  "lengthUnit": "words",
+  "rulesOneliner": "Keep sentences very short with one idea each; use common everyday vocabulary; prefer active voice; use present tense or simple past; avoid conditional, potential, and complex modal chains; prefer positive direct statements; keep case structures simple and avoid dense modifier strings; split long compounds when clearer; name the subject explicitly; use neutral common word order; avoid participial and infinitive packing; explain necessary difficult terms briefly; format numbers and times simply; remove fillers and repetitions. Finnish in, Finnish out.",
+  "fillers": [
+    "öö",
+    "niinku",
+    "tota",
+    "tuota",
+    "siis",
+    "tavallaan",
+    "noh",
+    "joo"
+  ],
+  "numberWordsRegex": "\\b(?:nolla|yksi|yks[ie]n|ka[h]?den|kaksi|kolme|kolm(?:e|en)|nelj[aä]|nelj[aä]n|viisi|viiden|kuusi|kuuden|seitsem[aä]n|seitsem[aä]n|kahdeksan|kahdeksan|yhdeks[aä]n|yhdeks[aä]n|kymmenen|kymmen(?:en|es)|toista|ensimm[aä]inen|ensimm[aä]isen|toinen|toisen|kolmas|kolmannen|nelj[aä]s|nelj[aä]nnen|viides|viidennen|kuudes|kuudennen|seitsem[aä]s|seitsem[aä]nnen|kahdeksas|kahdeksannen|yhdeks[aä]s|yhdeks[aä]nnen|kymmenes|kymmenennen|puoli|puolen|puolikas|tusina|tusinan|pari|molemmat|sata|sadan|sat[aä]s|satannen|tuhat|tuhannen|tuhannes|tuhannennen|miljoona|miljoonan|miljoonas|miljoonannen|miljardi|miljardin|miljardis|miljardinnen)\\b",
+  "stopwords": [
+    "ja",
+    "on",
+    "ei",
+    "että",
+    "se",
+    "ne",
+    "minä",
+    "sinä",
+    "hän",
+    "me",
+    "te",
+    "he",
+    "tämä",
+    "tuo",
+    "joka",
+    "jos",
+    "kun",
+    "mutta",
+    "tai",
+    "myös",
+    "vain",
+    "jo",
+    "vielä",
+    "nyt",
+    "sitten",
+    "siellä",
+    "tässä",
+    "olla",
+    "voi",
+    "pitää"
+  ],
+  "fewShots": [
+    {
+      "source": "Öö me niinku mietittiin, että voitais ehkä siirtää se tapaaminen ens viikolle, koska kaikilla ei tavallaan ole tänään aikaa.",
+      "simplified": "Siirrämme tapaamisen ensi viikolle. Tänään kaikilla ei ole aikaa."
+    },
+    {
+      "source": "Tota joo, mä en ensin löytänyt sitä lomaketta ja sitten niinku soitin sinne ja ne sanoi, että se pitää lähettää huomenna.",
+      "simplified": "En löytänyt lomaketta. Soitin sinne. He sanoivat näin: lähetä lomake huomenna."
+    },
+    {
+      "source": "Siis bussi oli myöhässä ja mä odotin, odotin tosi kauan, ja sitten se tuli väärälle pysäkille tai siis en mä tiedä, ehkä mä olin väärässä paikassa.",
+      "simplified": "Bussi oli myöhässä. Odotin kauan. Ehkä olin väärällä pysäkillä."
+    },
+    {
+      "source": "Noh jos sä niinku haluat, niin me voidaan tavallaan katsoa se asia myöhemmin, ettei tarvitse nyt päättää heti.",
+      "simplified": "Voimme katsoa asian myöhemmin. Sinun ei tarvitse päättää nyt."
+    },
+    {
+      "source": "Hakemusten käsittelyä koskevan menettelyn uudistamisen tavoitteena on palveluprosessin yhdenmukaistaminen sekä päätöksenteon läpinäkyvyyden parantaminen.",
+      "simplified": "Haluamme muuttaa hakemusten käsittelyä. Tavoite on selkeä palvelu. Tavoite on myös selkeä päätös."
+    },
+    {
+      "source": "Mikäli asiakas ei toimita pyydettyä lisäselvitystä määräajassa, viranomainen voi ratkaista asian käytettävissä olevan aineiston perusteella.",
+      "simplified": "Jos asiakas ei toimita lisätietoja ajoissa, viranomainen ratkaisee asian. Päätös tehdään nykyisillä tiedoilla."
+    },
+    {
+      "source": "Koulutukseen osallistuneiden henkilöiden arvioitiin hyötyneen erityisesti vuorovaikutustaitoja vahvistavista harjoitteista.",
+      "simplified": "Koulutukseen osallistuneet ihmiset hyötyivät harjoituksista. Harjoitukset vahvistivat vuorovaikutustaitoja."
+    },
+    {
+      "source": "Sopimuksen voimaantulon edellytyksenä on, että molemmat osapuolet ovat hyväksyneet siihen tehdyt muutokset kirjallisesti.",
+      "simplified": "Sopimus alkaa vasta sitten. Molempien osapuolten pitää hyväksyä muutokset kirjallisesti."
+    }
+  ]
+}

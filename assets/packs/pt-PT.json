@@ -1,0 +1,97 @@
+{
+  "framework": "leituraFacil",
+  "language": "pt-PT",
+  "displayName": "Leitura Fácil (Inclusion Europe ETR)",
+  "languageName": "Português (Portugal)",
+  "script": "Latin",
+  "baseLang": "pt",
+  "standardName": "Leitura Fácil / Easy-to-Read",
+  "standardTier": "easy_to_read_etr",
+  "standardCitation": "Inclusion Europe. Information for All: European standards for making information easy to read and understand (2009). Also aligned with IFLA Guidelines for Easy-to-Read Materials.",
+  "standardConfidence": 0.63,
+  "systemPrompt": "You rewrite live speech transcripts into Easy-to-Read European Portuguese for people with reading difficulties, cognitive disabilities, or limited Portuguese proficiency. Follow the European Easy-to-Read / Leitura Fácil tradition aligned with Inclusion Europe 'Information for All' (2009).\n\nYour task:\n- Keep the meaning.\n- Make the text much easier to read.\n- Output only in European Portuguese.\n- Do not explain your edits.\n\nCore rules:\n1. Write one idea per sentence.\n2. Use short sentences. Aim for 10 words. Never exceed 15 words per sentence.\n3. Use common everyday words. Replace technical, legal, abstract, or bureaucratic words with familiar ones.\n4. If a difficult word is necessary, keep it and explain it in the next short sentence.\n5. Use normal subject-verb-object order.\n6. Prefer active voice.\n7. Prefer simple verb forms: present, pretérito perfeito, or near future with 'ir + infinitivo'.\n8. Avoid complex moods and formal constructions when possible, especially futuro do conjuntivo, unnecessary conditional, passive voice, and long auxiliary chains.\n9. Split long sentences. Break subordinate clauses into separate sentences.\n10. Use simple connectors: 'e', 'mas', 'porque', 'por isso', 'depois'.\n11. Prefer affirmative sentences.\n12. Keep who does the action clear. Repeat the noun instead of using a pronoun if needed.\n13. Avoid formal clitic chains and archaic forms. Prefer clearer wording natural in European Portuguese.\n14. Remove fillers, hesitations, false starts, and repeated fragments from spoken transcripts unless they add essential meaning.\n15. Preserve important facts, names, dates, times, places, instructions, and warnings.\n16. If the input contains steps or a list, format each step or item on its own line.\n17. Keep European Portuguese spelling and usage.\n\nOutput style:\n- Plain, direct, calm.\n- No bullet points unless the content is a list or steps.\n- No long paragraphs.\n- If information is uncertain in the source, do not invent missing facts.\n\nRewrite the transcript now in Easy-to-Read European Portuguese.",
+  "retryPromptTemplate": "Your rewrite broke these Leitura Fácil (Inclusion Europe ETR) rules: {violations}. Rewrite the sentence again in Português (Portugal), keep the meaning, and follow every rule.",
+  "thresholds": {
+    "maxWordsHard": 15,
+    "maxWordsSoft": 10
+  },
+  "lengthUnit": "words",
+  "rulesOneliner": "One idea per sentence; aim for 10 words and never exceed 15; use common everyday vocabulary; prefer SVO order and put the main action early; use active voice; prefer present, pretérito perfeito, or 'ir + infinitivo'; avoid futuro do conjuntivo, unnecessary conditional, and long auxiliary chains; split subordinate clauses into separate sentences; use simple connectors like 'e', 'mas', 'porque', 'por isso', 'depois'; prefer affirmative wording; avoid nominalizations and bureaucratic terms; keep subjects, pronouns, gender, and number reference explicit; prefer clear proclitic or repeated nouns over formal clitic chains; remove fillers and false starts; format lists clearly; Português in, Português out.",
+  "fillers": [
+    "hum",
+    "hã",
+    "pois",
+    "pronto",
+    "então",
+    "tipo",
+    "ou seja",
+    "quer dizer"
+  ],
+  "numberWordsRegex": "\\b(?:zero|um|uma|uns|umas|dois|duas|tr[eê]s|quatro|cinco|seis|sete|oito|nove|dez|onze|doze|treze|catorze|quatorze|quinze|dezasseis|dezesseis|dezassete|dezessete|dezoito|dezanove|dezenove|vinte|trinta|quarenta|cinquenta|sessenta|setenta|oitenta|noventa|cem|cento|duzent[oa]s?|trezent[oa]s?|quatrocent[oa]s?|quinhent[oa]s?|seiscent[oa]s?|setecent[oa]s?|oitocent[oa]s?|novecent[oa]s?|mil|milh[aã]o(?:es)?|bilh[aã]o(?:es)?|trilh[aã]o(?:es)?|quadrilh[aã]o(?:es)?|primeir[oa]s?|segund[oa]s?|terceir[oa]s?|quart[oa]s?|quint[oa]s?|sext[oa]s?|s[eé]tim[oa]s?|oitav[oa]s?|non[oa]s?|n[oó]n[oa]s?|d[eé]cim[oa]s?|und[eé]cim[oa]s?|duod[eé]cim[oa]s?|vig[eé]sim[oa]s?|trig[eé]sim[oa]s?|quadrag[eé]sim[oa]s?|quinquag[eé]sim[oa]s?|sexag[eé]sim[oa]s?|septuag[eé]sim[oa]s?|octog[eé]sim[oa]s?|nonag[eé]sim[oa]s?|cent[eé]sim[oa]s?|mil[eé]sim[oa]s?|meio|meia|metade|d[úu]zia|d[úu]zias|dezena|dezenas|vintena|vintenas|centena|centenas|milhar|milhares|par)\\b",
+  "stopwords": [
+    "o",
+    "a",
+    "os",
+    "as",
+    "um",
+    "uma",
+    "uns",
+    "umas",
+    "de",
+    "do",
+    "da",
+    "dos",
+    "das",
+    "em",
+    "no",
+    "na",
+    "nos",
+    "nas",
+    "para",
+    "por",
+    "com",
+    "sem",
+    "e",
+    "ou",
+    "mas",
+    "que",
+    "se",
+    "não",
+    "é",
+    "foi"
+  ],
+  "fewShots": [
+    {
+      "source": "Hum, então, eu acho que a reunião, pronto, vai ser ali amanhã de manhã e, ou seja, quem puder aparece.",
+      "simplified": "A reunião é amanhã de manhã.\nA reunião é ali.\nQuem puder pode aparecer."
+    },
+    {
+      "source": "Pois, o autocarro, hã, saiu mais cedo e eu depois fiquei lá à espera, quer dizer, não consegui entrar.",
+      "simplified": "O autocarro saiu mais cedo.\nEu fiquei à espera.\nEu não consegui entrar."
+    },
+    {
+      "source": "Então nós, tipo, falámos com a escola e, pronto, eles disseram que talvez, se houver vagas, a criança possa entrar para a semana.",
+      "simplified": "Nós falámos com a escola.\nA escola deu uma resposta.\nSe houver vagas, a criança entra para a semana."
+    },
+    {
+      "source": "Ou seja, para receber o apoio, a pessoa tem de entregar o pedido, hum, e depois esperar pela resposta dos serviços.",
+      "simplified": "A pessoa tem de entregar o pedido.\nDepois, a pessoa espera pela resposta.\nA resposta vem dos serviços."
+    },
+    {
+      "source": "A concretização da medida dependerá da verificação prévia dos requisitos legalmente estabelecidos.",
+      "simplified": "A medida só avança depois.\nPrimeiro, é preciso verificar os requisitos da lei."
+    },
+    {
+      "source": "Caso o utente não compareça na data agendada, considerar-se-á sem efeito o pedido anteriormente apresentado.",
+      "simplified": "Se a pessoa não vier no dia marcado, o pedido fica sem efeito."
+    },
+    {
+      "source": "A entidade procederá à reavaliação do processo, mediante a apresentação de documentação complementar considerada pertinente.",
+      "simplified": "A entidade vai rever o processo.\nPara isso, a pessoa deve entregar mais documentos.\nEsses documentos devem ser úteis para o caso."
+    },
+    {
+      "source": "Não obstante as melhorias entretanto alcançadas, subsistem constrangimentos que inviabilizam a implementação imediata da solução proposta.",
+      "simplified": "Houve melhorias.\nMas ainda há problemas.\nPor isso, a solução não pode avançar já."
+    }
+  ]
+}

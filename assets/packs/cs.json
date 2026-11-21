@@ -1,0 +1,99 @@
+{
+  "framework": "snadneCteni",
+  "language": "cs",
+  "displayName": "Snadné čtení (Inclusion Europe ETR)",
+  "languageName": "Czech",
+  "script": "Latin",
+  "baseLang": "cs",
+  "standardName": "Snadné čtení / Easy-to-Read (evropská pravidla pro snadno srozumitelné informace)",
+  "standardTier": "easy_to_read_etr",
+  "standardCitation": "Inclusion Europe. Information for All: European standards for making information easy to read and understand (2009). Applied for Czech easy-to-read practice; specific Czech national member name not verified.",
+  "standardConfidence": 0.66,
+  "systemPrompt": "You rewrite live speech transcripts into EASY-TO-READ Czech for people with reading difficulties, cognitive disabilities, or limited Czech proficiency. Follow the Easy-to-Read approach based on Inclusion Europe 'Information for All' (2009), adapted to Czech grammar.\n\nGoal:\n- Make the text very easy to read and understand.\n- Preserve the speaker's meaning.\n- Do not add new facts.\n- Output only simplified Czech.\n\nAudience:\n- Adults or young people who need easy language.\n- Readers may struggle with long sentences, abstract words, complex grammar, dense information, and messy speech transcripts.\n\nCore rules:\n1. Keep one main idea per sentence.\n2. Target 8 words per sentence or fewer. Never go above 12 words.\n3. Use common everyday Czech words.\n4. Prefer short sentences with basic Subject–Verb–Object order.\n5. Prefer active voice. Name the actor when possible.\n6. Use simple indicative forms in present, past, or future.\n7. Avoid passive constructions, long noun phrases, nominalizations, and bureaucratic wording.\n8. Split subordinate clauses into separate sentences.\n9. Remove fillers, hesitations, repetitions, and false starts.\n10. Keep references clear. Repeat the noun if a pronoun may confuse.\n11. Use digits for numbers when easier to scan.\n12. If one difficult term must stay, explain it in one short sentence.\n\nCzech-specific guidance:\n- Avoid stacked clauses with 'který', 'aby', 'protože', 'jestliže', 'ačkoli', 'zatímco'.\n- Avoid reflexive/passive official style such as 'bude provedeno', 'se uskuteční', 'je zajišťováno', unless no clear actor exists.\n- Prefer a simple verb over nouns ending in '-ní', '-tí', '-ace' when possible.\n- Avoid long genitive chains and dense prepositional phrases.\n- Use direct positive statements.\n- Keep tense and person consistent.\n\nFormatting:\n- Preserve paragraph breaks if helpful.\n- If the source has several actions, split them into separate sentences or a short list.\n- No commentary, no explanations outside the rewritten text.\n\nExamples of transformation:\n- 'Realizace změny proběhne v průběhu příštího týdne.' -> 'Změna bude příští týden.'\n- 'Žádosti, které nebudou obsahovat všechny náležitosti, nebudou zařazeny do dalšího kola posouzení.' -> 'Žádost musí být úplná. Jinak ji úřad neposoudí.'\n\nOutput language: Czech only.",
+  "retryPromptTemplate": "Your rewrite broke these Snadné čtení (Inclusion Europe ETR) rules: {violations}. Rewrite the sentence again in Czech, keep the meaning, and follow every rule.",
+  "thresholds": {
+    "maxWordsHard": 12,
+    "maxWordsSoft": 8
+  },
+  "lengthUnit": "words",
+  "rulesOneliner": "One idea per sentence; aim for <=8 words, hard cap 12; use common everyday Czech words; keep basic SVO order; prefer active voice; use simple indicative tenses; avoid passive, long noun chains, and deverbal nouns; split subordinate clauses into separate sentences; avoid double negatives and rhetorical phrasing; keep prepositional/case-heavy phrases short; use digits for easy-to-scan numbers; remove fillers and false starts; Czech in, Czech out.",
+  "fillers": [
+    "ehm",
+    "no",
+    "vlastně",
+    "jakoby",
+    "prostě",
+    "teda",
+    "jako",
+    "takže"
+  ],
+  "numberWordsRegex": "\\b(?:nula|jeden|jedna|jedno|dva|dvě|tři|čtyři|pět|šest|sedm|osm|devět|deset|jedenáct|dvanáct|třináct|čtrnáct|patnáct|šestnáct|sedmnáct|osmnáct|devatenáct|dvacet|třicet|čtyřicet|padesát|šedesát|sedmdesát|osmdesát|devadesát|sto|stě|sta|set|tisíc|milion|miliarda|bilion|první|druhý|druhá|druhé|třetí|čtvrtý|čtvrtá|čtvrté|pátý|pátá|páté|šestý|šestá|šesté|sedmý|sedmá|sedmé|osmý|osmá|osmé|devátý|devátá|deváté|desátý|desátá|desáté|jedenáctý|jedenáctá|jedenácté|dvanáctý|dvanáctá|dvanácté|třináctý|třináctá|třinácté|čtrnáctý|čtrnáctá|čtrnácté|patnáctý|patnáctá|patnácté|šestnáctý|šestnáctá|šestnácté|sedmnáctý|sedmnáctá|sedmnácté|osmnáctý|osmnáctá|osmnácté|devatenáctý|devatenáctá|devatenácté|dvacátý|dvacátá|dvacáté|třicátý|třicátá|třicáté|čtyřicátý|čtyřicátá|čtyřicáté|padesátý|padesátá|padesáté|šedesátý|šedesátá|šedesáté|sedmdesátý|sedmdesátá|sedmdesáté|osmdesátý|osmdesátá|osmdesáté|devadesátý|devadesátá|devadesáté|stý|stá|sté|tisící|miliontý|miliardtý|půl|polovina|tucet|kopa)\\b",
+  "stopwords": [
+    "a",
+    "i",
+    "ale",
+    "nebo",
+    "že",
+    "se",
+    "si",
+    "je",
+    "jsou",
+    "byl",
+    "byla",
+    "bylo",
+    "bude",
+    "by",
+    "v",
+    "ve",
+    "na",
+    "do",
+    "z",
+    "ze",
+    "k",
+    "ke",
+    "pro",
+    "po",
+    "od",
+    "u",
+    "o",
+    "to",
+    "ten",
+    "ta",
+    "to",
+    "který"
+  ],
+  "fewShots": [
+    {
+      "source": "No takže ehm zítra vlastně asi nepřijdu, protože mám, jako, doktora a potom ještě musím na úřad.",
+      "simplified": "Zítra nepřijdu. Mám doktora. Potom jdu na úřad."
+    },
+    {
+      "source": "My jsme to, teda, chtěli udělat dneska, ale prostě nebyl čas a pak se to celé nějak posunulo.",
+      "simplified": "Chtěli jsme to udělat dnes. Nebyl čas. Uděláme to později."
+    },
+    {
+      "source": "Ehm paní říkala, že když doneseme ty papíry do pátku, tak by to snad mohlo být hotové příští týden.",
+      "simplified": "Paní to řekla jasně. Přineste papíry do pátku. Pak to může být hotové příští týden."
+    },
+    {
+      "source": "Já jsem tam jako přišel pozdě, no, a oni už vlastně zavírali, takže jsem to nestihl.",
+      "simplified": "Přišel jsem pozdě. Už zavírali. Nestihl jsem to."
+    },
+    {
+      "source": "Žadatelé, jejichž podání nebude obsahovat všechny požadované náležitosti, budou z důvodu nesplnění formálních podmínek vyloučeni z dalšího hodnocení.",
+      "simplified": "Žádost musí být úplná. Musí mít vše potřebné. Jinak ji úřad vyřadí."
+    },
+    {
+      "source": "V případě přetrvávajících technických obtíží doporučujeme bezodkladně kontaktovat příslušného administrátora systému.",
+      "simplified": "Když problém trvá, kontaktujte správce systému. Udělejte to hned."
+    },
+    {
+      "source": "Smlouva nabývá účinnosti dnem následujícím po dni jejího uveřejnění v registru smluv, nestanoví-li právní předpis jinak.",
+      "simplified": "Smlouva začne platit po zveřejnění. Platí od dalšího dne. Zákon může určit jinak."
+    },
+    {
+      "source": "Účastník je povinen bez zbytečného odkladu oznámit poskytovateli veškeré skutečnosti rozhodné pro vznik, změnu nebo zánik nároku.",
+      "simplified": "Musíte poskytovateli říct důležité změny. Řekněte je co nejdříve. Jde o vznik, změnu nebo konec nároku."
+    }
+  ]
+}

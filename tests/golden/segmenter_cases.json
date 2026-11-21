@@ -1,0 +1,109 @@
+{
+  "cases": [
+    {
+      "name": "punctuation_stable",
+      "steps": [
+        {
+          "kind": "ingest",
+          "text": "Bonjour tout",
+          "time": 1.1
+        },
+        {
+          "kind": "ingest",
+          "text": "Bonjour tout le monde.",
+          "time": 2.2
+        },
+        {
+          "kind": "ingest",
+          "text": "Bonjour tout le monde. Comment",
+          "time": 3.3
+        }
+      ],
+      "expected_finalized": [
+        "Bonjour tout le monde."
+      ],
+      "expected_partial": "Comment"
+    },
+    {
+      "name": "pause",
+      "steps": [
+        {
+          "kind": "ingest",
+          "text": "Ça va bien",
+          "time": 1.1
+        },
+        {
+          "kind": "tick",
+          "silence": 0.6,
+          "time": 2.2
+        }
+      ],
+      "expected_finalized": [
+        "Ça va bien"
+      ],
+      "expected_partial": null
+    },
+    {
+      "name": "multiple_stable",
+      "steps": [
+        {
+          "kind": "ingest",
+          "text": "Oui. Bien sûr.",
+          "time": 1.1
+        },
+        {
+          "kind": "ingest",
+          "text": "Oui. Bien sûr. Et toi",
+          "time": 2.2
+        }
+      ],
+      "expected_finalized": [
+        "Oui.",
+        "Bien sûr."
+      ],
+      "expected_partial": "Et toi"
+    },
+    {
+      "name": "flush",
+      "steps": [
+        {
+          "kind": "ingest",
+          "text": "dernier mot",
+          "time": 1.1
+        },
+        {
+          "kind": "flush",
+          "time": 2.0
+        }
+      ],
+      "expected_finalized": [
+        "dernier mot"
+      ],
+      "expected_partial": null
+    },
+    {
+      "name": "max_duration",
+      "steps": [
+        {
+          "kind": "ingest",
+          "text": "il parle sans arrêt",
+          "time": 1.1
+        },
+        {
+          "kind": "ingest",
+          "text": "il parle sans arrêt et continue encore",
+          "time": 6.0
+        },
+        {
+          "kind": "ingest",
+          "text": "il parle sans arrêt et continue encore et toujours plus",
+          "time": 13.5
+        }
+      ],
+      "expected_finalized": [
+        "il parle sans arrêt et continue encore et toujours plus"
+      ],
+      "expected_partial": null
+    }
+  ]
+}

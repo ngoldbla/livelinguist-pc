@@ -1,0 +1,97 @@
+{
+  "framework": "lattlast",
+  "language": "sv",
+  "displayName": "Lättläst (MTM)",
+  "languageName": "Swedish (Sweden)",
+  "script": "Latin",
+  "baseLang": "sv",
+  "standardName": "Lättläst",
+  "standardTier": "national_recognized",
+  "standardCitation": "Myndigheten för tillgängliga medier (MTM): riktlinjer och vägledning om lättläst svenska; MTM förvaltar och utvecklar lättläst i Sverige (historically including Centrum för lättläst).",
+  "standardConfidence": 0.92,
+  "systemPrompt": "You rewrite live speech transcripts into easy-to-read Swedish for people with reading difficulties, cognitive disabilities, or limited Swedish proficiency. Use Swedish lättläst in the sense used by MTM.\n\nGoal:\n- Make the text easy to read, easy to follow, and concrete.\n- Preserve the speaker's essential meaning.\n- Remove speech noise.\n\nOutput rules:\n1. Output only Swedish.\n2. Use very short sentences. One idea per sentence.\n3. Aim for 4-8 words per sentence. Do not exceed 12 words unless necessary.\n4. Use common everyday words. Replace difficult, abstract, or official language with simpler words.\n5. Prefer active voice. Name who does the action.\n6. Prefer simple present or simple past. Avoid complex verb chains.\n7. Avoid long subordinate clauses. Split into new sentences.\n8. Avoid nominalizations. Use verbs instead of abstract nouns when possible.\n9. Keep Swedish word order simple and direct.\n10. Keep pronouns clear. Repeat the noun if needed.\n11. Remove fillers, hesitations, false starts, and repeated words.\n12. If a detail is unclear in the transcript, do not invent it. Keep only what is reasonably clear.\n13. Keep names, dates, times, places, and numbers accurate. Use digits for numbers.\n14. If a technical word is necessary, keep it and add a very short explanation in simple Swedish.\n\nFormatting:\n- Plain text only.\n- Short paragraphs are allowed.\n- No bullet points unless the source is clearly a list.\n- No commentary about your edits.\n\nTransformation examples:\n- Spoken, messy input becomes short clear sentences.\n- Formal bureaucratic Swedish becomes concrete everyday Swedish.\n\nAlways produce easy-to-read Swedish in MTM-style lättläst. Swedish in, Swedish out.",
+  "retryPromptTemplate": "Your rewrite broke these Lättläst (MTM) rules: {violations}. Rewrite the sentence again in Swedish (Sweden), keep the meaning, and follow every rule.",
+  "thresholds": {
+    "maxWordsHard": 12,
+    "maxWordsSoft": 8
+  },
+  "lengthUnit": "words",
+  "rulesOneliner": "One idea per sentence; prefer 4-8 words, hard cap 12; use common everyday Swedish; keep simple subject-verb-object order; use active voice and avoid passive -s forms; prefer present or simple past and avoid complex tense chains; replace nominalizations with verbs; avoid long subordinate clauses and split with new sentences; name the actor clearly; keep negation simple with 'inte' near the verb; use digits for dates, times, prices, and quantities; simplify or explain long compounds; repeat nouns when pronouns are unclear; remove fillers and repetitions. Swedish in, Swedish out.",
+  "fillers": [
+    "eh",
+    "öh",
+    "alltså",
+    "liksom",
+    "typ",
+    "va",
+    "ja",
+    "mm"
+  ],
+  "numberWordsRegex": "\\b(?:noll|en|ett|två|tre|fyra|fem|sex|sju|åtta|nio|tio|elva|tolv|tretton|fjorton|femton|sexton|sjutton|arton|nitton|tjugo|trettio|fyrtio|femtio|sextio|sjuttio|åttio|nittio|hundra|hundrade|tusen|tusende|miljon|miljard|första|andre|andra|tredje|fjärde|femte|sexte|sjunde|åttonde|nionde|tionde|elfte|tolfte|trettonde|fjortonde|femtonde|sextonde|sjuttonde|artonde|nittonde|tjugonde|trettionde|fyrtionde|femtionde|sextionde|sjuttionde|åttionde|nittionde|halv|halva|hälft|dussin|par)\\b",
+  "stopwords": [
+    "och",
+    "att",
+    "det",
+    "är",
+    "i",
+    "en",
+    "som",
+    "på",
+    "för",
+    "med",
+    "till",
+    "den",
+    "de",
+    "av",
+    "om",
+    "inte",
+    "har",
+    "jag",
+    "vi",
+    "du",
+    "han",
+    "hon",
+    "man",
+    "sig",
+    "ett",
+    "var",
+    "men",
+    "så",
+    "kan",
+    "ska"
+  ],
+  "fewShots": [
+    {
+      "source": "eh jag tänkte väl att vi kanske, alltså, går till vårdcentralen i morgon om det funkar",
+      "simplified": "Vi går till vårdcentralen i morgon."
+    },
+    {
+      "source": "öh bussen var sen och jag kom liksom inte fram i tid till mötet",
+      "simplified": "Bussen var sen.\nJag kom för sent till mötet."
+    },
+    {
+      "source": "ja alltså det här brevet, det säger typ att ansökan inte har kunnat handläggas på grund av kompletteringsbehov",
+      "simplified": "Brevet säger detta.\nDu måste skicka mer information.\nSedan kan de pröva ansökan."
+    },
+    {
+      "source": "mm jag skulle bara säga att Anna, hon kanske inte kommer idag för hennes barn är sjukt",
+      "simplified": "Anna kommer kanske inte i dag.\nHennes barn är sjukt."
+    },
+    {
+      "source": "Kommunen avser att, efter genomförd översyn, successivt implementera nya riktlinjer för resursfördelning inom verksamheten.",
+      "simplified": "Kommunen ska införa nya regler.\nReglerna gäller hur pengar fördelas.\nDet sker steg för steg."
+    },
+    {
+      "source": "Beslutet om avveckling av tjänsten fattades i syfte att möjliggöra en mer kostnadseffektiv administration.",
+      "simplified": "De tog bort tjänsten.\nDet skulle spara pengar.\nDet skulle också förenkla administrationen."
+    },
+    {
+      "source": "Patienter som uppvisar kvarstående symtom efter avslutad behandling rekommenderas att snarast möjligt kontakta ansvarig mottagning för vidare bedömning.",
+      "simplified": "Har du symtom efter behandlingen?\nKontakta mottagningen snabbt.\nMottagningen gör en ny bedömning."
+    },
+    {
+      "source": "I händelse av förseningar som väsentligen påverkar leveransförmågan kommer berörda kunder att underrättas utan oskäligt dröjsmål.",
+      "simplified": "Om leveransen blir sen,\nfår kunderna information snabbt."
+    }
+  ]
+}

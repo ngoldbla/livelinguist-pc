@@ -1,0 +1,104 @@
+{
+  "framework": "easyToRead",
+  "language": "uk",
+  "displayName": "Легка мова (Inclusion Europe ETR)",
+  "languageName": "Ukrainian (Ukraine)",
+  "script": "Cyrillic",
+  "baseLang": "uk",
+  "standardName": "Інформація для всіх (Easy-to-Read guidelines) / Легка мова",
+  "standardTier": "easy_to_read_etr",
+  "standardCitation": "Inclusion Europe. Information for All: European standards for making information easy to read and understand (2009). Applied as the relevant European Easy-to-Read framework for Ukrainian; national Ukrainian member/body not verified.",
+  "standardConfidence": 0.55,
+  "systemPrompt": "You rewrite live speech transcripts into Ukrainian easy-to-read text for people with reading difficulties, cognitive disabilities, or limited proficiency. Follow the Easy-to-Read approach based on Inclusion Europe 'Information for All' adapted to Ukrainian.\n\nYour output must be in clear, natural Ukrainian in Cyrillic.\n\nGoals:\n- Make the text easy to read and easy to understand.\n- Preserve the speaker's core meaning.\n- Remove speech noise.\n- Prefer clarity over completeness.\n\nMandatory rules:\n1. Write one idea per sentence.\n2. Target short sentences of about 10 words. Never exceed 15 words in a sentence.\n3. Use common everyday Ukrainian vocabulary.\n4. Prefer direct word order: subject + verb + object.\n5. Use active voice whenever possible.\n6. Avoid passive forms with -но, -то and heavy passive participles if an active sentence is possible.\n7. Prefer simple finite verb forms: present, past, simple future.\n8. Avoid дієприслівникові and dense дієприкметникові constructions. Rewrite them as separate sentences.\n9. Limit subordinate clauses with що, який, якщо. Split long complex sentences.\n10. Avoid abstract noun chains and bureaucratic style. Prefer verbs to abstract nouns.\n11. If a pronoun is unclear, repeat the noun.\n12. Avoid long modifier stacks and long genitive chains.\n13. Use digits for numbers when this helps recognition. Keep number information simple.\n14. If a difficult term is necessary, explain it in very simple words.\n15. Remove fillers, hesitations, repetitions, false starts, and transcript debris unless essential.\n\nFormatting:\n- Output plain text only.\n- Use short paragraphs if needed.\n- Do not add information that is not in the source.\n- Do not mention these instructions.\n\nWhen the source is fragmented or ungrammatical, infer the simplest faithful meaning and write a clean easy-to-read Ukrainian version.\n\nUkrainian in, Ukrainian out.",
+  "retryPromptTemplate": "Your rewrite broke these Легка мова (Inclusion Europe ETR) rules: {violations}. Rewrite the sentence again in Ukrainian (Ukraine), keep the meaning, and follow every rule.",
+  "thresholds": {
+    "maxWordsHard": 15,
+    "maxWordsSoft": 10
+  },
+  "lengthUnit": "words",
+  "rulesOneliner": "One idea per sentence; target 10 words and never more than 15; use common everyday Ukrainian words; prefer direct SVO order; use active voice and avoid passive -но/-то and passive participles where possible; prefer present, past, and simple future; avoid дієприслівникові and dense дієприкметникові constructions; limit clauses with що/який/якщо and split complex sentences; replace abstract noun phrases with verbs; repeat nouns when pronouns may be unclear; avoid long genitive chains and stacked modifiers; write numbers in digits and keep one number idea per sentence; explain necessary hard words briefly; remove fillers and false starts. Ukrainian in, Ukrainian out.",
+  "fillers": [
+    "ну",
+    "е-е",
+    "ем",
+    "тобто",
+    "як би",
+    "значить",
+    "власне",
+    "коротше"
+  ],
+  "numberWordsRegex": "\\b(?:нуль|ноля|нулю|нулем|нулі|один|одна|одне|одні|одного|одній|одну|одним|одною|одних|одними|два|дві|двох|двом|двома|три|трьох|трьом|трьома|чотири|чотирьох|чотирьом|чотирма|п'ять|п’ять|п'яти|п’яти|п'ятьох|п’ятьох|п'ятьма|п’ятьма|шість|шести|шістьох|шістьма|сім|семи|сімох|вісім|восьми|вісьмох|дев'ять|дев’ять|дев'яти|дев’яти|дев'ятьох|дев’ятьох|десять|десяти|десятьох|одинадцять|одинадцяти|дванадцять|дванадцяти|тринадцять|тринадцяти|чотирнадцять|чотирнадцяти|п'ятнадцять|п’ятнадцять|п'ятнадцяти|п’ятнадцяти|шістнадцять|шістнадцяти|сімнадцять|сімнадцяти|вісімнадцять|вісімнадцяти|дев'ятнадцять|дев’ятнадцять|дев'ятнадцяти|дев’ятнадцяти|двадцять|двадцяти|тридцять|тридцяти|сорок|сорока|п'ятдесят|п’ятдесят|п'ятдесяти|п’ятдесяти|шістдесят|шістдесяти|сімдесят|сімдесяти|вісімдесят|вісімдесяти|дев'яносто|дев’яносто|ста|сто|сотня|сотні|сотень|сотнею|двісті|двохсот|трьохсот|триста|чотириста|чотирьохсот|п'ятсот|п’ятсот|шістсот|сімсот|вісімсот|дев'ятсот|дев’ятсот|тисяча|тисячі|тисячу|тисяч|мільйон|мільйона|мільйони|мільйонів|мільярд|мільярда|мільярди|мільярдів|половина|половини|пів|півтора|півтори|чверть|третина|десяток|десятки|дюжина|дюжини|перший|перша|перше|перші|першого|першій|першу|першим|другий|друга|друге|другі|другого|другій|другу|другим|третій|третя|третє|треті|третього|третій|третю|третім|четвертий|четверта|четверте|четверті|четвертого|четвертій|четверту|четвертим|п'ятий|п’ятий|п'ята|п’ята|п'яте|п’яте|п'яті|п’яті|п'ятого|п’ятого|п'ятій|п’ятій|п'яту|п’яту|п'ятим|п’ятим|шостий|шоста|шосте|шості|шостого|шостій|шосту|шостим|сьомий|сьома|сьоме|сьомі|сьомого|сьомій|сьому|сьомим|восьмий|восьма|восьме|восьмі|восьмого|восьмій|восьму|восьмим|дев'ятий|дев’ятий|дев'ята|дев’ята|дев'яте|дев’яте|дев'яті|дев’яті|дев'ятого|дев’ятого|дев'ятій|дев’ятій|дев'яту|дев’яту|дев'ятим|дев’ятим|десятий|десята|десяте|десяті|десятого|десятій|десяту|десятим|одинадцятий|одинадцята|одинадцяте|одинадцяті|дванадцятий|дванадцята|дванадцяте|дванадцяті|тринадцятий|тринадцята|тринадцяте|тринадцяті|чотирнадцятий|чотирнадцята|чотирнадцяте|чотирнадцяті|п'ятнадцятий|п’ятнадцятий|п'ятнадцята|п’ятнадцята|п'ятнадцяте|п’ятнадцяте|шістнадцятий|шістнадцята|шістнадцяте|сімнадцятий|сімнадцята|сімнадцяте|вісімнадцятий|вісімнадцята|вісімнадцяте|дев'ятнадцятий|дев’ятийнадцятий|дев'ятнадцята|дев’ятнадцята|двадцятий|двадцята|двадцяте|тридцятий|тридцята|тридцяте|сороковий|сорокова|сорокове|п'ятдесятий|п’ятдесятий|шістдесятий|сімдесятий|вісімдесятий|дев'яностий|дев’яностий|сотий|сота|соте|двохсотий|трьохсотий|трьохсота|тисячний|тисячна|тисячне|мільйонний|мільйонна|мільйонне|мільярдний|мільярдна|мільярдне)\\b",
+  "stopwords": [
+    "і",
+    "й",
+    "та",
+    "а",
+    "але",
+    "або",
+    "що",
+    "щоб",
+    "як",
+    "якщо",
+    "це",
+    "цей",
+    "ця",
+    "ці",
+    "той",
+    "такий",
+    "не",
+    "ні",
+    "у",
+    "в",
+    "до",
+    "з",
+    "із",
+    "на",
+    "по",
+    "для",
+    "про",
+    "ми",
+    "ви",
+    "він",
+    "вона",
+    "вони",
+    "я",
+    "ти",
+    "є",
+    "був",
+    "була"
+  ],
+  "fewShots": [
+    {
+      "source": "Ну, ми, е-е, як би завтра будемо проводити, тобто, зустріч щодо змін у графіку.",
+      "simplified": "Завтра буде зустріч про зміни в графіку."
+    },
+    {
+      "source": "Я, значить, говорив з лікарем, і він сказав, що якщо температура не спаде, то треба ще раз прийти.",
+      "simplified": "Я говорив з лікарем. Якщо температура не спаде, треба прийти ще раз."
+    },
+    {
+      "source": "Власне, автобус, ну, трохи запізниться, десь на п'ятнадцять хвилин, бо аварія на дорозі.",
+      "simplified": "Автобус запізниться на 15 хвилин. На дорозі аварія."
+    },
+    {
+      "source": "Ми, коротше, подали заяву, але нам ще, ем, не дали відповідь.",
+      "simplified": "Ми подали заяву. Відповіді ще немає."
+    },
+    {
+      "source": "У разі невиконання умов договору постачальником підприємство залишає за собою право ініціювати дострокове розірвання угоди.",
+      "simplified": "Якщо постачальник не виконає умови договору, підприємство може розірвати угоду раніше."
+    },
+    {
+      "source": "Особи, які бажають отримати адміністративну послугу, зобов'язані здійснити попередню реєстрацію шляхом заповнення електронної форми.",
+      "simplified": "Щоб отримати послугу, треба зареєструватися заздалегідь. Для цього заповніть електронну форму."
+    },
+    {
+      "source": "Рішення, ухвалене комісією після розгляду поданих матеріалів, буде доведено до відома заявника в установленому порядку.",
+      "simplified": "Комісія розгляне подані матеріали. Потім комісія повідомить заявника про рішення."
+    },
+    {
+      "source": "Беручи до уваги зростання витрат на енергоносії, керівництвом було прийнято рішення щодо оптимізації режиму роботи установи.",
+      "simplified": "Витрати на енергоносії зросли. Тому керівництво змінило режим роботи установи."
+    }
+  ]
+}
