@@ -26,16 +26,27 @@ bun  tests/bridge/event-delivery.mjs 600 docs/qa/artifacts/event-delivery-bun.js
 | Node v22.23.1 | 1000 | 1000 | 0 | 0.54 ms | 1.04 ms | 1.05 ms |
 | Bun 1.4.5 | 1000 | 1000 | 0 | 1.48 ms | 1.97 ms | 2.77 ms |
 
-## 10-minute soak
+## 10-minute soak (PASS)
 
-Status: **in progress** (600 s x 100 events/s = 60,000 events per runtime). The
-JSON results are written to `docs/qa/artifacts/event-delivery-{node,bun}.json`.
-The first attempt crashed with SIGBUS because the addon file was rebuilt while
-the processes had it mapped; the rerun uses a stable copy via
-`LL_BRIDGE_ADDON`.
+600 s x 100 events/s = 60,000 events per runtime, run concurrently against a
+stable addon copy (`LL_BRIDGE_ADDON`), JSON in
+`docs/qa/artifacts/event-delivery-{node,bun}.json`.
+
+| Runtime | Expected | Received | Dropped | p50 | p99 | max |
+|---|---|---|---|---|---|---|
+| Node v22.23.1 | 60,000 | 60,000 | 0 | 0.59 ms | 1.07 ms | 2.70 ms |
+| Bun 1.4.5 | 60,000 | 60,000 | 0 | 1.45 ms | 1.94 ms | 4.40 ms |
+
+Both p99 values are ~25-45x below the 50 ms threshold, with zero drops. No
+frame-pump fallback is needed for the TSFN path in the mock/demo workload; the
+GPUIX frame/tick pump remains documented as the fallback if a future runtime
+stalls.
+
+Note: the first attempt crashed with SIGBUS because the addon file was rebuilt
+while the processes had it mapped. The rerun uses a stable copy; that is now
+documented in `tests/bridge/README.md`.
 
 ## Conclusion
 
-The 10-second smoke is far below the 50 ms p99 threshold with zero drops on both
-runtimes. The 10-minute numbers are the release-gate evidence and replace this
-paragraph when complete. `deliveryTest` is dev-only and content-free.
+The 10-minute release-gate evidence passes under both runtimes. `deliveryTest`
+is dev-only and emits content-free `log` envelopes.

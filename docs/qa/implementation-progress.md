@@ -30,7 +30,7 @@ This file is the live status board. Each merged PR is a validated stage.
 | ID | Result | Date | Evidence |
 |---|---|---|---|
 | S-0 | PASS — all pins resolve | 2026-11-21 | `docs/qa/2026-11-21-version-verification.md` |
-| S-2 | Linux dev harness: 100 ev/s x 10 min, p50/p99 recorded; 10-min rerun in progress | 2026-11-21 | `docs/qa/2026-11-21-event-delivery.md` |
+| S-2 | PASS — 100 ev/s x 10 min under Node and Bun; 60k/60k, p99 1.07/1.94 ms, 0 drops | 2026-11-21 | `docs/qa/2026-11-21-event-delivery.md` |
 | S-3A | Partial: mock/eval path + 29-row matrix; real export/WER blocked on model access | 2026-11-21 | `docs/qa/2026-11-21-asr-coverage.md` |
 | S-4 | Partial: calibration/ladder/queue implemented; mock measured; real GPU pending | 2026-11-21 | `docs/qa/2026-11-21-llm-backends.md` |
 | S-5L | Partial: file/demo/silence + ring/VAD/chunker tested; device capture pending | 2026-11-21 | `docs/qa/2026-11-21-audio.md` |
