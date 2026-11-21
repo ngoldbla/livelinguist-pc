@@ -7,13 +7,13 @@ This file is the live status board. Each merged PR is a validated stage.
 
 | Stage | Scope | PR | Status | Evidence |
 |---|---|---|---|---|
-| 1 | S-0 pins, ADRs, AGENTS, skills, Rust workspace skeleton, CI | #2 | in progress | `docs/qa/2026-11-21-version-verification.md` |
-| 2 | `ll-core` deterministic parity + 29 packs + golden inventory | #3 | in progress | `tests/golden/INVENTORY.md`, 149 tests |
-| 3 | `ll-protocol`, `ll-config`, `ll-audio`, `ll-asr`, `ll-llm`, `ll-models`, `ll-pipeline`, `ll-eval` | #4 | in progress | `docs/qa/2026-11-21-pipeline.md` |
-| 4 | `ll-bridge` napi + envelope + event-delivery harness + X11 window policy + UI screens | #5 | merged | `docs/qa/2026-11-21-{ui,overlay,event-delivery}.md` |
+| 1 | S-0 pins, ADRs, AGENTS, skills, Rust workspace skeleton, CI | #2 | merged | `docs/qa/2026-11-21-version-verification.md` |
+| 2 | `ll-core` deterministic parity + 29 packs + golden inventory | #3 | merged | `tests/golden/INVENTORY.md`, 149 tests |
+| 3 | `ll-protocol`, `ll-config`, `ll-audio`, `ll-asr`, `ll-llm`, `ll-models`, `ll-pipeline`, `ll-eval` | #4 | merged | `docs/qa/2026-11-21-pipeline.md` |
+| 4 | `ll-bridge` napi + envelope + event-delivery harness + X11 window policy + UI screens | #5 | merged | `docs/qa/2026-11-21-ui.md`, `2026-11-21-overlay.md`, `2026-11-21-event-delivery.md` |
 | 5 | UI shell: Aurora, onboarding, console, store, i18n | #5 | merged | `docs/screenshots/m2/` |
 | 6 | UI overlay, transcript, settings, summary, licenses, dev panel | #5 | merged | `docs/screenshots/m2/` |
-| 7 | Packaging, CI release workflow, final QA | #6 | merged | `docs/qa/2026-11-21-{packaging,final-qa}.md` |
+| 7 | Packaging, CI release workflow, final QA | #6 | merged | `docs/qa/2026-11-21-packaging.md`, `2026-11-21-final-qa.md` |
 
 ## Milestone mapping
 
@@ -50,6 +50,14 @@ decision entry and an ADR update.
 3. #4 Stage 3 — protocol, config, audio, engines, pipeline, eval
 4. #5 Stage 4 — napi bridge, native window policy, GPUIX UI, screenshots
 5. #6 Stage 5 — final QA, packaging, refreshed UI portfolio
+
+## Next run
+
+Resume on the Windows 11 side with
+`docs/plans/2026-11-21-windows-resume-plan.md` and the copy-paste
+`docs/plans/2026-11-21-windows-resume-prompt.md`. The first gate is W-0:
+record the hardware, build/test natively, and open a baseline PR before changing
+policy or capture code.
 
 ## Known environment limitations
 

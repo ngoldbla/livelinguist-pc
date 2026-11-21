@@ -17,6 +17,8 @@ easy-language register for that language — **FALC**, **Leichte Sprache**,
 - **Decisions:** [`docs/decisions/`](docs/decisions/) (canonical ADRs)
 - **Progress board:** [`docs/qa/implementation-progress.md`](docs/qa/implementation-progress.md)
 - **Agent rules:** [`AGENTS.md`](AGENTS.md)
+- **Windows resume:** [`docs/plans/2026-11-21-windows-resume-plan.md`](docs/plans/2026-11-21-windows-resume-plan.md)
+  and the copy-paste [`resume prompt`](docs/plans/2026-11-21-windows-resume-prompt.md)
 
 ## Scope (v1)
 
