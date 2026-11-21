@@ -1,0 +1,18 @@
+# Build output
+/build/
+/target/
+/dist/
+*.o
+*.a
+*.so
+*.dylib
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Local models and eval artifacts
+/models/
+/eval/
