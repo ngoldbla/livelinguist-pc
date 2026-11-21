@@ -13,7 +13,7 @@ This file is the live status board. Each merged PR is a validated stage.
 | 4 | `ll-bridge` napi + envelope + event-delivery harness + X11 window policy + UI screens | #5 | merged | `docs/qa/2026-11-21-{ui,overlay,event-delivery}.md` |
 | 5 | UI shell: Aurora, onboarding, console, store, i18n | #5 | merged | `docs/screenshots/m2/` |
 | 6 | UI overlay, transcript, settings, summary, licenses, dev panel | #5 | merged | `docs/screenshots/m2/` |
-| 7 | Packaging, CI release workflow, final QA | #6 | in progress | `docs/qa/2026-11-21-{packaging,final-qa}.md` |
+| 7 | Packaging, CI release workflow, final QA | #6 | merged | `docs/qa/2026-11-21-{packaging,final-qa}.md` |
 
 ## Milestone mapping
 
@@ -21,7 +21,7 @@ This file is the live status board. Each merged PR is a validated stage.
 |---|---|---|
 | M0 | Windows-first feasibility spikes | S-0 done; S-2/S-5L/S-6L and UI spikes done on Linux dev; S-3A/S-4/S-5W/S-6W need Windows hardware/models |
 | M1 | Headless parity | `ll-core` + `ll-eval` implemented and tested on Linux; Windows CI job defined |
-| M2 | Windows desktop app | UI implemented; Linux dev captures; Windows acceptance pending hardware |
+| M2 | Windows desktop app | UI implemented and captured on Linux dev; Windows acceptance pending hardware |
 | M3 | Windows packaging/release | NSIS + portable ZIP config + release workflow; clean-install test pending Windows hardware |
 | M4 | macOS | out of scope (separate decision) |
 
@@ -42,6 +42,14 @@ This file is the live status board. Each merged PR is a validated stage.
 
 All 16 ADRs are present in `docs/decisions/`. New structural changes need a
 decision entry and an ADR update.
+
+## Merged PR sequence
+
+1. #2 Stage 1 — S-0 pins, ADRs, agent rules, workspace skeleton
+2. #3 Stage 2 — deterministic core parity + 29 packs + golden fixtures
+3. #4 Stage 3 — protocol, config, audio, engines, pipeline, eval
+4. #5 Stage 4 — napi bridge, native window policy, GPUIX UI, screenshots
+5. #6 Stage 5 — final QA, packaging, refreshed UI portfolio
 
 ## Known environment limitations
 
