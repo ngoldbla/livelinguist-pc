@@ -38,7 +38,7 @@ pub fn session_csv(
             String::new()
         };
         let tier2 = if include_latency_columns {
-            milliseconds(&stamps, Stage::AudioEnd, Stage::SimplifiedVisible)
+            milliseconds(&stamps, Stage::SimplifyStart, Stage::SimplifiedVisible)
         } else {
             String::new()
         };
@@ -414,7 +414,7 @@ mod tests {
         metrics.record(&id, Stage::SimplifiedVisible, 12.75);
         let fields = &data_rows(&session_csv(&store, Some(&metrics), true))[0];
         assert_eq!(fields[9], "1234");
-        assert_eq!(fields[10], "2750");
+        assert_eq!(fields[10], "1250");
         assert_eq!(fields[11], "1250");
     }
 
