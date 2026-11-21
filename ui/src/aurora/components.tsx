@@ -566,9 +566,8 @@ export function Slider({
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
       <div style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
         <text style={{ ...textStyle(13, colors.text, 600), flexGrow: 1 }}>{label}</text>
-        <text style={textStyle(12, colors.muted)}>
-          {value}
-          {unit ?? ""}
+        <text style={{ ...textStyle(12, colors.muted), whiteSpace: "nowrap" }}>
+          {`${value}${unit ?? ""}`}
         </text>
       </div>
       <div
