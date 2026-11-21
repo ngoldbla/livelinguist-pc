@@ -29,6 +29,14 @@ anything structural. The plan is the integrated index; ADRs in
     with code. Keep diagnostics and exports content-free.
 12. **Pin and review third-party skills.** No floating `npx skills add` in CI.
 
+## Resuming on Windows
+
+The current baseline is the Linux-validated handoff. The next run happens on
+native Windows 11; start with
+`docs/plans/2026-11-21-windows-resume-plan.md` and the copy-paste
+`docs/plans/2026-11-21-windows-resume-prompt.md`. Do not repeat merged Linux
+work; close the Windows gates (W-0..W-6) one PR at a time.
+
 ## Repository map
 
 ```
