@@ -1,5 +1,6 @@
 import type { StyleDesc } from "@gpuix/react";
 import type { ReactNode } from "react";
+import { directionFor } from "../i18n/direction";
 import type { Segment } from "../store/sessionStore";
 import { card, colors, focusRing, glass, gradient, textStyle } from "./theme";
 
@@ -439,14 +440,16 @@ export function CaptionRow({
   locale,
   compact = false,
   captionSize,
+  showTier1 = true,
 }: {
   segment: Segment;
   onSimplify?: (id: string) => void;
   locale: string;
   compact?: boolean;
   captionSize?: number;
+  showTier1?: boolean;
 }) {
-  const rtl = locale === "ar";
+  const rtl = directionFor(locale) === "rtl";
   const statusTone =
     segment.status === "clean" ? "mint" : segment.status === "flagged" ? "amber" : "neutral";
   return (
@@ -498,15 +501,17 @@ export function CaptionRow({
           tone={statusTone}
         />
       </div>
-      <text
-        style={{
-          ...textStyle(compact ? 13 : 15, colors.text, 500),
-          lineHeight: compact ? 18 : 22,
-          textAlign: rtl ? "right" : "left",
-        }}
-      >
-        {segment.text}
-      </text>
+      {showTier1 ? (
+        <text
+          style={{
+            ...textStyle(compact ? 13 : 15, colors.text, 500),
+            lineHeight: compact ? 18 : 22,
+            textAlign: rtl ? "right" : "left",
+          }}
+        >
+          {segment.text}
+        </text>
+      ) : null}
       {segment.simplified ? (
         <text
           style={{

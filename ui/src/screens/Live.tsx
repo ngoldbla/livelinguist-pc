@@ -18,6 +18,7 @@ export function LiveScreen({
   state,
   locale,
   captionSize,
+  showTier1,
   onSimplify,
   onStop,
   onPause,
@@ -31,6 +32,7 @@ export function LiveScreen({
   state: SessionView;
   locale: string;
   captionSize: number;
+  showTier1: boolean;
   onSimplify: (id: string) => void;
   onStop: () => void;
   onPause: () => void;
@@ -203,6 +205,8 @@ export function LiveScreen({
                   onSimplify={onSimplify}
                   locale={locale}
                   compact={compact}
+                  captionSize={captionSize}
+                  showTier1={showTier1}
                 />
               ))}
             </div>

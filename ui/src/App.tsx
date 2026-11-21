@@ -80,7 +80,9 @@ export function App() {
   const started = useRef(false);
   const renderer = useGpuixRequired();
 
-  const locale = state.uiLocale || languageByCode(state.language).uiCode;
+  const locale =
+    process.env.LL_UI_LOCALE ??
+    (settings.followLearning ? languageByCode(state.language).uiCode : state.uiLocale || "en");
 
   useEffect(() => {
     try {
@@ -347,6 +349,7 @@ export function App() {
         state={state}
         locale={locale}
         captionSize={settings.captionSize}
+        showTier1={settings.showTier1}
         onSimplify={(id) => void onSimplify(id)}
         onStop={() => void stopWith(ensureTransport())}
         onPause={() => void ensureTransport().pause()}
@@ -370,7 +373,7 @@ export function App() {
         backgroundColor: colors.bg,
       }}
     >
-      <AuroraField active={screen === "live"} />
+      <AuroraField active={screen === "live" && !settings.reducedEffects} />
       <div style={{ position: "relative", width: "100%", height: "100%" }}>{screenContent}</div>
       {toast ? (
         <div
