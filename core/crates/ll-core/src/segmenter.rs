@@ -66,11 +66,29 @@ impl Segmenter {
         audio_time: f64,
         detected_language: Option<&str>,
     ) -> SegmenterOutput {
-        self.previous_tokens = std::mem::take(&mut self.tokens);
-        self.tokens = hypothesis
+        let mut new_tokens = hypothesis
             .split_whitespace()
             .map(ToOwned::to_owned)
-            .collect();
+            .collect::<Vec<_>>();
+        // A hypothesis that differs from the committed prefix is a new
+        // utterance: the ASR contract resets its rolling text after a
+        // finalization. Re-emitting the same committed hypothesis is not a new
+        // utterance and must not duplicate the segment.
+        let is_new_utterance = new_tokens != self.tokens
+            && (new_tokens.len() < self.finalized_token_count
+                || new_tokens
+                    .iter()
+                    .take(self.finalized_token_count)
+                    .zip(self.tokens.iter())
+                    .any(|(new, old)| new != old));
+        if is_new_utterance && !new_tokens.is_empty() {
+            self.finalized_token_count = 0;
+            self.segment_start_time = None;
+            self.current_language = None;
+            self.previous_tokens.clear();
+        }
+        self.previous_tokens = std::mem::take(&mut self.tokens);
+        self.tokens = std::mem::take(&mut new_tokens);
         if let Some(language) = detected_language {
             self.current_language = Some(language.to_string());
         }

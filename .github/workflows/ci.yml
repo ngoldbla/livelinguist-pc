@@ -30,6 +30,24 @@ jobs:
         run: cargo clippy --workspace --all-targets -- -D warnings
       - name: Test
         run: cargo test --workspace
+      - name: Eval mock scenario
+        if: matrix.os == 'ubuntu-latest'
+        run: cargo run -p ll-eval -- --scenario mock --language fr-FR --out target/eval-mock
+      - name: Eval WAV replay
+        if: matrix.os == 'ubuntu-latest'
+        run: cargo run -p ll-eval -- --scenario mock --language fr-FR --wav tests/fixtures/sample.wav --out target/eval-wav
+      - name: Eval simplify-only text
+        if: matrix.os == 'ubuntu-latest'
+        run: cargo run -p ll-eval -- --scenario simplify-only --language fr-FR --text "Il faudrait que tu viennes nous rendre visite dès que l'occasion se présentera." --out target/eval-text
+      - name: Upload eval artifacts
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-mock
+          path: |
+            target/eval-mock
+            target/eval-wav
+            target/eval-text
 
   docs:
     name: Docs and pins

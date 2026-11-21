@@ -105,7 +105,7 @@ impl LatencyMetrics {
     pub fn report(&self) -> LatencyReport {
         let inner = self.lock();
         let tier1 = deltas(&inner, Stage::AudioEnd, Stage::PartialVisible);
-        let tier2 = deltas(&inner, Stage::AudioEnd, Stage::SimplifiedVisible);
+        let tier2 = deltas(&inner, Stage::SimplifyStart, Stage::SimplifiedVisible);
         LatencyReport {
             tier1_p50: percentile(&tier1, 50.0),
             tier1_p95: percentile(&tier1, 95.0),
@@ -189,14 +189,14 @@ mod tests {
     }
 
     #[test]
-    fn tier2_latency_is_sentence_end_to_glass() {
+    fn tier2_latency_is_simplify_start_to_glass() {
         let metrics = LatencyMetrics::new();
         metrics.record("a", Stage::AudioEnd, 10.0);
         metrics.record("a", Stage::Finalized, 10.4);
         metrics.record("a", Stage::SimplifyStart, 10.5);
         metrics.record("a", Stage::SimplifiedVisible, 12.1);
         let report = metrics.report();
-        assert!((report.tier2_p50.unwrap() - 2.1).abs() < 0.0001);
+        assert!((report.tier2_p50.unwrap() - 1.6).abs() < 0.0001);
     }
 
     #[test]

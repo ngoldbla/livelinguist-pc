@@ -9,6 +9,8 @@ repository.workspace = true
 authors.workspace = true
 
 [dependencies]
+thiserror = { workspace = true }
+ll-protocol = { workspace = true }
 ll-core = { workspace = true }
 ll-config = { workspace = true }
 ll-audio = { workspace = true }

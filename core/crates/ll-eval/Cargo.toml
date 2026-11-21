@@ -9,10 +9,15 @@ repository.workspace = true
 authors.workspace = true
 
 [dependencies]
+thiserror = { workspace = true }
 ll-core = { workspace = true }
 ll-config = { workspace = true }
 ll-audio = { workspace = true }
 ll-asr = { workspace = true }
 ll-llm = { workspace = true }
 ll-pipeline = { workspace = true }
+serde = { workspace = true }
 serde_json = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }

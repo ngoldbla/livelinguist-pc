@@ -11,3 +11,9 @@ authors.workspace = true
 [dependencies]
 ll-core = { workspace = true }
 ringbuf = { workspace = true }
+thiserror = { workspace = true }
+cpal = { workspace = true, optional = true }
+
+[features]
+default = []
+capture = ["dep:cpal"]
