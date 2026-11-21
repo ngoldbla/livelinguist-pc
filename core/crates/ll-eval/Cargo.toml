@@ -1,0 +1,18 @@
+[package]
+name = "ll-eval"
+description = "Headless replay/eval CLI with content-free CSV/JSON diagnostics."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+ll-core = { workspace = true }
+ll-config = { workspace = true }
+ll-audio = { workspace = true }
+ll-asr = { workspace = true }
+ll-llm = { workspace = true }
+ll-pipeline = { workspace = true }
+serde_json = { workspace = true }

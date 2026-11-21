@@ -1,40 +1,39 @@
 # Decisions
 
-One file per decision, numbered, short. Each records the context, the options
+One file per decision, numbered. Each records the context, the options
 considered, the choice, and what measurement would overturn it. Spike results go
-in the same file as a dated addendum.
+in the same file as a dated addendum. The master plan
+(`docs/plans/2026-11-21-live-linguist-pc-master-plan.md`) is the integrated index;
+these ADRs are canonical for the rationale and evidence of their decision.
 
-Status labels: `proposed`, `accepted`, `superseded`.
+Status labels: `proposed`, `accepted`, `baseline` (working default), `superseded`.
 
-| # | Decision | Status |
-|---|---|---|
-| 0001 | Primary ASR runtime (sherpa-onnx vs ONNX Runtime vs whisper.cpp) | open — M0 spike 1 |
-| 0002 | Simplifier runtime and GGUF conversion path | open — M0 spike 2 |
-| 0003 | System-audio capture model (monitor source vs virtual sink) | open — M0 spike 3 |
-| 0004 | Overlay strategy on Wayland | open — M0 spike 4 |
-| 0005 | Core implementation language | open |
-| 0006 | Live budget per hardware tier | open — follows 0001–0002 |
+| # | Decision | Plan IDs | Status |
+|---|---|---|---|
+| [0001](0001.md) | ASR runtime: sherpa-onnx | D-012 | accepted |
+| [0002](0002.md) | Simplifier runtime: llama.cpp GGUF | D-011 | accepted |
+| [0003](0003.md) | System-audio capture | D-007, §13 | baseline |
+| [0004](0004.md) | Overlay strategy: Win32 primary | D-007 | accepted |
+| [0005](0005.md) | Core implementation language: Rust | D-002 | accepted |
+| [0006](0006.md) | Live budget per hardware tier | D-051 | baseline |
+| [0007](0007.md) | UI framework: GPUIX + React | D-001 | baseline |
+| [0008](0008.md) | Window modes and overlay policy | D-004/008/009/010 | baseline |
+| [0009](0009.md) | Inference backends and calibration | D-013/014/015/040 | baseline |
+| [0010](0010.md) | Developer settings and strict scenarios | D-018 | accepted |
+| [0011](0011.md) | Per-locale ASR coverage | D-031 | accepted |
+| [0012](0012.md) | Event delivery and envelope | D-033/038 | baseline |
+| [0013](0013.md) | Platform order: Windows-first | D-023/053 | accepted |
+| [0014](0014.md) | GUI floor: D3D11/12 / Vulkan | D-024 | accepted |
+| [0015](0015.md) | Windows-only v1 scope | D-053 | accepted |
+| [0016](0016.md) | Reference hardware: Dylan PC | D-051 | accepted |
 
-Template:
+## Superseded
 
-```md
-# 000N — Title
+None yet.
 
-Status: proposed | accepted | superseded by 000M
-Date: YYYY-MM-DD
+## Adding or changing a decision
 
-## Context
-What forced a decision, and what the reference implementation assumed.
-
-## Options
-Each with the evidence for and against.
-
-## Decision
-The choice, stated so it can be checked.
-
-## Consequences
-What this makes easy, hard, or impossible. What would overturn it.
-
-## Evidence
-Commands, hardware, measured numbers, artifact paths.
-```
+1. Copy the template in the master plan §22.5.
+2. Give it the next number and the D-ID it records.
+3. Move the old entry to `Superseded` with a link.
+4. Update the decision log in the master plan.

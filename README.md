@@ -1,114 +1,98 @@
 # Live Linguist PC
 
-Native, on-device **same-language simplification captions** for x86-64 PCs running
-Linux — and, where the stack allows, Windows.
+Native, on-device **same-language simplification captions** for Windows 11 x64,
+built with a Rust core and a GPUIX + React UI. Linux x86-64 is the
+development/evaluation environment. No translation, no cloud, no audio leaving
+the machine.
 
 This repo is the PC spin-out of [live-linguist](https://github.com/ngoldbla/live-linguist)
 (the macOS/iOS app). The product conceit is unchanged: a learner hears authentic
 native-speed speech and reads the same content rendered into the official
 easy-language register for that language — **FALC**, **Leichte Sprache**,
-**Easy English**, **Lectura Fácil** — with no translation, no cloud, and no audio
-leaving the machine.
+**Easy English**, **Lectura Fácil**, and 25 further locales.
 
-The Mac app achieves that with Apple-only building blocks. This repo exists to
-answer, with evidence, what the same conceit becomes on x86 Linux: which models
-run, how fast, on whose hardware, and which parts of the Mac architecture are
-portable data versus Apple-specific machinery.
+## Source of truth
 
-## Scope
+- **Master plan:** [`docs/plans/2026-11-21-live-linguist-pc-master-plan.md`](docs/plans/2026-11-21-live-linguist-pc-master-plan.md)
+- **Decisions:** [`docs/decisions/`](docs/decisions/) (canonical ADRs)
+- **Progress board:** [`docs/qa/implementation-progress.md`](docs/qa/implementation-progress.md)
+- **Agent rules:** [`AGENTS.md`](AGENTS.md)
+
+## Scope (v1)
 
 **In scope**
 
-- x86-64 Linux desktop (Wayland and X11), CPU-only and vendor-GPU paths
-  (Vulkan first; CUDA/ROCm where present).
-- The full caption pipeline: audio → VAD → chunking → ASR → segmentation →
-  simplification → deterministic validation → two-tier captions.
-- On-demand ("click a sentence") simplification as the shipping default, matching
-  the Mac app's current UX.
-- The reusable parts of the Mac implementation: framework/register packs,
-  validator rules, reversion detection, latency instrumentation, export formats.
-- Windows as a near-term secondary target, provided it doesn't force a parallel
-  stack. See [docs/stack-options.md](docs/stack-options.md).
+- **Windows 11 x64 (23H2+)** — the only product/release target.
+- Linux x86-64 — development and evaluation only; no Linux package in v1.
+- Full pipeline: audio -> VAD -> ASR -> endpointing -> segmentation ->
+  simplification -> deterministic validation -> two-tier captions.
+- On-demand simplification default; live mode behind advanced settings.
+- 29 locales with explicit ASR coverage; simplify-only mode where streaming ASR
+  is not usable.
+- Console, caption overlay, transcript, settings, summary, onboarding, licenses.
+- Export: Markdown, plain text, diagnostics CSV.
+- Developer settings for CPU/GPU/mock/fault scenarios.
+- Packaging: NSIS installer + portable ZIP for Windows 11 x64.
 
-**Out of scope (for now)**
+**Out of scope**
 
-- ARM Linux, mobile, and any cloud or hosted inference. The privacy contract is
-  the product: nothing leaves the device except a model download.
-- Translation. Ever. Same-language register rewriting only.
-- macOS/iOS: those remain in the reference repo.
+- Translation, cloud inference, mobile, ARM Linux, Windows ARM64, browser.
+- Linux packaging/support in this plan (future track).
+- Windows 10, speaker diarization, per-app capture (stretch), macOS/iOS shipping.
 
-## What carries over, and what cannot
+## Repository layout
 
-| Concern | Mac reference | PC reality |
-|---|---|---|
-| Register rules, prompts, thresholds | `FrameworkPacks/*.json`, `ValidatorSuite` | **Portable data.** The crown jewel; language-agnostic and test-first. |
-| Caption pipeline shape | `CaptionPipeline` (1.1 s chunks, 10 s commit window, tier 1 verbatim + tier 2 simplified) | Portable design; needs a C++/Rust (or Swift-on-Linux) reimplementation. |
-| ASR | CoreML **ANE** encoder + MLX RNN-T decoder | **Must be replaced.** No ANE, no MLX on x86. Candidates: sherpa-onnx, ONNX Runtime, whisper.cpp. |
-| Simplifier | Qwen3 0.6B/1.7B 4-bit via MLX-Swift | **Must be replaced.** Candidates: llama.cpp GGUF, ONNX Runtime GenAI. |
-| Audio capture | AVFoundation mic + CoreAudio process taps | **Different model.** PipeWire/PulseAudio monitor sources or a virtual sink; user setup required. |
-| Overlay | NSPanel joining all Spaces | **Harder.** Wayland has no cross-compositor always-on-top; X11 is straightforward. |
-| Model delivery | Hugging Face, pinned revisions, SHA-256 | Reusable design; format differs (GGUF/ONNX), same pinning discipline. |
+```
+core/crates/    Rust workspace: ll-core, ll-config, ll-audio, ll-asr, ll-llm,
+                ll-models, ll-pipeline, ll-protocol, ll-bridge, ll-eval, ll-window
+ui/             GPUIX 0.11 + React 19.2 + TypeScript
+assets/packs/   29 canonical FrameworkPacks (ported verbatim from the Mac repo)
+assets/locales/ 29 UI locale JSON files
+tests/          golden inventory, fixtures, bridge harness
+packaging/      NSIS + portable ZIP
+docs/           plan, ADRs, QA evidence
+```
 
-## Budgets
+## Build
 
-The Mac's numbers are the reference, not the promise. On x86 the live budget must
-be set by hardware class and measured, not assumed:
+Linux dev prerequisites: Rust 1.98 (pinned by `rust-toolchain.toml`), Bun 1.4.5,
+Node 22+, Vulkan (lavapipe works for headless CI; a real GPU is better for the
+window), and X11 for the dev overlay.
 
-| Tier | Target hardware | Suggested live p50 | Suggested on-demand |
-|---|---|---|---|
-| A | Discrete GPU (Vulkan/CUDA/ROCm) | ≤ 1.5 s | ≤ 8 s |
-| B | Modern CPU, AVX2, 8+ cores | ≤ 2.5 s | ≤ 8 s |
-| C | Older/low-power CPU | on-demand only | ≤ 8 s |
+```bash
+cargo test --workspace
+cargo run -p ll-eval -- --scenario mock --out /tmp/ll-eval-out
 
-These are hypotheses to falsify in M0, not commitments.
+cd ui
+bun install --frozen-lockfile
+bun run start
+```
+
+On a Wayland desktop, force X11 for overlay development:
+
+```bash
+env -u WAYLAND_DISPLAY bun ui/src/app.tsx
+```
 
 ## Status
 
-**Pre-M0.** No implementation yet. This repo starts as the decision record and
-spike plan: pick the ASR and LLM stacks, prove word-to-glass latency on real x86
-hardware, prove audio capture and overlay on both Wayland and X11, then port the
-deterministic layer.
-
-## Milestones
-
-- **M0 — feasibility spikes**
-  1. ASR: streaming word-to-glass p50/p95 on tier A/B/C hardware (sherpa-onnx vs
-     whisper.cpp vs ONNX Runtime), 30-min cache-stability soak.
-  2. Simplifier: llama.cpp Qwen3 0.6B/1.7B (and the fine-tuned EasyLanguage GGUFs)
-     p50/p95 per segment, CPU vs Vulkan.
-  3. Audio capture: PipeWire monitor/virtual sink for mic + system audio on
-     GNOME and KDE, Wayland and X11.
-  4. Overlay: always-on-top caption window on Wayland (wlr-layer-shell where
-     available, KWin rules otherwise) and X11.
-- **M1 — headless parity**: CLI that replays audio files through the real
-  pipeline and reproduces the Mac eval artifact shape (per-segment CSV, latency
-  JSON, summary).
-- **M2 — desktop app**: setup, download, captioner, on-demand simplification,
-  transcript sidebar/summary, export.
-- **M3 — packaging & release**: Flatpak/AppImage/deb, model manager with pinned
-  checksums, licenses screen.
+Implementation follows the master plan in validated stages. The core, bridge,
+and UI are exercised on Linux dev; Windows hardware acceptance (Win32 overlay,
+WASAPI loopback, D3D, packaging) is recorded when run on the Windows side.
+See the progress board for the current stage and evidence.
 
 ## Design invariants (inherited)
 
-- Never block or drop a segment: a late or unsimplified caption beats no caption.
+- Never translate; same-language rewriting only.
+- Never drop a finalized segment: a late or unsimplified caption beats no caption.
 - Validators are confidence signals, not gates; fall back to verbatim with "≡".
-- Degradation order: batch → step down model size → skip simplification
-  (verbatim) → never drop audio.
+- Degradation order: batch -> step down model size -> skip simplification
+  (verbatim) -> never drop audio.
 - Latency instrumentation is built in, and exports are content-free.
 - Pinned model revisions and checksums; no silent model drift.
+- No audio or transcript leaves the device.
 
 ## Reference
 
 - Mac/iOS implementation: <https://github.com/ngoldbla/live-linguist>
-- Product spec: [`PRD.md`](https://github.com/ngoldbla/live-linguist/blob/main/PRD.md)
-- Platform PRDs that anticipate this port: `docs/prd/PRD-windows.md`,
-  `docs/prd/PRD-android.md` in the reference repo (both assume llama.cpp/GGUF and
-  sherpa-onnx, which is a useful prior).
-- Live-budget measurements that set expectations:
-  `docs/qa/2026-06-10-live-budget-levers.md`.
-
-## Decisions
-
-Architecture decisions and spike results live in
-[`docs/decisions/`](docs/decisions/). Start with
-[docs/stack-options.md](docs/stack-options.md) for the candidate matrix.
+- Product spec: `PRD.md` in the reference repo
