@@ -1,0 +1,97 @@
+{
+  "framework": "easyToRead",
+  "language": "ar",
+  "displayName": "Easy-to-Read Arabic (Inclusion Europe / Information for All)",
+  "languageName": "Arabic (Modern Standard Arabic)",
+  "script": "Arabic",
+  "baseLang": "ar",
+  "standardName": "إرشادات المعلومات السهلة للقراءة والفهم (Easy-to-Read) — Inclusion Europe / Information for All",
+  "standardTier": "easy_to_read_etr",
+  "standardCitation": "Inclusion Europe. Information for All: European standards for making information easy to read and understand (2009).",
+  "standardConfidence": 0.82,
+  "systemPrompt": "You rewrite live speech transcripts into Easy-to-Read Arabic for people with reading difficulties, cognitive disabilities, or limited Arabic proficiency. Follow the Easy-to-Read approach from Inclusion Europe, Information for All (2009), adapted to Modern Standard Arabic. Output only simplified Arabic in Arabic script.\n\nGoals:\n- Make the text easy to read and easy to understand.\n- Preserve the speaker's meaning, facts, dates, numbers, and decisions.\n- Remove spoken noise, hesitation, repetition, self-correction, and false starts.\n- Prefer clarity over elegance.\n\nRules:\n1. One idea per sentence.\n2. Keep most sentences at 8 words or fewer. Hard limit: 12 words.\n3. Use common Modern Standard Arabic vocabulary. Replace rare, literary, formal, bureaucratic, or abstract words with everyday words.\n4. Prefer direct sentences. Use active voice whenever possible.\n5. Prefer simple present and simple past. Avoid complex conditionals and long chains of subordinate clauses.\n6. Split long sentences. Split lists into separate short sentences or bullet-like lines if formatting allows.\n7. Avoid dense nominalizations. Use clear verbs.\n8. Avoid ambiguous pronouns. Repeat the noun if needed.\n9. Keep connectors simple: و، ثم، لكن، لأن، لذلك.\n10. If a technical term is necessary, keep it and explain it in a few simple words.\n11. Keep numbers exact. Use digits when helpful.\n12. Do not add new information. Do not summarize away essential content.\n13. Keep respectful, neutral tone. Do not use dialect unless the input itself requires a fixed name or quote.\n14. Use simple RTL punctuation and frequent full stops.\n\nTranscript handling:\n- Delete fillers, hesitations, repeated words, and discourse markers unless they change meaning.\n- Resolve broken spoken syntax into grammatical short sentences.\n- If the transcript has one long run-on sentence, turn it into several short sentences.\n- If a sentence contains two or more actions, separate them by time or cause.\n- If a reference is unclear, use the nearest explicit noun from context rather than a pronoun.\n\nOutput format:\n- Output only the rewritten Arabic text.\n- No commentary, no notes, no labels.\n- Short paragraphs are allowed.\n- Arabic in, Arabic out.",
+  "retryPromptTemplate": "Your rewrite broke these Easy-to-Read Arabic (Inclusion Europe / Information for All) rules: {violations}. Rewrite the sentence again in Arabic (Modern Standard Arabic), keep the meaning, and follow every rule.",
+  "thresholds": {
+    "maxWordsHard": 12,
+    "maxWordsSoft": 8
+  },
+  "lengthUnit": "words",
+  "rulesOneliner": "One idea per sentence; keep most sentences to 8 words, never above 12; use common Modern Standard Arabic words; prefer direct word order; use active voice; prefer simple present and past; split relative clauses; prefer clear verbs over dense nominal style; avoid double negatives and legalistic connectors; use explicit simple connectors; write numbers clearly; repeat nouns when pronouns may confuse; explain necessary technical terms briefly; keep RTL punctuation simple and frequent. Arabic in, Arabic out.",
+  "fillers": [
+    "يعني",
+    "أمم",
+    "آه",
+    "إيه",
+    "طيب",
+    "بصراحة",
+    "خليني أقول",
+    "في الحقيقة"
+  ],
+  "numberWordsRegex": "\\b(?:صفر|واحد(?:ة)?|اثنان|اثنين|اثنتان|اثنتين|اثنا|اثني|أحد|إحدى|أول|أولى|ثان(?:ي|ية)|اثنا\\s+عشر|اثني\\s+عشر|اثنتا\\s+عشرة|اثنتي\\s+عشرة|ثالث(?:ة)?|رابع(?:ة)?|خامس(?:ة)?|سادس(?:ة)?|سابع(?:ة)?|ثامن(?:ة)?|تاسع(?:ة)?|عاشر(?:ة)?|نصف|ثلث|ربع|خمس(?:ة)?|سدس|سبع(?:ة)?|ثمن|تسع(?:ة)?|عشر(?:ة)?|أحد\\s+عشر|إحدى\\s+عشرة|اثنا\\s+عشر|اثني\\s+عشر|اثنتا\\s+عشرة|اثنتي\\s+عشرة|اثنا\\s+عشر(?:ون)?|عشرون|ثلاث(?:ة)?|ثلاث(?:ون)?|ثلاثين|أربع(?:ة)?|أربع(?:ون)?|أربعين|خمس(?:ون)?|خمسين|ست(?:ة)?|ست(?:ون)?|ستين|سبع(?:ون)?|سبعين|ثمان(?:ية)?|ثماني(?:ة)?|ثمان(?:ون)?|ثمانين|تسع(?:ون)?|تسعين|مائة|مئة|مائ(?:تان|تين)|ثلاثمائة|ثلاثمئة|أربعمائة|أربعمئة|خمسمائة|خمسمئة|ستمائة|ستمئة|سبعمائة|سبعمئة|ثمانمائة|ثمانمئة|تسعمائة|تسعمئة|ألف|ألفان|ألفين|آلاف|مليون|مليونان|مليونين|ملايين|مليار|ملياران|مليارين|مليارات|دستة|زوج)\\b",
+  "stopwords": [
+    "في",
+    "من",
+    "إلى",
+    "على",
+    "عن",
+    "مع",
+    "هذا",
+    "هذه",
+    "ذلك",
+    "تلك",
+    "هو",
+    "هي",
+    "هم",
+    "أنا",
+    "نحن",
+    "أنت",
+    "أن",
+    "إن",
+    "لا",
+    "ما",
+    "لم",
+    "لن",
+    "كان",
+    "كانت",
+    "يكون",
+    "وقد",
+    "ثم",
+    "أو",
+    "لكن",
+    "لأن"
+  ],
+  "fewShots": [
+    {
+      "source": "يعني أمم الاجتماع كان طويل جدا وبصراحة ما فهمنا متى يبدأ التطبيق ومتى الناس لازم تراجع المكتب",
+      "simplified": "كان الاجتماع طويلا. يبدأ التطبيق قريبا. على الناس مراجعة المكتب. الموعد لم يحدد بعد."
+    },
+    {
+      "source": "آه طيب هو القرار الجديد إيه يعني يخص السكن ولا يخص الدعم لأن الكلام دخل في بعضه",
+      "simplified": "القرار الجديد يخص السكن. لا يخص الدعم."
+    },
+    {
+      "source": "خليني أقول إن الطالب إذا لم يقم باستكمال الإجراءات المطلوبة ضمن المدة المحددة فإنه قد يتعرض لإلغاء طلبه بصورة نهائية",
+      "simplified": "يجب على الطالب إكمال الإجراءات في الوقت المحدد. إذا تأخر، يلغى الطلب."
+    },
+    {
+      "source": "في الحقيقة الوزارة أفادت بأنه سيتم الشروع في تنفيذ المرحلة الثانية عقب الانتهاء من الأعمال التمهيدية ذات الصلة",
+      "simplified": "قالت الوزارة: تبدأ المرحلة الثانية بعد الأعمال التحضيرية."
+    },
+    {
+      "source": "إيه أنا رحت أمس وبعدين قالوا لي يعني يمكن الأسبوع الجاي أو بعده على حسب النظام الجديد",
+      "simplified": "ذهبت أمس. قالوا لي: المراجعة الأسبوع القادم. وقد تتأخر إلى الأسبوع الذي بعده."
+    },
+    {
+      "source": "ونظرا لعدم استيفاء المستندات الثبوتية المنصوص عليها في اللائحة التنفيذية فقد تعذر البت في الطلب في الوقت الراهن",
+      "simplified": "الطلب ينقصه بعض المستندات. لذلك لا يمكن البت فيه الآن."
+    },
+    {
+      "source": "أمم هو الجهاز هذا يعني إذا توقف لا تحاول تفتحه بنفسك لأن الموضوع فيه كهرباء وممكن يصير خطر",
+      "simplified": "إذا توقف الجهاز، لا تفتحه بنفسك. فيه كهرباء. هذا خطر."
+    },
+    {
+      "source": "تقرر تأجيل الجلسة إلى موعد لاحق لتمكين الأطراف المعنية من استكمال أوجه التنسيق وتقديم الملاحظات اللازمة",
+      "simplified": "تأجلت الجلسة. تحتاج الجهات المعنية إلى وقت. ستكمل التنسيق. وستقدم ملاحظاتها."
+    }
+  ]
+}

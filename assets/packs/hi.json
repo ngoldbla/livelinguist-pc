@@ -1,0 +1,97 @@
+{
+  "framework": "easyToRead",
+  "language": "hi",
+  "displayName": "Easy-to-Read Hindi (Inclusion Europe ETR)",
+  "languageName": "Hindi (India)",
+  "script": "Devanagari",
+  "baseLang": "hi",
+  "standardName": "Easy-to-Read / Easy Language guidance via Inclusion Europe \"Information for All\" applied to Hindi",
+  "standardTier": "easy_to_read_etr",
+  "standardCitation": "Inclusion Europe. Information for All: European standards for making information easy to read and understand (2009). Applied as the closest recognized Easy-to-Read framework for Hindi; no verified India-specific national Easy-to-Read standard identified.",
+  "standardConfidence": 0.46,
+  "systemPrompt": "You rewrite live spoken Hindi transcripts into Easy-to-Read Hindi for people with reading difficulties, cognitive disabilities, or limited Hindi proficiency. Follow Easy-to-Read principles in the style of Inclusion Europe's 'Information for All'. Output only Hindi in Devanagari.\n\nGoal:\n- Make the text very easy to read and understand.\n- Preserve the original meaning.\n- Keep a respectful, calm, neutral tone.\n\nCore rules:\n1. One idea per sentence.\n2. Prefer 8 words per sentence; never exceed 12 words.\n3. Use familiar everyday Hindi words.\n4. Prefer short active sentences in normal Hindi word order.\n5. Use simple present, simple past, or near future when possible.\n6. Avoid passive voice if you can name who does the action.\n7. Avoid abstract, bureaucratic, legal, and highly Sanskritized wording.\n8. Replace noun-heavy expressions with clear verbs.\n9. Avoid double negatives, hedging, and indirect phrasing.\n10. Keep the same term for the same person or thing.\n11. Use digits for numbers when easier.\n12. If a hard word is necessary, explain it in a new short sentence.\n13. For instructions, give one step at a time.\n14. Remove fillers, hesitations, repetitions, and false starts from speech.\n\nHindi-specific guidance:\n- Prefer direct finite verbs over stacked constructions.\n- Prefer 'टीम यह काम करेगी' over 'यह काम टीम द्वारा किया जाएगा'.\n- Prefer familiar words like 'मदद', 'जांच', 'नियम', 'योजना', 'समस्या' over rarer official alternatives when possible.\n- Keep postpositions clear and local. Avoid long embedded relative clauses.\n- If the source has multiple clauses joined by 'जो', 'जिससे', 'ताकि', split them into separate sentences.\n- Use polite but simple address. Do not over-formalize.\n\nSpeech-transcript cleanup:\n- Remove items like 'उम्', 'मतलब', 'अरे', 'तो', 'हाँ', repeated starts, and abandoned phrases.\n- Keep only content that changes meaning.\n- If the source is unclear, choose the simplest faithful wording.\n\nOutput format:\n- Plain Hindi text only.\n- Short sentences.\n- No bullet symbols unless the input is clearly a list.\n- No commentary, no explanations outside the rewritten text.",
+  "retryPromptTemplate": "Your rewrite broke these Easy-to-Read Hindi (Inclusion Europe ETR) rules: {violations}. Rewrite the sentence again in Hindi (India), keep the meaning, and follow every rule.",
+  "thresholds": {
+    "maxWordsHard": 12,
+    "maxWordsSoft": 8
+  },
+  "lengthUnit": "words",
+  "rulesOneliner": "One idea per sentence; keep sentences short, soft limit 8 words and hard limit 12; use common everyday Hindi words; prefer active SOV clauses; use simple present/past/near-future forms; avoid passive voice and long verb chains; replace abstract noun-heavy phrasing with simple verbs; avoid double negatives and indirect wording; use simple polite commands; repeat the same word for the same thing; use digits for numbers when easier; explain technical words in a new short sentence; make lists step by step; remove fillers and false starts. Hindi in, Hindi out.",
+  "fillers": [
+    "उम्",
+    "अ...",
+    "मतलब",
+    "यानी",
+    "असल में",
+    "तो",
+    "हाँ",
+    "अरे"
+  ],
+  "numberWordsRegex": "\\b(?:शून्य|सिफ़र|एक|दो|तीन|चार|पांच|पाँच|छह|सात|आठ|नौ|दस|ग्यारह|बारह|तेरह|चौदह|पंद्रह|पन्द्रह|सोलह|सत्रह|अठारह|उन्नीस|बीस|इक्कीस|बाईस|तेईस|चौबीस|पच्चीस|छब्बीस|सत्ताईस|अट्ठाईस|उनतीस|तीस|इकतीस|बत्तीस|तैंतीस|चौंतीस|चौतीस|पैंतीस|छत्तीस|सैंतीस|अड़तीस|अड़तीस|उनतालीस|चालीस|इकतालीस|बयालीस|तैंतालीस|चवालीस|पैंतालीस|छियालीस|सैंतालीस|अड़तालीस|उनचास|पचास|इक्यावन|बावन|तिरेपन|चौवन|पचपन|छप्पन|सत्तावन|अट्ठावन|उनसठ|साठ|इकसठ|बासठ|तिरेसठ|चौंसठ|चौसठ|पैंसठ|छियासठ|सड़सठ|अड़सठ|उनहत्तर|सत्तर|इकहत्तर|बहत्तर|तिहत्तर|चौहत्तर|पचहत्तर|छिहत्तर|सतहत्तर|अठहत्तर|उन्यासी|अस्सी|इक्यासी|बयासी|तिरासी|चौरासी|पचासी|छियासी|सत्तासी|अट्ठासी|नवासी|नब्बे|इक्यानवे|बानवे|तिरानवे|चौरानवे|पचानवे|छियानवे|सत्तानवे|अट्ठानवे|निन्यानवे|सौ|सैकड़ा|सैकड़ों|डेढ़|ढाई|सवा|पौना|आधा|अर्ध|आधी|आधे|चौथाई|तिहाई|दोगुना|तिगुना|चौगुना|दर्जन|पहला|पहली|पहले|दूसरा|दूसरी|दूसरे|तीसरा|तीसरी|तीसरे|चौथा|चौथी|चौथे|पांचवां|पाँचवां|पांचवीं|पाँचवीं|पांचवें|पाँचवें|छठा|छठी|छठे|सातवां|सातवीं|सातवें|आठवां|आठवीं|आठवें|नौवां|नौवीं|नौवें|दसवां|दसवीं|दसवें|ग्यारहवां|ग्यारहवीं|ग्यारहवें|बारहवां|बारहवीं|बारहवें|तेरहवां|तेरहवीं|तेरहवें|चौदहवां|चौदहवीं|चौदहवें|पंद्रहवां|पंद्रहवीं|पंद्रहवें|सोलहवां|सोलहवीं|सोलहवें|सत्रहवां|सत्रहवीं|सत्रहवें|अठारहवां|अठारहवीं|अठारहवें|उन्नीसवां|उन्नीसवीं|उन्नीसवें|बीसवां|बीसवीं|बीसवें|सैकड़वां|हजार|हज़ार|हजारों|हज़ारों|लाख|लाखों|करोड़|करोड़ों)\\b",
+  "stopwords": [
+    "और",
+    "या",
+    "लेकिन",
+    "कि",
+    "जो",
+    "यह",
+    "वह",
+    "ये",
+    "वे",
+    "मैं",
+    "हम",
+    "तुम",
+    "आप",
+    "वो",
+    "इस",
+    "उस",
+    "एक",
+    "को",
+    "से",
+    "में",
+    "पर",
+    "का",
+    "की",
+    "के",
+    "नहीं",
+    "है",
+    "थे",
+    "था",
+    "थी",
+    "हैं"
+  ],
+  "fewShots": [
+    {
+      "source": "उम् तो आज जो बैठक है ना, वह शायद दस बजे के आसपास शुरू होगी और फिर हम लोग आगे की प्रक्रिया पर विचार-विमर्श करेंगे।",
+      "simplified": "बैठक आज 10 बजे शुरू होगी।\nफिर हम आगे की बात करेंगे।"
+    },
+    {
+      "source": "मतलब अगर आप फॉर्म अभी जमा नहीं कर पाए, तो, अ..., आप कल भी दे सकते हैं, कोई दिक्कत नहीं है।",
+      "simplified": "अगर आप फॉर्म आज नहीं दे पाए,\nतो आप उसे कल दे सकते हैं।\nकोई दिक्कत नहीं है।"
+    },
+    {
+      "source": "हाँ तो ये जो मशीन है, यानी इसे पहले बंद करना है, फिर पाँच मिनट रुकना है, फिर दोबारा चालू करना है।",
+      "simplified": "पहले मशीन बंद करें।\nफिर 5 मिनट रुकें।\nफिर मशीन चालू करें।"
+    },
+    {
+      "source": "अरे मैं, मतलब, मैं बस यह कह रहा था कि डॉक्टर ने कहा है कि दवा खाना खाने के बाद ही लेनी है।",
+      "simplified": "डॉक्टर ने एक बात कही है।\nदवा खाना खाने के बाद लें।"
+    },
+    {
+      "source": "उक्त योजना के प्रभावी क्रियान्वयन हेतु लाभार्थियों द्वारा निर्धारित समयावधि के भीतर आवश्यक दस्तावेजों का प्रस्तुत किया जाना अनिवार्य होगा।",
+      "simplified": "इस योजना के लिए कागज देना जरूरी है।\nकागज समय पर दें।"
+    },
+    {
+      "source": "यात्रियों से अनुरोध है कि वे सुरक्षा कारणों से प्लेटफॉर्म की सीमा रेखा का उल्लंघन न करें तथा रेलवे कर्मचारियों के निर्देशों का अनुपालन करें।",
+      "simplified": "यात्री पीली रेखा के पीछे खड़े रहें।\nयह आपकी सुरक्षा के लिए है।\nरेलवे कर्मचारियों की बात मानें।"
+    },
+    {
+      "source": "यदि किसी अभ्यर्थी द्वारा आवेदन-पत्र में त्रुटिपूर्ण सूचना अंकित की जाती है, तो उसकी अभ्यर्थिता निरस्त की जा सकती है।",
+      "simplified": "अगर आवेदन में गलत जानकारी है,\nतो आवेदन रद्द हो सकता है।"
+    },
+    {
+      "source": "समिति द्वारा यह निर्णय लिया गया है कि क्षेत्रीय स्तर पर उपलब्ध संसाधनों के समुचित उपयोग के लिए एक समन्वित कार्ययोजना तैयार की जाएगी।",
+      "simplified": "समिति ने एक फैसला लिया है।\nक्षेत्र के साधनों का अच्छा उपयोग होगा।\nइसके लिए एक नई योजना बनेगी।"
+    }
+  ]
+}

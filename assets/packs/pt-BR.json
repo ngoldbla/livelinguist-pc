@@ -1,0 +1,97 @@
+{
+  "framework": "leituraFacil",
+  "language": "pt-BR",
+  "displayName": "Leitura Fácil (Inclusion Europe / Information for All)",
+  "languageName": "Português (Brasil)",
+  "script": "Latin",
+  "baseLang": "pt",
+  "standardName": "Leitura Fácil",
+  "standardTier": "easy_to_read_etr",
+  "standardCitation": "Inclusion Europe. Information for All: European standards for making information easy to read and understand (2009); adaptação e uso em português no quadro de Leitura Fácil.",
+  "standardConfidence": 0.63,
+  "systemPrompt": "You rewrite live speech transcripts into Easy-to-Read Brazilian Portuguese for people with reading difficulties, cognitive disabilities, or limited Portuguese proficiency. Follow the Leitura Fácil / Easy-to-Read approach aligned with Inclusion Europe 'Information for All'. Output only simplified Portuguese.\n\nGoals:\n- Make the text very easy to read and understand.\n- Preserve the original meaning.\n- Remove speech noise, hesitation, and repetition.\n- Split long speech into short sentences.\n\nRules:\n1. Write in Brazilian Portuguese.\n2. Keep one idea per sentence.\n3. Prefer 6-8 words per sentence. Never exceed 12 words per sentence.\n4. Use common everyday words.\n5. Use direct order: subject + verb + complement.\n6. State the subject clearly.\n7. Prefer active voice.\n8. Prefer present tense. Use simple past only when needed for time.\n9. Avoid passive voice, legalistic wording, and bureaucratic wording.\n10. Avoid nominalizations. Prefer verbs over abstract nouns.\n11. Avoid unclear pronouns. Repeat the noun if needed.\n12. Avoid long lists inside one sentence. Break them into separate sentences or bullet-like lines if formatting allows.\n13. Remove fillers, false starts, and self-corrections.\n14. If a difficult word is necessary, explain it with simple words right away.\n15. Keep names, numbers, dates, and key facts accurate.\n\nSpeech cleanup:\n- Remove fillers such as 'é', 'aham', 'tipo', 'né', 'assim'.\n- Remove repeated words unless they add meaning.\n- Complete broken spoken syntax into clear written sentences.\n- If the source is ambiguous, choose the simplest faithful reading and do not invent facts.\n\nOutput style:\n- Short sentences.\n- Plain punctuation.\n- No commentary about your changes.\n- No quotation marks unless needed.\n- No bullet points unless the input is a list or steps.\n\nYour output must be easy-to-read Brazilian Portuguese in the Leitura Fácil style.",
+  "retryPromptTemplate": "Your rewrite broke these Leitura Fácil (Inclusion Europe / Information for All) rules: {violations}. Rewrite the sentence again in Português (Brasil), keep the meaning, and follow every rule.",
+  "thresholds": {
+    "maxWordsHard": 12,
+    "maxWordsSoft": 8
+  },
+  "lengthUnit": "words",
+  "rulesOneliner": "One idea per sentence; prefer 6-8 words, never more than 12; use common everyday vocabulary; keep direct order subject-verb-complement; state the subject clearly; prefer active voice; prefer present tense and simple past only when needed; avoid passive voice, heavy nominalizations, long noun chains, and unnecessary subjunctive/future forms; avoid unclear pronouns and repeat the noun when needed; prefer natural Brazilian pronoun placement; use simple negation; keep agreement clear; explain any unavoidable difficult word immediately. Português in, Português out.",
+  "fillers": [
+    "é",
+    "aham",
+    "hã",
+    "né",
+    "tipo",
+    "assim",
+    "bom",
+    "então"
+  ],
+  "numberWordsRegex": "\\b(?:zero|um|uma|uns|umas|dois|duas|tr[eê]s|quatro|cinco|seis|sete|oito|nove|dez|onze|doze|treze|catorze|quatorze|quinze|dezasseis|dezesseis|dezassete|dezessete|dezoito|dezanove|dezenove|vinte|trinta|quarenta|cinquenta|sessenta|setenta|oitenta|noventa|cem|cento|duzentos|duzentas|trezentos|trezentas|quatrocentos|quatrocentas|quinhentos|quinhentas|seiscentos|seiscentas|setecentos|setecentas|oitocentos|oitocentas|novecentos|novecentas|mil|milh[aã]o|milh[oõ]es|bili[aã]o|bili[oõ]es|trili[aã]o|trili[oõ]es|primeiro|primeira|segundo|segunda|terceiro|terceira|quarto|quarta|quinto|quinta|sexto|sexta|s[eé]timo|s[eé]tima|oitavo|oitava|nono|nona|d[eé]cimo|d[eé]cima|vig[eé]simo|vig[eé]sima|trig[eé]simo|trig[eé]sima|quadrag[eé]simo|quadrag[eé]sima|quinquag[eé]simo|quinquag[eé]sima|sexag[eé]simo|sexag[eé]sima|septuag[eé]simo|septuag[eé]sima|setuag[eé]simo|setuag[eé]sima|octog[eé]simo|octog[eé]sima|otog[eé]simo|otog[eé]sima|nonag[eé]simo|nonag[eé]sima|cent[eé]simo|cent[eé]sima|mil[eé]simo|mil[eé]sima|meio|meia|metade|ter[cç]o|quarto|quartos|d[úu]zia|d[úu]zias|dezena|dezenas|centena|centenas)\\b",
+  "stopwords": [
+    "o",
+    "a",
+    "os",
+    "as",
+    "um",
+    "uma",
+    "de",
+    "do",
+    "da",
+    "dos",
+    "das",
+    "em",
+    "no",
+    "na",
+    "nos",
+    "nas",
+    "para",
+    "por",
+    "com",
+    "sem",
+    "e",
+    "ou",
+    "mas",
+    "que",
+    "se",
+    "eu",
+    "você",
+    "ele",
+    "ela",
+    "é"
+  ],
+  "fewShots": [
+    {
+      "source": "É, então, a gente vai chegar lá mais ou menos umas três horas e aí depois vê o documento, né, se precisar.",
+      "simplified": "Nós chegamos lá às três horas.\nDepois, nós vemos o documento."
+    },
+    {
+      "source": "Aham, tipo, se você não conseguir entrar no aplicativo, você fala com a moça da recepção que ela ajuda.",
+      "simplified": "Se você não entrar no aplicativo,\npeça ajuda na recepção."
+    },
+    {
+      "source": "Bom, eu, eu falei com o médico e, assim, ele disse que o exame não precisa ser hoje.",
+      "simplified": "Eu falei com o médico.\nO exame não precisa ser hoje."
+    },
+    {
+      "source": "Né, porque o ônibus atrasou e daí a reunião começou sem a gente, mas depois explicaram tudo.",
+      "simplified": "O ônibus atrasou.\nA reunião começou sem nós.\nDepois, eles explicaram tudo."
+    },
+    {
+      "source": "A efetivação da matrícula estará condicionada à apresentação da documentação comprobatória no prazo estipulado pelo regulamento.",
+      "simplified": "A matrícula só vale com os documentos.\nVocê deve levar os documentos no prazo."
+    },
+    {
+      "source": "Os usuários que não efetuarem a atualização cadastral poderão ter o acesso ao benefício temporariamente suspenso.",
+      "simplified": "Atualize o cadastro.\nSem isso, o benefício pode parar por um tempo."
+    },
+    {
+      "source": "Caso haja necessidade de comparecimento presencial, o interessado será previamente comunicado pelos canais oficiais da instituição.",
+      "simplified": "Se você precisar ir ao local,\na instituição vai avisar antes."
+    },
+    {
+      "source": "A realização do pagamento fora da data de vencimento implicará a incidência de encargos previstos contratualmente.",
+      "simplified": "Se você pagar depois do vencimento,\nvocê paga taxa extra."
+    }
+  ]
+}

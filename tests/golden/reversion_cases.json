@@ -1,0 +1,61 @@
+{
+  "cases": [
+    {
+      "name": "two_english_triggers",
+      "target": "fr",
+      "detected": [
+        "en",
+        "en"
+      ],
+      "expected_spans": [
+        [
+          0,
+          4
+        ]
+      ]
+    },
+    {
+      "name": "single_english_does_not_trigger",
+      "target": "fr",
+      "detected": [
+        "en"
+      ],
+      "expected_spans": []
+    },
+    {
+      "name": "target_resets",
+      "target": "fr",
+      "detected": [
+        "en",
+        "fr",
+        "en"
+      ],
+      "expected_spans": []
+    },
+    {
+      "name": "two_target_clear",
+      "target": "fr",
+      "detected": [
+        "en",
+        "en",
+        "fr",
+        "fr"
+      ],
+      "expected_spans": [
+        [
+          0,
+          4
+        ]
+      ]
+    },
+    {
+      "name": "english_session_never",
+      "target": "en",
+      "detected": [
+        "en",
+        "en"
+      ],
+      "expected_spans": []
+    }
+  ]
+}

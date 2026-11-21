@@ -1,0 +1,97 @@
+{
+  "framework": "easyToRead",
+  "language": "hr",
+  "displayName": "Lako za čitanje (Inclusion Europe ETR)",
+  "languageName": "Croatian",
+  "script": "Latin",
+  "baseLang": "hr",
+  "standardName": "Easy-to-Read / Lako za čitanje (European Easy-to-Read framework for Croatian)",
+  "standardTier": "easy_to_read_etr",
+  "standardCitation": "Inclusion Europe, Information for All: European standards for making information easy to read and understand (2009); applied to Croatian easy-to-read practice",
+  "standardConfidence": 0.63,
+  "systemPrompt": "You rewrite live speech transcripts into EASY-TO-READ Croatian for people with reading difficulties, cognitive disabilities, or limited Croatian proficiency. Follow the European Easy-to-Read approach from Inclusion Europe 'Information for All' (2009), adapted to Croatian grammar.\n\nYour task:\n- Keep the original meaning.\n- Remove speech noise: fillers, hesitations, false starts, repeated words, and self-corrections.\n- Rewrite into very short, clear Croatian sentences.\n- Output only simplified Croatian.\n\nRules:\n1. One idea per sentence.\n2. Target 4-8 words per sentence. Never exceed 12 words.\n3. Use common everyday words. Avoid jargon, legal, medical, administrative, and abstract vocabulary. If a difficult word is necessary, explain it in a separate short sentence.\n4. Prefer simple subject-verb-object order.\n5. Prefer present tense. Use perfect only when past time matters. Do not use aorist, imperfect, or rare literary forms. Avoid future II.\n6. Prefer active voice. Name who does the action.\n7. Avoid long subordinate clauses and relative clauses. Split them into separate sentences.\n8. Avoid nominal style and dense noun strings. Prefer verbs over nouns made from verbs.\n9. Keep pronouns clear. Repeat the noun if needed.\n10. Keep case forms simple and natural. Avoid complex genitive chains when a common prepositional phrase is easier.\n11. Use positive wording when possible. Do not compress many conditions into one sentence.\n12. Write numbers and times in an easy format.\n13. If the source gives steps, write one step per sentence or line.\n14. Do not add new facts. Do not summarize away important information.\n\nCroatian-specific guidance:\n- Use standard modern Croatian in Latin script.\n- Keep agreement in gender, number, and person correct.\n- Prefer common connectors such as 'i', 'ali', 'jer', 'zato'. Avoid heavy connectors such as 'međutim' if a simpler one works.\n- Prefer 'ako' over formal 'ukoliko'.\n- Prefer concrete nouns and verbs over abstract administration style.\n\nOutput format:\n- Plain text only.\n- Short sentences separated by line breaks when helpful.\n- No commentary, no labels, no quotation marks unless present in meaning.\n\nCroatian in, Croatian out.",
+  "retryPromptTemplate": "Your rewrite broke these Lako za čitanje (Inclusion Europe ETR) rules: {violations}. Rewrite the sentence again in Croatian, keep the meaning, and follow every rule.",
+  "thresholds": {
+    "maxWordsHard": 12,
+    "maxWordsSoft": 8
+  },
+  "lengthUnit": "words",
+  "rulesOneliner": "One idea per sentence; prefer 4-8 words, hard cap 12; use common everyday Croatian words; explain necessary hard terms in a new short sentence; prefer simple SVO order; use present tense when possible and perfect only when needed; avoid aorist, imperfect, future II, passive, impersonal bureaucracy, and verbal nouns; split subordinate clauses and dense noun chains; keep statements positive and conditions separate; use clear agreement and repeat nouns instead of unclear pronouns; format numbers simply; remove fillers and repairs; keep action steps in original order. Croatian in, Croatian out.",
+  "fillers": [
+    "pa",
+    "ovaj",
+    "ovoga",
+    "znači",
+    "mislim",
+    "ono",
+    "dakle",
+    "hm"
+  ],
+  "numberWordsRegex": "\\b(?:nula|ništa|jedan|jedna|jedno|jedni|jedne|jednu|dva|dvije|tri|četiri|pet|šest|sedam|osam|devet|deset|jedanaest|dvanaest|trinaest|četrnaest|petnaest|šesnaest|sedamnaest|osamnaest|devetnaest|dvadeset|trideset|četrdeset|pedeset|šezdeset|sedamdeset|osamdeset|devedeset|sto|stotinu|stotka|dvjesto|tristo|četiristo|petsto|šeststo|sedamsto|osamsto|devetsto|tisuću|tisuća|tisuće|milijun|milijuna|milijun[a]?|milijarda|milijarde|milijardi|prvi|prva|prvo|drugi|druga|drugo|treći|treća|treće|četvrti|četvrta|četvrto|peti|peta|peto|šesti|šesta|šesto|sedmi|sedma|sedmo|osmi|osma|osmo|deveti|deveta|deveto|deseti|deseta|deseto|jedanaesti|jedanaesta|jedanaesto|dvanaesti|dvanaesta|dvanaesto|trinaesti|trinaesta|trinaesto|četrnaesti|četrnaesta|četrnaesto|petnaesti|petnaesta|petnaesto|šesnaesti|šesnaesta|šesnaesto|sedamnaesti|sedamnaesta|sedamnaesto|osamnaesti|osamnaesta|osamnaesto|devetnaesti|devetnaesta|devetnaesto|dvadeseti|dvadeseta|dvadeseto|trideseti|trideseta|trideseto|četrdeseti|četrdeseta|četrdeseto|pedeseti|pedeseta|pedeseto|šezdeseti|šezdeseta|šezdeseto|sedamdeseti|sedamdeseta|sedamdeseto|osamdeseti|osamdeseta|osamdeseto|devedeseti|devedeseta|devedeseto|stoti|stota|stoto|tisućiti|tisućita|tisućito|milijunti|milijunta|milijunto|pola|polovica|polovina|trećina|četvrtina|petina|šestina|sedmina|osmina|devetina|desetina|ducat|tucet|par|oba|obje|oboje)\\b",
+  "stopwords": [
+    "i",
+    "a",
+    "ali",
+    "da",
+    "je",
+    "su",
+    "sam",
+    "smo",
+    "ste",
+    "u",
+    "na",
+    "iz",
+    "od",
+    "do",
+    "za",
+    "s",
+    "se",
+    "ne",
+    "kao",
+    "ako",
+    "jer",
+    "koji",
+    "koja",
+    "koje",
+    "to",
+    "taj",
+    "ova",
+    "ovaj",
+    "mi",
+    "vi"
+  ],
+  "fewShots": [
+    {
+      "source": "Pa ovaj, sutra ćemo, mislim, ako sve bude u redu, krenuti s tim radovima na cesti koji su već dugo najavljeni.",
+      "simplified": "Sutra počinju radovi na cesti.\nAko bude sve u redu."
+    },
+    {
+      "source": "Ono, ljudi su se žalili da ne znaju gdje trebaju doći i kad, pa ćemo, znači, poslati novu poruku.",
+      "simplified": "Ljudi ne znaju gdje trebaju doći.\nNe znaju ni kada.\nPoslat ćemo novu poruku."
+    },
+    {
+      "source": "Hm, ja sam zapravo, ovaj, htio reći da prijavu morate predati danas do tri sata, inače sustav to više neće primati.",
+      "simplified": "Prijavu morate predati danas.\nRok je do 15 sati.\nPoslije toga sustav ne prima prijavu."
+    },
+    {
+      "source": "Dakle, pacijenti koji su prethodno ostvarili pravo na ortopedsko pomagalo obvezni su prije preuzimanja nove doznake dostaviti postojeću medicinsku dokumentaciju.",
+      "simplified": "Neki pacijenti već imaju pravo na pomagalo.\nPrije nove doznake trebaju donijeti medicinske papire."
+    },
+    {
+      "source": "Sukladno odredbama pravilnika, korisnik je dužan izvršiti uplatu administrativne pristojbe prije podnošenja zahtjeva.",
+      "simplified": "Pravilnik traži ovo.\nKorisnik prvo plaća pristojbu.\nZatim predaje zahtjev."
+    },
+    {
+      "source": "Pa znači autobus neće stati kod škole jer je, ovaj, cesta zatvorena, nego ide okolo pa morate na drugu stanicu.",
+      "simplified": "Autobus ne staje kod škole.\nCesta je zatvorena.\nAutobus ide drugim putem.\nIdite na drugu stanicu."
+    },
+    {
+      "source": "U slučaju nemogućnosti osobnog dolaska, dokumentaciju je moguće dostaviti putem opunomoćene osobe ili preporučenom pošiljkom.",
+      "simplified": "Ako ne možete doći osobno,\npošaljite dokumente preko druge osobe.\nMožete ih poslati i preporučenom poštom."
+    },
+    {
+      "source": "Mislim, mi smo to već rekli, ali evo opet: tko želi potvrdu, mora nakon predavanja obrasca čekati e-poruku s točnim terminom.",
+      "simplified": "To smo već rekli.\nAko želite potvrdu,\nprvo predajte obrazac.\nZatim čekajte e-poruku.\nU poruci piše točan termin."
+    }
+  ]
+}

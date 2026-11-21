@@ -1,0 +1,104 @@
+{
+  "framework": "tekstAtwyDo",
+  "language": "pl",
+  "displayName": "ETR po polsku (Informacja dla wszystkich)",
+  "languageName": "Polish",
+  "script": "Latin",
+  "baseLang": "pl",
+  "standardName": "Tekst łatwy do czytania i zrozumienia (ETR / easy-to-read)",
+  "standardTier": "easy_to_read_etr",
+  "standardCitation": "Inclusion Europe, Europejska organizacja self-adwokatów i ILSMH European Association: Informacja dla wszystkich. Europejskie standardy przygotowania tekstu łatwego do czytania i zrozumienia (polskie wydanie/adaptacja zasad ETR), 2009",
+  "standardConfidence": 0.74,
+  "systemPrompt": "You rewrite LIVE SPEECH transcripts into Polish easy-to-read language for people with reading difficulties, cognitive disabilities, or limited proficiency. Follow the European easy-to-read approach used for Polish: tekst łatwy do czytania i zrozumienia (ETR), aligned with Inclusion Europe 'Informacja dla wszystkich'.\n\nYour task is to keep the meaning, but make the text much easier to read and understand.\n\nCore rules:\n- Write in Polish only.\n- Keep one idea in one sentence.\n- Use very short sentences. Target 8 words or fewer. Never exceed 12 words in one sentence.\n- Use common, everyday Polish words.\n- Prefer active voice and say who does what.\n- Prefer present tense or simple past/future.\n- Avoid participles, passive voice, heavy official style, and abstract nouns.\n- Replace noun-heavy phrases with clear verbs.\n- Avoid long strings of nouns and legal wording.\n- Keep word order simple.\n- Make pronoun reference explicit. Repeat the noun if needed.\n- Remove fillers, hesitations, repetitions, and false starts from spoken input.\n- If information is complex, split it into several short sentences.\n- If an abbreviation or specialist word is necessary, explain it in simple Polish.\n- Keep important numbers, dates, times, and names accurate.\n\nOutput format:\n- Output only the rewritten text.\n- Use short paragraphs if helpful.\n- Do not add commentary, headings, or explanations unless they are needed for understanding.\n- Do not translate into another language.\n\nWhen the source is unclear:\n- Preserve only what is reasonably clear from the transcript.\n- Do not invent facts.\n- If one sentence contains many ideas, split them.\n\nGoal:\nMake the text easy to read, easy to follow, and easy to understand for the intended audience, while preserving the original message in simple Polish.",
+  "retryPromptTemplate": "Your rewrite broke these ETR po polsku (Informacja dla wszystkich) rules: {violations}. Rewrite the sentence again in Polish, keep the meaning, and follow every rule.",
+  "thresholds": {
+    "maxWordsHard": 12,
+    "maxWordsSoft": 8
+  },
+  "lengthUnit": "words",
+  "rulesOneliner": "One idea per sentence; aim for very short sentences (soft 8 words, hard 12); use common everyday Polish; prefer active voice and name the actor; prefer present tense or simple past/future; avoid participles and long imiesłów chains; avoid passive voice; replace nominalizations with verbs; avoid double or stacked negation; keep basic SVO order when possible; make references explicit and repeat nouns if needed; use concrete examples and digits for important numbers; avoid long genitive noun chains; avoid unexplained abbreviations and legal phrasing; remove fillers and false starts from speech. Polish in, Polish out.",
+  "fillers": [
+    "yyy",
+    "eee",
+    "no",
+    "znaczy",
+    "jakby",
+    "w sumie",
+    "po prostu",
+    "tak naprawdę"
+  ],
+  "numberWordsRegex": "\\b(?:zero|jeden|jedna|jedno|jednej|jednego|jednym|jedną|jedni|dwa|dwie|dwaj|dwóch|dwom|dwoma|trzy|trzej|trzech|trzem|trzema|cztery|czterej|czterech|czterem|czterema|pięć|pięciu|pięcioma|sześć|sześciu|sześcioma|siedem|siedmiu|siedmioma|osiem|ośmiu|ośmioma|dziewięć|dziewięciu|dziewięcioma|dziesięć|dziesięciu|dziesięcioma|jedenaście|jedenastu|dwadzieścia|dwudziestu|trzydzieści|trzydziestu|czterdzieści|czterdziestu|pięćdziesiąt|pięćdziesięciu|sześćdziesiąt|sześćdziesięciu|siedemdziesiąt|siedemdziesięciu|osiemdziesiąt|osiemdziesięciu|dziewięćdziesiąt|dziewięćdziesięciu|sto|stu|stoma|dwieście|dwustu|trzysta|trzystu|czterysta|czterystu|pięćset|pięciuset|sześćset|sześciuset|siedemset|siedmiuset|osiemset|ośmiuset|dziewięćset|dziewięciuset|tysiąc|tysiąca|tysiące|tysięcy|milion|miliona|miliony|milionów|miliard|miliarda|miliardy|miliardów|pierwszy|pierwsza|pierwsze|pierwsi|pierwszego|pierwszej|pierwszym|pierwszą|drugi|druga|drugie|drudzy|drugiego|drugiej|drugim|drugą|trzeci|trzecia|trzecie|trzeci|trzeciego|trzeciej|trzecim|trzecią|czwarty|czwarta|czwarte|czwarci|czwartego|czwartej|czwartym|czwartą|piąty|piąta|piąte|piąci|piątego|piątej|piątym|piątą|szósty|szósta|szóste|szóści|szóstego|szóstej|szóstym|szóstą|siódmy|siódma|siódme|siódmi|siódmego|siódmej|siódmym|siódmą|ósmy|ósma|ósme|ósmi|ósmego|ósmej|ósmym|ósmą|dziewiąty|dziewiąta|dziewiąte|dziewiąci|dziewiątego|dziewiątej|dziewiątym|dziewiątą|dziesiąty|dziesiąta|dziesiąte|dziesiąci|dziesiątego|dziesiątej|dziesiątym|dziesiątą|jedenasty|jedenasta|jedenaste|jedenastego|jedenastej|jedenastym|jedenastą|dwunasty|dwunasta|dwunaste|dwunastego|dwunastej|dwunastym|dwunastą|setny|setna|setne|setnego|setnej|setnym|setną|tysięczny|tysięczna|tysięczne|tysięcznego|tysięcznej|tysięcznym|tysięczną|milionowy|milionowa|milionowe|milionowego|milionowej|milionowym|milionową|pół|połowa|połowę|połowy|połowie|połówka|połówki|ćwierć|ćwierci|tuzin|tuzina|tuziny|tuzinów|para|pary|parę|oboje|dwoje|troje|czworo|pięcioro|sześcioro|siedmioro|ośmioro|dziewięcioro|dziesięcioro|kilka|kilkanaście|kilkadziesiąt|kilkaset|wiele|mnóstwo)\\b",
+  "stopwords": [
+    "i",
+    "a",
+    "ale",
+    "albo",
+    "bo",
+    "że",
+    "to",
+    "ten",
+    "ta",
+    "to",
+    "te",
+    "w",
+    "na",
+    "do",
+    "z",
+    "za",
+    "o",
+    "u",
+    "od",
+    "po",
+    "dla",
+    "bez",
+    "przy",
+    "czy",
+    "nie",
+    "tak",
+    "się",
+    "jest",
+    "są",
+    "był",
+    "była",
+    "być",
+    "ma",
+    "mają",
+    "jak",
+    "co",
+    "kto"
+  ],
+  "fewShots": [
+    {
+      "source": "No yyy jutro, znaczy, urząd będzie jakby nieczynny od dwunastej, bo mają jakieś szkolenie.",
+      "simplified": "Jutro urząd będzie zamknięty od 12. Mają szkolenie."
+    },
+    {
+      "source": "W sumie to ja chciałem powiedzieć, że jeśli ktoś nie odda formularza dzisiaj, no to później będzie problem z wypłatą.",
+      "simplified": "Oddaj formularz dzisiaj. Inaczej wypłata może być później."
+    },
+    {
+      "source": "Eee pani w okienku mówiła, że trzeba jeszcze, po prostu, przynieść dowód i numer konta.",
+      "simplified": "Trzeba przynieść dowód. Trzeba też podać numer konta."
+    },
+    {
+      "source": "No my, jakby, zaczynamy o dziewiątej, ale jak ktoś przyjdzie wcześniej, to może poczekać na korytarzu.",
+      "simplified": "Zaczynamy o 9. Możesz przyjść wcześniej. Poczekaj wtedy na korytarzu."
+    },
+    {
+      "source": "W przypadku niewywiązania się przez beneficjenta z obowiązku dostarczenia wymaganej dokumentacji w terminie, realizacja świadczenia ulegnie wstrzymaniu.",
+      "simplified": "Jeśli nie dostarczysz dokumentów na czas, urząd wstrzyma świadczenie."
+    },
+    {
+      "source": "Dokonanie rejestracji uczestnika następuje po uprzednim zweryfikowaniu kompletności i poprawności przedłożonego wniosku.",
+      "simplified": "Najpierw urząd sprawdza wniosek. Potem rejestruje uczestnika."
+    },
+    {
+      "source": "Środki finansowe mogą zostać uruchomione wyłącznie po pozytywnym rozpatrzeniu odwołania przez właściwy organ.",
+      "simplified": "Urząd musi najpierw przyjąć odwołanie. Dopiero potem może wypłacić pieniądze."
+    },
+    {
+      "source": "Osoby zainteresowane udziałem w projekcie zobowiązane są do wcześniejszego zgłoszenia chęci uczestnictwa drogą elektroniczną.",
+      "simplified": "Jeśli chcesz wziąć udział w projekcie, zgłoś się wcześniej przez internet."
+    }
+  ]
+}

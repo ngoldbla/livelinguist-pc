@@ -1,0 +1,97 @@
+{
+  "framework": "letlst",
+  "language": "da",
+  "displayName": "Letlæst (Inclusion Europe ETR)",
+  "languageName": "Dansk",
+  "script": "Latin",
+  "baseLang": "da",
+  "standardName": "Letlæst / Easy-to-Read Danish aligned with Inclusion Europe",
+  "standardTier": "easy_to_read_etr",
+  "standardCitation": "Inclusion Europe. Information for All: European standards for making information easy to read and understand (2009). Applied to Danish easy-to-read practice; specific Danish national member name unverified.",
+  "standardConfidence": 0.58,
+  "systemPrompt": "You rewrite live speech transcripts into EASY-TO-READ Danish for people with reading difficulties, cognitive disabilities, or limited Danish proficiency. Follow Inclusion Europe-style easy-to-read principles adapted to Danish.\n\nGoal:\n- Make the text easy to read and easy to understand.\n- Preserve the speaker's core meaning.\n- Remove spoken noise.\n- Output only simplified Danish.\n\nRules:\n1. Write in Danish only.\n2. Keep one idea per sentence.\n3. Aim for 10 words per sentence or fewer. Never go above 12 words unless a name requires it.\n4. Use common everyday words. Replace difficult, formal, abstract, and bureaucratic words.\n5. If a difficult term is necessary, explain it in the next short sentence.\n6. Prefer active voice and a clear subject.\n7. Use simple Danish word order: subject + verb + object.\n8. Avoid long subordinate clauses and stacked information.\n9. Prefer present tense or simple past.\n10. Turn nominalizations into verbs.\n11. Use 'du' when the speaker addresses the audience directly. Otherwise use a concrete noun.\n12. Put conditions, exceptions, dates, and practical details in separate short sentences.\n13. Use digits when they are easier to read.\n14. Repeat the same word for the same concept.\n15. Remove fillers, hesitations, false starts, and repeated fragments.\n16. Keep only important information.\n17. Do not add new facts.\n18. If the source is unclear, choose the safest simple wording that preserves uncertainty without inventing details.\n\nStyle:\n- Calm, direct, concrete.\n- Short sentences.\n- No jargon.\n- No decorative variation.\n- No bullet points unless the input is clearly a list; otherwise use separate short lines or short sentences.\n\nTranscript handling:\n- Clean up broken speech.\n- Resolve obvious self-corrections.\n- Drop discourse markers with no meaning.\n- If a sentence contains two or more ideas, split it.\n- If a referent is vague, replace pronouns with the clear noun when possible.\n\nOutput:\n- Output only the rewritten easy-to-read Danish text.\n- No explanations, no notes, no labels.",
+  "retryPromptTemplate": "Your rewrite broke these Letlæst (Inclusion Europe ETR) rules: {violations}. Rewrite the sentence again in Dansk, keep the meaning, and follow every rule.",
+  "thresholds": {
+    "maxWordsHard": 12,
+    "maxWordsSoft": 10
+  },
+  "lengthUnit": "words",
+  "rulesOneliner": "One idea per sentence; prefer 10 words and never more than 12; use common everyday Danish; explain hard words in a new short sentence; prefer active voice with a clear subject; use simple SVO order; avoid long subordinate clauses; prefer present or simple past; avoid nominalizations; use 'du' when the audience is addressed; state the main rule first and conditions separately; write numbers simply with digits when easier; repeat the same key term; split lists into separate short sentences; remove fillers and repetitions; keep 'ikke' close to the verb; use standard Danish spelling and punctuation. Danish in, Danish out.",
+  "fillers": [
+    "øh",
+    "altså",
+    "øhm",
+    "eh",
+    "du ved",
+    "ligesom",
+    "ja altså",
+    "mm"
+  ],
+  "numberWordsRegex": "\\b(?:nul|en|et|to|tre|fire|fem|seks|syv|otte|ni|ti|elleve|tolv|tretten|fjorten|femten|seksten|sytten|atten|nitten|tyve|tredive|fyrre|halvtreds|tres|halvfjerds|firs|halvfems|hundred(?:e)?|tusind(?:e)?|million(?:er)?|milliard(?:er)?|første|anden|andet|andet?|tredje|fjerde|femte|sjette|syvende|ottende|niende|tiende|ellevte|tolvte|trettende|fjortende|femtende|sekstende|syttende|attende|nittende|tyvende|tredivte|fyrretyvende|halvtredsindstyvende|tresindstyvende|halvfjerdsindstyvende|firsindstyvende|halvfemsindstyvende|hundred(?:e)?del|tusind(?:e)?del|halv|halve|kvart|dusin|snese)\\b",
+  "stopwords": [
+    "og",
+    "eller",
+    "men",
+    "at",
+    "det",
+    "der",
+    "de",
+    "den",
+    "en",
+    "et",
+    "jeg",
+    "du",
+    "vi",
+    "han",
+    "hun",
+    "man",
+    "som",
+    "ikke",
+    "i",
+    "på",
+    "til",
+    "af",
+    "for",
+    "med",
+    "om",
+    "så",
+    "når",
+    "hvis",
+    "er",
+    "var"
+  ],
+  "fewShots": [
+    {
+      "source": "Øh, altså, vi skal jo sådan set lige have sendt de papirer ind, før vi kan kigge på sagen, ikke?",
+      "simplified": "Du skal sende papirerne først.\nSå kan vi se på sagen."
+    },
+    {
+      "source": "Jeg tænker bare, at bussen, øhm, den kommer nok lidt senere i dag, fordi der er vejarbejde.",
+      "simplified": "Bussen kommer lidt senere i dag.\nDer er vejarbejde."
+    },
+    {
+      "source": "Ja altså hvis du, du ved, ikke får svar i morgen, så kan du måske lige ringe igen.",
+      "simplified": "Hvis du ikke får svar i morgen,\nså ring igen."
+    },
+    {
+      "source": "Øhm kommunen har jo, altså, besluttet at lave om på åbningstiderne, så man kun kan komme mandag og torsdag.",
+      "simplified": "Kommunen har nye åbningstider.\nDu kan kun komme mandag og torsdag."
+    },
+    {
+      "source": "Ansøgninger, der ikke opfylder de fastsatte kriterier, vil efter en konkret vurdering kunne blive afvist uden yderligere begrundelse.",
+      "simplified": "Nogle ansøgninger kan få afslag.\nDet sker, hvis de ikke opfylder reglerne."
+    },
+    {
+      "source": "Såfremt borgeren ønsker at påklage afgørelsen, skal dette ske inden for en frist på fire uger fra modtagelsen af meddelelsen.",
+      "simplified": "Du kan klage over afgørelsen.\nDu skal klage senest 4 uger efter brevet."
+    },
+    {
+      "source": "Virksomheden foretager løbende evaluering af de indkomne henvendelser med henblik på optimering af sagsbehandlingen.",
+      "simplified": "Virksomheden ser løbende på de henvendelser, den får.\nDet skal gøre sagsbehandlingen bedre."
+    },
+    {
+      "source": "Det anbefales, at medicinen indtages i forbindelse med et måltid, idet dette kan reducere risikoen for gastrointestinale bivirkninger.",
+      "simplified": "Tag medicinen sammen med mad.\nSå er der mindre risiko for ondt i maven."
+    }
+  ]
+}

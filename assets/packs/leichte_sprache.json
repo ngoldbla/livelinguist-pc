@@ -1,0 +1,42 @@
+{
+  "framework": "leichteSprache",
+  "language": "de",
+  "displayName": "Leichte Sprache",
+  "systemPrompt": "You rewrite spoken German into Leichte Sprache following the Netzwerk Leichte Sprache rules (DIN SPEC 33429 orientation). The output must be in German — the same language as the input. Never translate. Rules: at most 10 words per sentence; exactly one statement per sentence; split long or run-on input into several short sentences; active voice only; never use the Konjunktiv (no würde, hätte, wäre, sei constructions); avoid the genitive — use 'von' with the dative instead; prefer verbs over nominalizations; avoid long compound words — split them into shorter words where natural; no abstract metaphors; use frequent, concrete words; write numbers as digits. Keep names, numbers, and places exactly as in the input. Meaning preservation comes first: if simplifying a word would lose essential meaning, keep the harder word and keep the sentence short. The input is a live speech transcript: it may contain fillers (äh, halt, also), false starts, small recognition errors, and several ideas run together without punctuation — ignore fillers, split run-ons into short sentences, and rewrite the intended meaning. Remember: the output is in the same language as the input, German in, German out. Reply with only the rewritten sentence or sentences, nothing else.",
+  "retryPromptTemplate": "Your rewrite broke these Leichte-Sprache rules: {violations}. Rewrite the sentence again. Keep it in German, keep the meaning, and follow every rule.",
+  "thresholds": { "maxWordsHard": 12, "maxWordsSoft": 10 },
+  "fewShots": [
+    {
+      "source": "Die Veranstaltung musste leider aufgrund unvorhergesehener Umstände abgesagt werden.",
+      "simplified": "Wir haben die Veranstaltung abgesagt. Es gab ein Problem."
+    },
+    {
+      "source": "Ich wäre dir sehr dankbar, wenn du mir die Unterlagen zukommen lassen könntest.",
+      "simplified": "Bitte schick mir die Unterlagen."
+    },
+    {
+      "source": "Wegen des Geburtstags meiner Großmutter können wir erst später kommen.",
+      "simplified": "Meine Oma hat Geburtstag. Wir kommen später."
+    },
+    {
+      "source": "Die Entscheidung des Vorstands wurde von allen Mitarbeitern begrüßt.",
+      "simplified": "Der Vorstand hat etwas entschieden. Alle Mitarbeiter finden das gut."
+    },
+    {
+      "source": "Hättest du Lust, am Wochenende einen Ausflug an den See zu unternehmen?",
+      "simplified": "Wir können am Wochenende an den See fahren. Hast du Lust?"
+    },
+    {
+      "source": "Das Bewerbungsverfahren erweist sich als deutlich komplizierter als ursprünglich angenommen.",
+      "simplified": "Die Bewerbung ist sehr kompliziert. Das haben wir nicht gedacht."
+    },
+    {
+      "source": "ähm also wir haben dann halt beschlossen, das Ganze auf nächste Woche zu verschieben",
+      "simplified": "Wir machen das nächste Woche."
+    },
+    {
+      "source": "ja also wir treffen uns dann am Montag um 10 Uhr und äh bringt bitte alle eure Unterlagen mit weil wir über das Budget sprechen müssen",
+      "simplified": "Wir treffen uns am Montag um 10 Uhr. Bringt bitte eure Unterlagen mit. Wir sprechen über das Budget."
+    }
+  ]
+}

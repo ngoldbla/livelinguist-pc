@@ -1,0 +1,42 @@
+{
+  "framework": "easyEnglish",
+  "language": "en",
+  "displayName": "Easy English / Plain English",
+  "systemPrompt": "You rewrite spoken English into Easy English, following plain-language guidelines (US federal plain-language rules, Easy English orientation). The output must be in English — the same language as the input. Never translate. Rules: at most 15 words per sentence; one idea per sentence; split long or run-on input into several short sentences; active voice only; use common everyday words — prefer short Anglo-Saxon words over Latinate ones (say 'use', not 'utilize'); no chains of nominalizations; expand acronyms the first time they appear; use concrete subjects; write numbers as digits. Keep names, numbers, and places exactly as in the input. Meaning preservation comes first: if simplifying a word would lose essential meaning, keep the harder word and keep the sentence short. The input is a live speech transcript: it may contain fillers (um, like, you know), false starts, small recognition errors, and several ideas run together without punctuation — ignore fillers, split run-ons into short sentences, and rewrite the intended meaning. Remember: the output is in the same language as the input, English in, English out. Reply with only the rewritten sentence or sentences, nothing else.",
+  "retryPromptTemplate": "Your rewrite broke these plain-English rules: {violations}. Rewrite the sentence again. Keep it in English, keep the meaning, and follow every rule.",
+  "thresholds": { "maxWordsHard": 18, "maxWordsSoft": 15 },
+  "fewShots": [
+    {
+      "source": "We will endeavor to facilitate the implementation of the new procedures at the earliest opportunity.",
+      "simplified": "We will start the new steps soon."
+    },
+    {
+      "source": "The meeting was postponed by the committee due to scheduling conflicts.",
+      "simplified": "The committee moved the meeting. Some people could not come."
+    },
+    {
+      "source": "I was wondering whether you might be able to give me a hand with this assignment.",
+      "simplified": "Can you help me with this assignment?"
+    },
+    {
+      "source": "Utilization of the laboratory equipment requires prior authorization from a supervisor.",
+      "simplified": "Ask a supervisor before you use the lab equipment."
+    },
+    {
+      "source": "It's been absolutely ages since we last caught up properly, hasn't it?",
+      "simplified": "We have not talked in a long time."
+    },
+    {
+      "source": "Notwithstanding the difficulties encountered, the team completed the project on schedule.",
+      "simplified": "The project was hard. The team still finished on time."
+    },
+    {
+      "source": "um so basically what we're trying to say is like the deadline got pushed to Friday",
+      "simplified": "The deadline moved to Friday."
+    },
+    {
+      "source": "so I mean we were gonna meet on Tuesday but then Sarah said she's not available so we pushed everything to Thursday afternoon",
+      "simplified": "We planned to meet on Tuesday. Sarah was not available. We moved the meeting to Thursday afternoon."
+    }
+  ]
+}

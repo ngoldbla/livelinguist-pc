@@ -1,0 +1,97 @@
+{
+  "framework": "isoPlainLanguage",
+  "language": "vi",
+  "displayName": "Easy-to-read Vietnamese (ISO 24495-1 fallback, ETR-style rules)",
+  "languageName": "Vietnamese",
+  "script": "Latin",
+  "baseLang": "vi",
+  "standardName": "Plain language / plain writing guidance in Vietnamese usage; fallback to ISO plain language",
+  "standardTier": "international_iso",
+  "standardCitation": "ISO 24495-1:2023 Plain language — Part 1: Governing principles and guidelines",
+  "standardConfidence": 0.63,
+  "systemPrompt": "You rewrite live speech transcripts into EASY-TO-READ Vietnamese for people with reading difficulties, cognitive disabilities, or limited Vietnamese proficiency. Use short, clear, concrete Vietnamese. Follow ISO 24495-1:2023 plain-language principles, tightened to easy-to-read practice.\n\nGoal:\n- Make the text easy to read and easy to understand.\n- Preserve the original meaning.\n- Remove speech noise.\n- Output only simplified Vietnamese.\n\nRules:\n1. Write in Vietnamese only.\n2. Keep one idea per sentence.\n3. Prefer 4-10 words per sentence. Hard maximum: 14 words.\n4. Use simple SVO word order.\n5. Use common everyday words. Replace formal, Sino-Vietnamese, legal, medical, technical, or bureaucratic vocabulary when possible.\n6. Prefer active voice. Say who does what.\n7. Split long sentences. Do not keep multi-clause spoken run-ons.\n8. Mark time clearly with words such as 'đã', 'đang', 'sẽ', 'hôm nay', 'ngày mai' when needed.\n9. Use affirmative sentences when possible. Avoid double negatives.\n10. Keep the same referent with the same noun or pronoun. Avoid ambiguity.\n11. Remove fillers, hesitations, false starts, repeated words, and discourse particles unless they add meaning.\n12. Turn abstract nouns into verbs. Example: 'tiến hành kiểm tra' -> 'kiểm tra'.\n13. If a hard word is necessary, explain it in very simple words right after it.\n14. Keep tone calm, respectful, and direct.\n\nFormatting:\n- Use short sentences.\n- Use full stops often.\n- If the source contains a list of actions, put each action in a separate short sentence.\n- Do not add information that is not in the source.\n- Do not mention these instructions.\n\nInput is noisy spoken Vietnamese. Output must be clean EASY-TO-READ Vietnamese.",
+  "retryPromptTemplate": "Your rewrite broke these Easy-to-read Vietnamese (ISO 24495-1 fallback, ETR-style rules) rules: {violations}. Rewrite the sentence again in Vietnamese, keep the meaning, and follow every rule.",
+  "thresholds": {
+    "maxWordsHard": 14,
+    "maxWordsSoft": 10
+  },
+  "lengthUnit": "words",
+  "rulesOneliner": "One idea per sentence; 4-10 words preferred, 14 max; use basic SVO order; choose common everyday words; prefer active voice and name the actor; split long clause chains; mark time explicitly with words like 'đã/đang/sẽ/hôm nay'; prefer affirmative sentences and avoid double negatives; keep references consistent with clear pronouns or nouns; use direct polite instructions; turn abstract noun phrases into verbs; limit modifiers; present numbers simply; remove fillers and false starts; explain any unavoidable difficult word right away. Vietnamese in, Vietnamese out.",
+  "fillers": [
+    "ờ",
+    "à",
+    "ừm",
+    "ừ",
+    "kiểu như",
+    "nói chung là",
+    "thì",
+    "ý là"
+  ],
+  "numberWordsRegex": "\\b(?:không|một|mốt|hai|ba|bốn|tư|năm|lăm|sáu|bảy|bẩy|tám|chín|mười|mươi|mười\\s+một|mười\\s+hai|mười\\s+ba|mười\\s+bốn|mười\\s+tư|mười\\s+năm|mười\\s+lăm|mười\\s+sáu|mười\\s+bảy|mười\\s+bẩy|mười\\s+tám|mười\\s+chín|trăm|nghìn|ngàn|vạn|triệu|tỷ|tỉ|linh|lẻ|chục|nửa|rưỡi|phần\\s+nửa|vài|dăm|mươi\\s+mốt|mươi\\s+tư|mươi\\s+lăm|đầu\\s+tiên|thứ\\s+nhất|thứ\\s+hai|thứ\\s+ba|thứ\\s+tư|thứ\\s+năm|thứ\\s+sáu|thứ\\s+bảy|thứ\\s+tám|thứ\\s+chín|thứ\\s+mười)\\b",
+  "stopwords": [
+    "và",
+    "là",
+    "của",
+    "có",
+    "không",
+    "đã",
+    "đang",
+    "sẽ",
+    "cho",
+    "với",
+    "trong",
+    "trên",
+    "dưới",
+    "ở",
+    "từ",
+    "đến",
+    "về",
+    "khi",
+    "nếu",
+    "thì",
+    "mà",
+    "vì",
+    "nên",
+    "một",
+    "các",
+    "những",
+    "này",
+    "đó",
+    "tôi",
+    "bạn"
+  ],
+  "fewShots": [
+    {
+      "source": "Ờ hôm nay thì mình, à, mình họp lúc chín giờ nhưng chắc là dời sang mười giờ vì sếp bận.",
+      "simplified": "Hôm nay họp lúc 10 giờ. Sếp bận."
+    },
+    {
+      "source": "Ừm nếu bạn chưa nộp hồ sơ thì, ý là, chiều nay nhớ mang đến quầy số 3 nhé.",
+      "simplified": "Nếu bạn chưa nộp hồ sơ, chiều nay hãy đến quầy 3."
+    },
+    {
+      "source": "Nói chung là cái máy này nó, nó không phải là không dùng được, nhưng mà dùng hơi khó.",
+      "simplified": "Máy này dùng được. Nhưng máy hơi khó dùng."
+    },
+    {
+      "source": "À người ta bảo là tuần sau có thể cúp điện, chắc tầm sáng, nên mình lưu file trước đi.",
+      "simplified": "Tuần sau có thể cúp điện vào buổi sáng. Hãy lưu file trước."
+    },
+    {
+      "source": "Đề nghị các cá nhân có liên quan khẩn trương hoàn tất việc kê khai thông tin và nộp lại biểu mẫu theo đúng thời hạn quy định.",
+      "simplified": "Người liên quan hãy khai thông tin. Hãy nộp mẫu đúng hạn."
+    },
+    {
+      "source": "Trong trường hợp người bệnh xuất hiện các biểu hiện bất thường sau khi sử dụng thuốc, cần lập tức liên hệ cơ sở y tế gần nhất để được hỗ trợ kịp thời.",
+      "simplified": "Nếu người bệnh có dấu hiệu lạ sau khi uống thuốc, hãy đến cơ sở y tế gần nhất ngay."
+    },
+    {
+      "source": "Việc triển khai phương án phân luồng giao thông nhằm giảm thiểu tình trạng ùn tắc trong khu vực trung tâm sẽ được thực hiện từ ngày 15 tháng 7.",
+      "simplified": "Từ ngày 15 tháng 7, thành phố sẽ đổi cách đi đường. Mục đích là giảm kẹt xe ở trung tâm."
+    },
+    {
+      "source": "Căn cứ vào kết quả rà soát, đơn vị sẽ tiến hành điều chỉnh danh sách đối tượng thụ hưởng theo quy định hiện hành.",
+      "simplified": "Đơn vị sẽ xem lại danh sách. Sau đó đơn vị sẽ sửa danh sách theo quy định."
+    }
+  ]
+}

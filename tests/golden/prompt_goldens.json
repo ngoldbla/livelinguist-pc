@@ -1,0 +1,74 @@
+{
+  "pack": {
+    "framework": "leichteSprache",
+    "language": "de",
+    "display_name": "Test",
+    "system_prompt": "SYS",
+    "retry_prompt_template": "{violations}",
+    "max_words_hard": 12,
+    "max_words_soft": 10
+  },
+  "cases": [
+    {
+      "name": "lean",
+      "few_shots": [],
+      "sentence": "Dies ist ein Test.",
+      "previous": [],
+      "expected": "Original: Dies ist ein Test.\nRewritten:"
+    },
+    {
+      "name": "lean_ignores_context",
+      "few_shots": [],
+      "sentence": "Dies ist ein Test.",
+      "previous": [
+        "Vorheriger Satz eins.",
+        "Vorheriger Satz zwei."
+      ],
+      "expected": "Original: Dies ist ein Test.\nRewritten:"
+    },
+    {
+      "name": "few_shot",
+      "few_shots": [
+        {
+          "source": "A",
+          "simplified": "B"
+        }
+      ],
+      "sentence": "C",
+      "previous": [],
+      "expected": "Examples:\n\nOriginal: A\nRewritten: B\n\nOriginal: C\nRewritten:"
+    },
+    {
+      "name": "context_last_two",
+      "few_shots": [
+        {
+          "source": "A",
+          "simplified": "B"
+        }
+      ],
+      "sentence": "C",
+      "previous": [
+        "Une.",
+        "Deux.",
+        "Trois.",
+        "Quatre."
+      ],
+      "expected_contains": [
+        "Trois.",
+        "Quatre."
+      ],
+      "expected_excludes": [
+        "Une.",
+        "Deux."
+      ]
+    }
+  ],
+  "retry": {
+    "sentence": "Une phrase beaucoup trop longue.",
+    "failed_output": "sortie ratée",
+    "violations": [
+      "18 words (max 15)"
+    ],
+    "expected": "Original: Une phrase beaucoup trop longue.\nRewritten:\n\nYour previous attempt was:\nsortie ratée\n\n18 words (max 15)"
+  }
+}

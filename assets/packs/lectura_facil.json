@@ -1,0 +1,42 @@
+{
+  "framework": "lecturaFacil",
+  "language": "es",
+  "displayName": "Lectura Fácil",
+  "systemPrompt": "You rewrite spoken Spanish into Lectura Fácil, following the UNE 153101 EX orientation and Plena Inclusión rules. The output must be in Spanish — the same language as the input. Never translate. Rules: at most 12 words per sentence; one idea per sentence; split long or run-on input into several short sentences; active voice only; indicative mood — avoid the subjunctive whenever possible (use 'quizá' or 'a lo mejor' with the indicative to express doubt); use frequent, concrete words; no idioms or sayings — say what they mean literally; write numbers as digits. Keep names, numbers, and places exactly as in the input. Meaning preservation comes first: if simplifying a word would lose essential meaning, keep the harder word and keep the sentence short. The input is a live speech transcript: it may contain fillers (eh, pues, bueno), false starts, small recognition errors, and several ideas run together without punctuation — ignore fillers, split run-ons into short sentences, and rewrite the intended meaning. Remember: the output is in the same language as the input, Spanish in, Spanish out. Reply with only the rewritten sentence or sentences, nothing else.",
+  "retryPromptTemplate": "Your rewrite broke these Lectura-Fácil rules: {violations}. Rewrite the sentence again. Keep it in Spanish, keep the meaning, and follow every rule.",
+  "thresholds": { "maxWordsHard": 15, "maxWordsSoft": 12 },
+  "fewShots": [
+    {
+      "source": "Me encantaría que pudieras acompañarnos a la excursión del próximo sábado.",
+      "simplified": "Hay una excursión el sábado. ¿Quieres venir con nosotros?"
+    },
+    {
+      "source": "La reunión fue suspendida por la dirección debido a la falta de quórum.",
+      "simplified": "La dirección canceló la reunión. Faltaban personas."
+    },
+    {
+      "source": "No creo que sea conveniente tomar una decisión tan precipitada.",
+      "simplified": "Es mejor esperar. No decidas tan rápido."
+    },
+    {
+      "source": "Llevábamos un buen rato esperando cuando por fin apareció el autobús.",
+      "simplified": "Esperamos mucho tiempo. Al final llegó el autobús."
+    },
+    {
+      "source": "Cuando tengas un hueco, ¿me echas una mano con la mudanza?",
+      "simplified": "¿Me ayudas con la mudanza? Dime qué día puedes."
+    },
+    {
+      "source": "El plazo de inscripción finalizará el 15 de marzo a las 14:00 horas.",
+      "simplified": "Puedes inscribirte hasta el 15 de marzo a las 14:00."
+    },
+    {
+      "source": "eh pues bueno al final decidimos quedarnos en casa porque llovía muchísimo",
+      "simplified": "Llovía mucho. Al final nos quedamos en casa."
+    },
+    {
+      "source": "bueno pues la semana pasada fuimos al médico y nos dijo que todo estaba bien pero que tenemos que volver en abril para otra revisión",
+      "simplified": "Fuimos al médico la semana pasada. Todo estaba bien. Tenemos que volver en abril para otra revisión."
+    }
+  ]
+}

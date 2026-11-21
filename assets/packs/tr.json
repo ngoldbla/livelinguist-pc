@@ -1,0 +1,97 @@
+{
+  "framework": "kolayAnlaslrBilgi",
+  "language": "tr",
+  "displayName": "Kolay Anlaşılır Bilgi (Inclusion Europe ETR)",
+  "languageName": "Turkish",
+  "script": "Latin",
+  "baseLang": "tr",
+  "standardName": "Kolay Anlaşılır Bilgi / Easy-to-Read",
+  "standardTier": "easy_to_read_etr",
+  "standardCitation": "Inclusion Europe. Information for All: European standards for making information easy to read and understand (2009). Applied as the pan-European Easy-to-Read framework for Turkish in the absence of a clearly verifiable dominant national Turkish easy-language standard.",
+  "standardConfidence": 0.58,
+  "systemPrompt": "You rewrite live speech transcripts into EASY-TO-READ Turkish for people with reading difficulties, cognitive disabilities, or limited Turkish proficiency. Follow the Easy-to-Read approach based on Inclusion Europe's 'Information for All' guidance, adapted to Turkish grammar.\n\nYour task:\n- Keep the original meaning.\n- Remove speech noise, hesitation, false starts, and repetition.\n- Produce very short, clear sentences in Turkish.\n- Make the text easy to read and easy to understand.\n\nOutput requirements:\n- Output only simplified Turkish.\n- One idea per sentence.\n- Prefer 4-8 words per sentence.\n- Never exceed 12 words per sentence.\n- If the source has several ideas, split into several sentences.\n- Keep paragraph breaks only when they help understanding.\n\nLanguage rules:\n- Use common everyday Turkish words.\n- Prefer active voice.\n- Name who does the action when known.\n- Prefer simple finite verbs: present, definite past (-di), simple future.\n- Avoid formal written forms such as '-ilmektedir', '-ılması', '-ulması', 'tarafından'.\n- Avoid dense noun phrases and nominalizations. Turn them into simple verbs.\n- Avoid long modifier chains before nouns. Make a new sentence.\n- Avoid unnecessary conditionals, passives, concessives, and legal-administrative style.\n- Keep natural Turkish word order.\n- Use only simple connectors: 've', 'ama', 'çünkü', 'sonra'.\n- Keep negatives only when necessary.\n- Keep important names, dates, times, places, and numbers accurate.\n\nSpeech cleanup:\n- Delete fillers and hesitation words.\n- Delete duplicates unless they add meaning.\n- Resolve broken starts into one clean sentence.\n- If the source is unclear, keep only the meaning that is supported.\n- Do not invent facts.\n\nAccessibility rules:\n- Prefer concrete words over abstract words.\n- Prefer explicit subjects over omitted subjects when omission may confuse.\n- If a technical term is necessary, keep it and explain it with simple words.\n- If a list is needed, put one item per line.\n\nStyle:\n- Calm, direct, respectful.\n- Do not sound bureaucratic.\n- Do not summarize away important facts.\n- Do not translate into another language.\n\nTurkish in, Turkish out.",
+  "retryPromptTemplate": "Your rewrite broke these Kolay Anlaşılır Bilgi (Inclusion Europe ETR) rules: {violations}. Rewrite the sentence again in Turkish, keep the meaning, and follow every rule.",
+  "thresholds": {
+    "maxWordsHard": 12,
+    "maxWordsSoft": 8
+  },
+  "lengthUnit": "words",
+  "rulesOneliner": "One idea per sentence; 4-8 words preferred, max 12; use common everyday Turkish; prefer active voice and name the actor; use simple present, -di past, and simple future; avoid nominalizations and bureaucratic noun phrases; avoid passive/impersonal forms like '-ilmektedir' and 'tarafından'; split conditional, concessive, and relative-participial chains into separate sentences; keep suffix chains short where possible; keep natural SOV order; use only simple connectors; write numbers and times clearly; use simple respectful 'siz' if addressing the reader. Turkish in, Turkish out.",
+  "fillers": [
+    "şey",
+    "yani",
+    "eee",
+    "ııı",
+    "hani",
+    "işte",
+    "aslında",
+    "falan"
+  ],
+  "numberWordsRegex": "\\b(?:sıfır|bir|iki|üç|dört|beş|altı|yedi|sekiz|dokuz|on|yirmi|otuz|kırk|elli|altmış|yetmiş|seksen|doksan|yüz|bin|milyon|milyar|trilyon|birinci|ikinci|üçüncü|dördüncü|beşinci|altıncı|yedinci|sekizinci|dokuzuncu|onuncu|yarım|çeyrek|düzine|kaç|birkaç|çok|az|nice|bunca|onlarca|yüzlerce|binlerce)\\b",
+  "stopwords": [
+    "ve",
+    "veya",
+    "ama",
+    "fakat",
+    "çünkü",
+    "de",
+    "da",
+    "ile",
+    "için",
+    "bu",
+    "şu",
+    "o",
+    "ben",
+    "sen",
+    "siz",
+    "biz",
+    "onlar",
+    "bir",
+    "çok",
+    "az",
+    "mi",
+    "mı",
+    "mu",
+    "mü",
+    "ne",
+    "nasıl",
+    "gibi",
+    "kadar",
+    "sonra",
+    "önce"
+  ],
+  "fewShots": [
+    {
+      "source": "Eee yani toplantı şey yarın gibi olacak, hani saat olarak da tam net değil ama büyük ihtimalle öğleden sonra falan.",
+      "simplified": "Toplantı yarın olacak.\nSaat henüz net değil.\nBüyük olasılıkla öğleden sonra."
+    },
+    {
+      "source": "Bu başvuru sürecinin sonuçlandırılabilmesi için ilgili belgelerin tarafımıza iletilmesi gerekmektedir.",
+      "simplified": "Belgeleri bize gönderin.\nSonra başvuruyu bitirelim."
+    },
+    {
+      "source": "Iıı ben dün kuruma gittim da şey, sistem yoktu, o yüzden işlem yapamadılar, sonra bugün tekrar gelin dediler.",
+      "simplified": "Dün kuruma gittim.\nSistem yoktu.\nİşlem yapamadılar.\nBugün yine gelmemi istediler."
+    },
+    {
+      "source": "Vatandaşlarımızın mağduriyet yaşamamaları adına ödemelerin belirtilen süre zarfında gerçekleştirilmesi önem arz etmektedir.",
+      "simplified": "Sorun yaşamayın.\nÖdemeyi zamanında yapın."
+    },
+    {
+      "source": "Yani şimdi otobüs normalde buradan geçiyor ama işte yol kapalı olduğu için biraz ileriden kalkacak.",
+      "simplified": "Otobüs bugün buradan geçmiyor.\nYol kapalı.\nOtobüs ileriden kalkacak."
+    },
+    {
+      "source": "Söz konusu düzenleme kapsamında hizmetten yararlanmak isteyen kişilerin kimlik ibraz etmeleri ve kayıt formunu eksiksiz doldurmaları beklenmektedir.",
+      "simplified": "Hizmeti almak için kimlik gösterin.\nKayıt formunu doldurun.\nFormu eksiksiz doldurun."
+    },
+    {
+      "source": "Şey ben size onu anlatacaktım, hani geçen hafta başlayan kurs var ya, onun saati değişti, artık sabah değil akşam.",
+      "simplified": "Geçen hafta başlayan kursun saati değişti.\nKurs artık akşam.\nSabah değil."
+    },
+    {
+      "source": "Afet sonrası geçici barınma alanlarında konaklayan bireylerin, hijyen malzemelerine erişimlerinin artırılmasına yönelik çalışmalar sürdürülmektedir.",
+      "simplified": "Kurum çalışıyor.\nAmaç şudur:\nBarınma alanlarında kalan kişiler\ndaha kolay hijyen malzemesi alsın."
+    }
+  ]
+}

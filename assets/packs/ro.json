@@ -1,0 +1,97 @@
+{
+  "framework": "easyToRead",
+  "language": "ro",
+  "displayName": "Easy-to-Read Romanian (Inclusion Europe / Information for All)",
+  "languageName": "Romanian",
+  "script": "Latin",
+  "baseLang": "ro",
+  "standardName": "Easy-to-Read / Easy Language (Inclusion Europe framework applied in Romanian)",
+  "standardTier": "easy_to_read_etr",
+  "standardCitation": "Inclusion Europe. Information for All: European standards for making information easy to read and understand (2009). Applied as the closest authoritative easy-to-read framework for Romanian.",
+  "standardConfidence": 0.63,
+  "systemPrompt": "You rewrite LIVE SPEECH transcripts into EASY-TO-READ Romanian for people with reading difficulties, cognitive disabilities, or limited Romanian proficiency. Use the Easy-to-Read approach aligned with Inclusion Europe's 'Information for All' framework, adapted to Romanian grammar.\n\nYour task:\n- Keep the meaning of the speaker.\n- Remove speech noise: fillers, hesitations, false starts, repeated words, and self-corrections.\n- Rewrite into very simple Romanian.\n- Output only the rewritten Romanian text.\n\nRules:\n1. Write one idea per sentence.\n2. Keep sentences short: target 5-8 words, maximum 12 words.\n3. Use common, concrete Romanian words.\n4. Prefer short sentences in basic subject-verb-object order.\n5. Use present tense when possible. Use perfectul compus for past if needed. Avoid complex literary or bureaucratic tense forms.\n6. Use active voice, not passive voice.\n7. Break long sentences into separate sentences.\n8. Avoid long clauses with 'care', 'deoarece', 'întrucât', 'astfel încât', 'deși'. Split them.\n9. Prefer verbs over abstract nouns and bureaucratic nouns.\n10. If a hard word is necessary, keep it and explain it in a new short sentence.\n11. Avoid pronouns when they may be unclear. Repeat the noun instead.\n12. Keep grammar correct but simple. Maintain clear agreement in gender and number.\n13. For instructions, use direct simple forms.\n14. Do not add new information. Do not summarize away important facts.\n\nFormatting:\n- Use short paragraphs only if needed.\n- Prefer one sentence per line when the content is dense.\n- No bullet points unless the source is clearly a list.\n- No quotation marks unless needed for meaning.\n\nRomanian output only.",
+  "retryPromptTemplate": "Your rewrite broke these Easy-to-Read Romanian (Inclusion Europe / Information for All) rules: {violations}. Rewrite the sentence again in Romanian, keep the meaning, and follow every rule.",
+  "thresholds": {
+    "maxWordsHard": 12,
+    "maxWordsSoft": 8
+  },
+  "lengthUnit": "words",
+  "rulesOneliner": "One idea per sentence; keep sentences short, ideally 5-8 words and never over 12; use common everyday Romanian words; explain any necessary difficult word in a new short sentence; prefer simple SVO order; use present tense or perfectul compus and avoid complex tenses; use active voice with a clear actor; split subordinate and relative clauses into separate sentences; prefer verbs over abstract nouns; prefer positive statements and avoid double negation; keep agreement simple and correct; repeat nouns when pronouns may confuse; remove fillers and false starts; use short direct instruction forms, not bureaucratic impersonal phrasing; Romanian in, Romanian out.",
+  "fillers": [
+    "ăă",
+    "mmm",
+    "adică",
+    "păi",
+    "eh",
+    "na",
+    "deci",
+    "cum să zic"
+  ],
+  "numberWordsRegex": "\\b(?:zero|nul(?:ul)?|o|un(?:u(?:l)?)?|una|unuia|unei|doi|doua|două|douazeci|douăzeci|trei|patru|cinci|șase|sase|sapte|șapte|opt|noua|nouă|zece|unsprezece|doisprezece|douasprezece|douăsprezece|treisprezece|paisprezece|cincisprezece|șaisprezece|saisprezece|șaptesprezece|saptesprezece|optsprezece|nouasprezece|nouăsprezece|douazeci|douăzeci|treizeci|patruzeci|cincizeci|șaizeci|saizeci|șaptezeci|saptezeci|optzeci|nouazeci|nouăzeci|suta|sută|sute|sutele|sutelor|mie|mii|miile|miilor|milion|milioane|miliard|miliarde|trilion|trilioane|jumatate|jumătate|sfert|doime|treime|zecime|duzina|duzină|duzini|prim(?:ul|a)?|intai(?:ul|a)?|întâi(?:ul|a)?|al\\s+doilea|a\\s+doua|a\\s+douăa?|al\\s+treilea|a\\s+treia|al\\s+patrulea|a\\s+patra|al\\s+cincilea|a\\s+cincea|al\\s+șaselea|al\\s+saselea|a\\s+șasea|a\\s+sasea|al\\s+șaptelea|al\\s+saptelea|a\\s+șaptea|a\\s+saptea|al\\s+optulea|a\\s+opta|al\\s+nouălea|al\\s+noualea|a\\s+noua|al\\s+zecilea|a\\s+zecea|dublu|triplu|cvadruplu|quintuplu)\\b",
+  "stopwords": [
+    "și",
+    "să",
+    "în",
+    "la",
+    "de",
+    "cu",
+    "pe",
+    "din",
+    "că",
+    "este",
+    "e",
+    "a",
+    "un",
+    "o",
+    "într-un",
+    "pentru",
+    "nu",
+    "se",
+    "mai",
+    "ca",
+    "sau",
+    "dar",
+    "ce",
+    "care",
+    "au",
+    "am",
+    "ai",
+    "fost",
+    "fi",
+    "lui"
+  ],
+  "fewShots": [
+    {
+      "source": "Păi, ăă, mâine, cred, venim pe la zece și după aia, dacă mai e nevoie, mai stăm puțin să vorbim.",
+      "simplified": "Venim mâine la ora zece.\nApoi vorbim puțin, dacă este nevoie."
+    },
+    {
+      "source": "Deci eu, cum să zic, nu prea am înțeles unde trebuie să merg și cine îmi dă actele.",
+      "simplified": "Nu am înțeles un lucru.\nUnde trebuie să merg?\nCine îmi dă actele?"
+    },
+    {
+      "source": "Na, cererea asta, adică, se depune aici, dar după aceea trebuie, mmm, să așteptați un mesaj.",
+      "simplified": "Depui cererea aici.\nApoi aștepți un mesaj."
+    },
+    {
+      "source": "Eh, noi am fost ieri, dar nu era doamna de acolo și am plecat, și azi venim iar.",
+      "simplified": "Noi am fost ieri acolo.\nDoamna nu era acolo.\nAm plecat.\nVenim din nou azi."
+    },
+    {
+      "source": "Solicitanții ale căror dosare nu au fost completate în conformitate cu prevederile procedurale aplicabile vor fi notificați ulterior în vederea remedierii neconformităților constatate.",
+      "simplified": "Unele dosare nu sunt complete.\nNoi trimitem un mesaj mai târziu.\nMesajul spune ce trebuie corectat."
+    },
+    {
+      "source": "Implementarea măsurilor prevăzute în cadrul programului se va realiza după finalizarea etapei de evaluare administrativă și tehnică.",
+      "simplified": "Programul are o etapă de evaluare.\nEvaluarea este administrativă și tehnică.\nDupă evaluare, încep măsurile din program."
+    },
+    {
+      "source": "În situația în care beneficiarul nu poate face dovada domiciliului, cererea de acordare a sprijinului financiar nu poate fi soluționată favorabil.",
+      "simplified": "Beneficiarul trebuie să arate dovada domiciliului.\nFără această dovadă, cererea nu poate fi aprobată."
+    },
+    {
+      "source": "Deși contractul a fost semnat, plata nu va fi efectuată până la îndeplinirea tuturor obligațiilor asumate de către părți.",
+      "simplified": "Contractul este semnat.\nPlata vine mai târziu.\nMai întâi, toate părțile trebuie să își facă obligațiile."
+    }
+  ]
+}

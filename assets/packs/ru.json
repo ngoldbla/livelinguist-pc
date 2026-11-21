@@ -1,0 +1,106 @@
+{
+  "framework": "easyToRead",
+  "language": "ru",
+  "displayName": "Лёгкое чтение (Inclusion Europe ETR)",
+  "languageName": "Russian",
+  "script": "Cyrillic",
+  "baseLang": "ru",
+  "standardName": "Лёгкое чтение / Easy-to-Read guidelines used via Inclusion Europe",
+  "standardTier": "easy_to_read_etr",
+  "standardCitation": "Inclusion Europe. Information for All: European standards for making information easy to read and understand (2009)",
+  "standardConfidence": 0.62,
+  "systemPrompt": "You rewrite live speech transcripts into Russian Easy-to-Read text for people with reading difficulties, cognitive disabilities, or limited Russian proficiency. Follow Easy-to-Read practice based on Inclusion Europe 'Information for All' and adapt it to Russian grammar.\n\nGoal:\n- Keep the original meaning.\n- Make the text very easy to read and understand.\n- Output only simplified Russian in Cyrillic.\n\nCore rules:\n1. Use very short sentences.\n2. Put only one main idea in each sentence.\n3. Prefer common everyday Russian words.\n4. Prefer active voice and name the person or organization doing the action.\n5. Use simple sentence order: subject + verb + object.\n6. Use simple present, past, or future.\n7. Avoid participles and adverbial participles.\n8. Avoid long subordinate clauses; split them into separate sentences.\n9. Avoid bureaucratic phrases, abstract nouns, and long noun chains.\n10. Prefer a simple verb over a noun phrase with a weak verb.\n11. Repeat the same word for the same thing; avoid unclear pronouns.\n12. Remove fillers, hesitations, repetitions, repairs, and off-topic fragments.\n13. If the source is a run-on sentence, break it into several short sentences.\n14. Keep numbers, dates, times, names, and addresses exact, but format them clearly.\n15. If an instruction or process has steps, present each step on a new line.\n16. Do not add information that is not in the source.\n\nRussian-specific guidance:\n- Avoid forms like 'осуществление', 'предоставление', 'реализация' when a simple verb is possible.\n- Avoid passive patterns like 'было принято решение' when you can say who decided.\n- Avoid stacked genitives and long official noun groups.\n- Avoid причастия and деепричастия; rewrite them as finite verbs in separate sentences.\n- Keep case-heavy phrases short and concrete.\n\nOutput style:\n- Clear, calm, respectful.\n- Short paragraphs if needed.\n- Use lists for steps.\n- No commentary, no explanations, no quotation marks unless needed by the meaning.\n\nRussian in, Russian out.",
+  "retryPromptTemplate": "Your rewrite broke these Лёгкое чтение (Inclusion Europe ETR) rules: {violations}. Rewrite the sentence again in Russian, keep the meaning, and follow every rule.",
+  "thresholds": {
+    "maxWordsHard": 12,
+    "maxWordsSoft": 8
+  },
+  "lengthUnit": "words",
+  "rulesOneliner": "Very short sentences, one idea each; use common everyday words; prefer active voice with an explicit doer; keep subject + verb + object order; use simple present/past/future; avoid participles and adverbial participles; split subordinate clauses; prefer verbs over abstract verbal nouns; reduce heavy case chains and stacked genitives; address the reader directly when useful; repeat the same key term; format numbers and steps clearly; keep negatives simple; remove fillers and false starts. Russian in, Russian out.",
+  "fillers": [
+    "ну",
+    "э-э",
+    "ээ",
+    "это",
+    "как бы",
+    "в общем",
+    "значит",
+    "типа"
+  ],
+  "numberWordsRegex": "\\b(?:ноль|нуль|один|одна|одно|одни|перв(?:ый|ая|ое|ые)|два|две|втор(?:ой|ая|ое|ые)|три|трет(?:ий|ья|ье|ьи)|четыре|четв(?:ёртый|ертый|ёртая|ертая|ёртое|ертое|ёртые|ертые)|пять|пят(?:ый|ая|ое|ые)|шесть|шест(?:ой|ая|ое|ые)|семь|седьм(?:ой|ая|ое|ые)|восемь|восьм(?:ой|ая|ое|ые)|девять|девят(?:ый|ая|ое|ые)|десять|десят(?:ый|ая|ое|ые)|одиннадцать|одиннадцат(?:ый|ая|ое|ые)|двенадцать|двенадцат(?:ый|ая|ое|ые)|тринадцать|тринадцат(?:ый|ая|ое|ые)|четырнадцать|четырнадцат(?:ый|ая|ое|ые)|пятнадцать|пятнадцат(?:ый|ая|ое|ые)|шестнадцать|шестнадцат(?:ый|ая|ое|ые)|семнадцать|семнадцат(?:ый|ая|ое|ые)|восемнадцать|восемнадцат(?:ый|ая|ое|ые)|девятнадцать|девятнадцат(?:ый|ая|ое|ые)|двадцать|двадцат(?:ый|ая|ое|ые)|тридцать|тридцат(?:ый|ая|ое|ые)|сорок|соров(?:ой|ая|ое|ые)|пятьдесят|пятидесят(?:ый|ая|ое|ые)|шестьдесят|шестидесят(?:ый|ая|ое|ые)|семьдесят|семидесят(?:ый|ая|ое|ые)|восемьдесят|восьмидесят(?:ый|ая|ое|ые)|девяносто|девяност(?:ый|ая|ое|ые)|сто|сот(?:ый|ая|ое|ые)|двести|двухсот(?:ый|ая|ое|ые)|триста|трёхсот(?:ый|ая|ое|ые)|трехсот(?:ый|ая|ое|ые)|четыреста|четырёхсот(?:ый|ая|ое|ые)|четырехсот(?:ый|ая|ое|ые)|пятьсот|пятисот(?:ый|ая|ое|ые)|шестьсот|шестисот(?:ый|ая|ое|ые)|семьсот|семисот(?:ый|ая|ое|ые)|восемьсот|восьмисот(?:ый|ая|ое|ые)|девятьсот|девятисот(?:ый|ая|ое|ые)|тысяча|тысячи|тысяч(?:а|и)?|тысячн(?:ый|ая|ое|ые)|миллион|миллиона|миллионов|миллионн(?:ый|ая|ое|ые)|миллиард|миллиарда|миллиардов|миллиардн(?:ый|ая|ое|ые)|пол(?:овина|овиной)?|полтора|полторы|полутор(?:а|ый|ая|ое|ые)|четверть|треть|дюжина|пара|несколько|много|мало)\\b",
+  "stopwords": [
+    "и",
+    "а",
+    "но",
+    "или",
+    "что",
+    "чтобы",
+    "как",
+    "если",
+    "то",
+    "не",
+    "ни",
+    "да",
+    "же",
+    "ли",
+    "в",
+    "на",
+    "с",
+    "со",
+    "к",
+    "ко",
+    "у",
+    "из",
+    "от",
+    "по",
+    "для",
+    "о",
+    "об",
+    "про",
+    "я",
+    "ты",
+    "мы",
+    "вы",
+    "он",
+    "она",
+    "они",
+    "это",
+    "тот",
+    "этот",
+    "быть"
+  ],
+  "fewShots": [
+    {
+      "source": "Ну, значит, мы, э-э, завтра, как бы, начинаем приём документов, и, в общем, если у вас чего-то не хватает, то вы потом донесёте.",
+      "simplified": "Мы начинаем принимать документы завтра.\nЕсли чего-то нет, вы принесёте это потом."
+    },
+    {
+      "source": "Это, ну, можно, типа, прийти не с утра, а попозже, потому что утром обычно, э-э, много людей и всё долго.",
+      "simplified": "Можно прийти позже.\nУтром людей много.\nУтром ждать дольше."
+    },
+    {
+      "source": "Мы сейчас, в общем, проверим заявку, потом вам, значит, позвоним и скажем, что дальше делать.",
+      "simplified": "Сейчас мы проверим заявку.\nПотом мы вам позвоним.\nМы скажем, что делать дальше."
+    },
+    {
+      "source": "Ну я, э-э, не успел сегодня оплатить, но завтра с утра точно переведу деньги и пришлю чек.",
+      "simplified": "Сегодня я не успел оплатить.\nЗавтра утром я переведу деньги.\nПотом я пришлю чек."
+    },
+    {
+      "source": "Граждане, не представившие документы, подтверждающие право на льготу, подлежат обслуживанию на общих основаниях.",
+      "simplified": "Если у человека нет документа на льготу,\nмы обслуживаем его на общих условиях."
+    },
+    {
+      "source": "В целях осуществления контроля за качеством оказываемых услуг организация проводит периодическую оценку удовлетворённости получателей.",
+      "simplified": "Организация проверяет качество услуг.\nДля этого она иногда спрашивает людей,\nдовольны ли они услугами."
+    },
+    {
+      "source": "Заявления, поступившие после указанной даты, рассматриваются при наличии технической возможности и свободных мест.",
+      "simplified": "Мы принимаем заявления до этой даты.\nПосле этой даты мы можем принять заявление не всегда.\nЭто зависит от мест и возможностей."
+    },
+    {
+      "source": "Посетителям, прибывшим в учреждение без предварительной записи, может быть отказано в приёме в связи с высокой загруженностью специалистов.",
+      "simplified": "Лучше записаться заранее.\nЕсли записи нет,\nмы можем не принять посетителя.\nПричина: у специалистов много работы."
+    }
+  ]
+}

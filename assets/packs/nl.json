@@ -1,0 +1,97 @@
+{
+  "framework": "makkelijkLezen",
+  "language": "nl",
+  "displayName": "Makkelijk Lezen / Easy to Read (Inclusion Europe)",
+  "languageName": "Nederlands",
+  "script": "Latin",
+  "baseLang": "nl",
+  "standardName": "Makkelijk Lezen / Easy to Read (Inclusion Europe-framework, Nederlandse context)",
+  "standardTier": "easy_to_read_etr",
+  "standardCitation": "Inclusion Europe, Information for All: European standards for making information easy to read and understand (2009)",
+  "standardConfidence": 0.62,
+  "systemPrompt": "You rewrite live speech transcripts into Dutch easy-to-read language for people with reading difficulties, cognitive disabilities, or limited Dutch proficiency. Follow the Easy-to-Read approach from Inclusion Europe's 'Information for All' framework, adapted to Dutch grammar and usage.\n\nGoal:\n- Produce very clear, short, concrete Dutch.\n- Preserve the important meaning.\n- Remove speech noise, hesitation, repetition, and false starts.\n- Make the text easy to read aloud and easy to scan.\n\nAudience:\n- Adults and young people who need easy-to-read Dutch.\n- Readers may have cognitive disabilities, low literacy, aphasia, or be learning Dutch.\n\nCore rules:\n1. Write one idea per sentence.\n2. Keep sentences short: target 10 words, maximum 12 words.\n3. Use everyday Dutch words.\n4. Replace abstract or formal words with concrete words.\n5. If a difficult word is necessary, explain it in a new short sentence.\n6. Use active voice. Say who does what.\n7. Prefer present tense. Use past only when needed for meaning.\n8. Avoid passive forms with 'worden' or 'zijn' + participle.\n9. Split long sentences with subordinate clauses into separate sentences.\n10. Avoid nominalisations; prefer verbs.\n11. Keep verb clusters short and simple.\n12. Avoid idioms, sarcasm, figurative language, and legalistic wording.\n13. Use positive wording and avoid double negatives.\n14. Use clear reference. Repeat the noun if a pronoun could confuse the reader.\n15. Keep a consistent polite form: use 'u' for the reader.\n16. Present steps, times, dates, and numbers clearly.\n\nSpeech cleanup:\n- Remove fillers such as 'eh', 'nou', 'zeg maar', 'dus', 'ja', 'eigenlijk', 'soort van'.\n- Remove self-corrections, repeated starts, and duplicate words.\n- If the transcript is fragmented, reconstruct the simplest correct meaning.\n- Do not add information that is not supported by the source.\n\nOutput format:\n- Output only the rewritten Dutch text.\n- Use short paragraphs if needed.\n- Each sentence must be easy to understand on first reading.\n- Keep wording natural for Dutch easy-to-read, not childish.\n\nQuality check before finalizing:\n- Is each sentence one idea?\n- Is each sentence within the length limit?\n- Are hard words removed or explained?\n- Is every sentence concrete and direct?\n- Are actor, action, and time clear?\n\nDutch in, Dutch out.",
+  "retryPromptTemplate": "Your rewrite broke these Makkelijk Lezen / Easy to Read (Inclusion Europe) rules: {violations}. Rewrite the sentence again in Nederlands, keep the meaning, and follow every rule.",
+  "thresholds": {
+    "maxWordsHard": 12,
+    "maxWordsSoft": 10
+  },
+  "lengthUnit": "words",
+  "rulesOneliner": "One idea per sentence; keep sentences to 10 words soft, 12 hard; use common everyday Dutch words; explain any necessary hard word in the next short sentence; prefer active voice and name the actor; use present tense where possible and only simple past reference when needed; avoid passive with worden/zijn + participle; split subordinate clauses and long sentences; change nominalisations into verbs; keep Dutch verb groups short and avoid stacked auxiliaries/modals; use positive wording and avoid double negation; use consistent direct address with 'u'; repeat nouns when pronouns are unclear; format numbers and steps clearly. Dutch in, Dutch out.",
+  "fillers": [
+    "eh",
+    "uh",
+    "nou",
+    "zeg maar",
+    "dus",
+    "ja",
+    "eigenlijk",
+    "soort van"
+  ],
+  "numberWordsRegex": "\\b(?:nul|een|e[eé]n|twee|drie|vier|vijf|zes|zeven|acht|negen|tien|elf|twaalf|dertien|veertien|vijftien|zestien|zeventien|achttien|negentien|twintig|dertig|veertig|vijftig|zestig|zeventig|tachtig|negentig|honderd|duizend|miljoen|miljard|biljoen|biljard|eerste|tweede|derde|vierde|vijfde|zesde|zevende|achtste|negende|tiende|elfde|twaalfde|dertiende|veertiende|vijftiende|zestiende|zeventiende|achttiende|negentiende|twintigste|dertigste|veertigste|vijftigste|zestigste|zeventigste|tachtigste|negentigste|honderdste|duizendste|miljoenste|miljardste|half|halve|kwart|dozijn|paar|enkele|vele|weinige)\\b",
+  "stopwords": [
+    "de",
+    "het",
+    "een",
+    "en",
+    "of",
+    "maar",
+    "want",
+    "dat",
+    "dit",
+    "die",
+    "deze",
+    "het",
+    "is",
+    "zijn",
+    "was",
+    "waren",
+    "wordt",
+    "worden",
+    "heeft",
+    "hebben",
+    "ik",
+    "u",
+    "je",
+    "hij",
+    "zij",
+    "wij",
+    "ze",
+    "van",
+    "in",
+    "op"
+  ],
+  "fewShots": [
+    {
+      "source": "Eh ja, u moet zeg maar eerst even online een formulier invullen en daarna wordt er door de gemeente gekeken of u recht heeft op hulp.",
+      "simplified": "Vul eerst online een formulier in.\nDaarna kijkt de gemeente naar uw aanvraag.\nDe gemeente beslist of u hulp krijgt."
+    },
+    {
+      "source": "Nou, als het pasje kwijt is, dan moet u dus eigenlijk zo snel mogelijk bellen, want anders kan iemand anders het gebruiken.",
+      "simplified": "Is uw pasje kwijt?\nBel dan snel.\nAnders kan iemand uw pasje gebruiken."
+    },
+    {
+      "source": "Uh we waren, eh, gisteren nog bezig met de planning, maar die was nog niet klaar, dus morgen hoort u meer.",
+      "simplified": "Gisteren was de planning nog niet klaar.\nMorgen hoort u meer."
+    },
+    {
+      "source": "Ja, het loket is, zeg maar, niet open op vrijdagmiddag en dan kunt u alleen via de website een afspraak maken.",
+      "simplified": "Het loket is vrijdagmiddag dicht.\nU kunt dan alleen online een afspraak maken."
+    },
+    {
+      "source": "Indien de aanvrager niet tijdig de vereiste documenten overlegt, kan de behandeling van de aanvraag worden opgeschort.",
+      "simplified": "Levert u de documenten niet op tijd in?\nDan stopt de behandeling van uw aanvraag tijdelijk."
+    },
+    {
+      "source": "De uitvoering van het beleid vindt plaats onder verantwoordelijkheid van het college, waarbij tevens rekening wordt gehouden met de geldende wettelijke kaders.",
+      "simplified": "Het college voert dit beleid uit.\nHet college houdt zich aan de wet."
+    },
+    {
+      "source": "Hoewel de resultaten op onderdelen positief kunnen worden genoemd, bestaat er vooralsnog onvoldoende duidelijkheid over de financiële consequenties op langere termijn.",
+      "simplified": "Sommige resultaten zijn goed.\nMaar de kosten later zijn nog niet duidelijk."
+    },
+    {
+      "source": "De cliënt dient zich ervan bewust te zijn dat overschrijding van de termijn kan leiden tot niet-ontvankelijkheid van het bezwaar.",
+      "simplified": "U moet op tijd bezwaar maken.\nBent u te laat?\nDan behandelen wij uw bezwaar misschien niet."
+    }
+  ]
+}

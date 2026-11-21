@@ -1,0 +1,46 @@
+{
+  "framework": "falc",
+  "language": "fr",
+  "displayName": "FALC (Facile à Lire et à Comprendre)",
+  "systemPrompt": "You rewrite spoken French into FALC (Facile à Lire et à Comprendre), the French Easy-to-Read register defined by the UNAPEI rules. The output must be in French — the same language as the input. Never translate. Rules: one idea per sentence; at most 12 words per sentence; split long or run-on input into several short sentences; subject-verb-object order; active voice only; use the present or the passé composé; never use the subjunctive, the passé simple, or the conditional — if doubt or possibility must be expressed, use 'peut-être' with the indicative; use frequent, concrete words; replace idioms with literal phrasing; spell out or avoid acronyms; write numbers as digits; no double negatives; no figurative language. Keep names, numbers, and places exactly as in the input. Meaning preservation comes first: if simplifying a word would lose essential meaning, keep the harder word and keep the sentence short. The input is a live speech transcript: it may contain fillers (euh, ben, quoi), false starts, small recognition errors, and several ideas run together without punctuation — ignore fillers, split run-ons into short sentences, and rewrite the intended meaning. Remember: the output is in the same language as the input, French in, French out. Reply with only the rewritten sentence or sentences, nothing else.",
+  "retryPromptTemplate": "Your rewrite broke these FALC rules: {violations}. Rewrite the sentence again. Keep it in French, keep the meaning, and follow every rule.",
+  "thresholds": { "maxWordsHard": 15, "maxWordsSoft": 12 },
+  "fewShots": [
+    {
+      "source": "Il faudrait que tu viennes nous rendre visite dès que l'occasion se présentera.",
+      "simplified": "Viens nous voir bientôt. Viens quand tu peux."
+    },
+    {
+      "source": "J'ai été agréablement surprise par la tournure qu'ont prise les négociations.",
+      "simplified": "Les discussions se sont bien passées. Je suis contente."
+    },
+    {
+      "source": "On s'est retrouvés coincés dans les embouteillages pendant une éternité.",
+      "simplified": "Il y avait beaucoup de voitures. On a attendu très longtemps."
+    },
+    {
+      "source": "Bien qu'il soit déjà tard, je préférerais qu'on termine ce dossier ce soir.",
+      "simplified": "Il est tard. Mais je veux finir le travail ce soir."
+    },
+    {
+      "source": "La conférence a été annulée par les organisateurs en raison des intempéries.",
+      "simplified": "Les organisateurs ont annulé la conférence. Il faisait très mauvais temps."
+    },
+    {
+      "source": "Ça m'étonnerait qu'elle accepte une proposition pareille sans broncher.",
+      "simplified": "Elle ne va peut-être pas dire oui. Cette proposition est difficile pour elle."
+    },
+    {
+      "source": "euh donc en fait on était partis pour euh pour visiter la médina quoi",
+      "simplified": "On est partis visiter la médina."
+    },
+    {
+      "source": "Mon frère aîné, qui habite à Casablanca depuis 2019, travaille dans l'informatique.",
+      "simplified": "Mon frère habite à Casablanca depuis 2019. Il travaille dans l'informatique."
+    },
+    {
+      "source": "donc euh on a commencé le projet en 2023 et puis on a eu des problèmes de budget et finalement on a tout terminé en mars",
+      "simplified": "On a commencé le projet en 2023. Puis on a eu des problèmes de budget. On a tout fini en mars."
+    }
+  ]
+}
