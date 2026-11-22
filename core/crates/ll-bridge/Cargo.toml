@@ -15,6 +15,7 @@ name = "livelinguist_core"
 serde_json = { workspace = true }
 serde = { workspace = true }
 ll-window = { workspace = true }
+ll-accel = { workspace = true }
 ll-llm = { workspace = true }
 ll-asr = { workspace = true }
 ll-audio = { workspace = true }

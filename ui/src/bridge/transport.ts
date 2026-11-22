@@ -6,6 +6,7 @@ import type {
   SimplifiedStatus,
 } from "../store/sessionStore";
 import type { Envelope } from "./generated/Envelope";
+import type { HardwareReport } from "./generated/HardwareReport";
 import type { RuntimeStatus } from "./generated/RuntimeStatus";
 import type { Snapshot } from "./generated/Snapshot";
 
@@ -42,6 +43,10 @@ export interface BackendProbe {
   backend: string;
   devices: Array<{ id: string; kind: string; available: boolean }>;
   mockCalibration: boolean;
+  ui?: HardwareReport["ui"];
+  vulkanDetail?: string;
+  cudaDetail?: string;
+  cudaDevices?: HardwareReport["cuda"]["devices"];
 }
 
 export interface Transport {
@@ -61,6 +66,7 @@ export interface Transport {
   applyRuntimeConfig(layer: unknown): Promise<RuntimeStatus>;
   applyScenario(scenario: string): Promise<RuntimeStatus>;
   probeBackends(): Promise<BackendProbe>;
+  probeHardware(): Promise<HardwareReport>;
   calibrate(): Promise<RuntimeStatus>;
 }
 
@@ -80,6 +86,7 @@ interface NativeClient {
   applyRuntimeConfig(layerJson: string): string;
   applyScenario(scenario: string): string;
   probeBackends(): string;
+  probeHardware(): string;
   calibrate(): string;
 }
 
@@ -194,6 +201,10 @@ class NativeTransport implements Transport {
 
   async probeBackends(): Promise<BackendProbe> {
     return JSON.parse(this.client.probeBackends()) as BackendProbe;
+  }
+
+  async probeHardware(): Promise<HardwareReport> {
+    return JSON.parse(this.client.probeHardware()) as HardwareReport;
   }
 
   async calibrate(): Promise<RuntimeStatus> {
@@ -420,12 +431,34 @@ class DemoTransport implements Transport {
         { id: "vulkan", kind: "gpu", available: false },
       ],
       mockCalibration: true,
+      ui: demoHardware().ui,
     };
+  }
+
+  async probeHardware(): Promise<HardwareReport> {
+    return demoHardware();
   }
 
   async calibrate(): Promise<RuntimeStatus> {
     return demoRuntime();
   }
+}
+
+function demoHardware(): HardwareReport {
+  return {
+    ui: {
+      backend: "demo",
+      apiAvailable: false,
+      hardware: false,
+      adapter: null,
+      driver: null,
+      degradedReason: "demo transport — the native bridge is not loaded",
+      notes: [],
+    },
+    adapters: [],
+    vulkan: { available: false, detail: "demo transport", devices: [] },
+    cuda: { available: false, detail: "demo transport", devices: [] },
+  };
 }
 
 function demoRuntime(): RuntimeStatus {
@@ -438,7 +471,7 @@ function demoRuntime(): RuntimeStatus {
     effectiveGpuLayers: 0,
     loadedBackendModules: ["cpu"],
     cpuVariant: "avx2",
-    uiBackend: "vulkan",
+    ui: demoHardware().ui,
     windowPolicy: "console",
     model: "qwen3-0.6b-easylanguage",
     quant: "q4_k_m",

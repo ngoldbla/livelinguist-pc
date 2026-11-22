@@ -14,14 +14,16 @@ This file is the live status board. Each merged PR is a validated stage.
 | 5 | UI shell: Aurora, onboarding, console, store, i18n | #5 | merged | `docs/screenshots/m2/` |
 | 6 | UI overlay, transcript, settings, summary, licenses, dev panel | #5 | merged | `docs/screenshots/m2/` |
 | 7 | Packaging, CI release workflow, final QA | #6 | merged | `docs/qa/2026-11-21-packaging.md`, `2026-11-21-final-qa.md` |
+| 8 | W-0 Windows baseline, toolchain, dev-VM smoke | pending | branch | `docs/qa/2026-11-22-windows-vm-smoke.md` |
+| 9 | W-5a measured renderer/accelerator probe + GPUIX GPU test-renderer portfolio | pending | branch | `docs/qa/2026-11-22-gpu-renderer.md`, `docs/screenshots/m2-windows/` |
 
 ## Milestone mapping
 
 | Milestone | Plan scope | Repo status |
 |---|---|---|
-| M0 | Windows-first feasibility spikes | S-0 done; S-2/S-5L/S-6L and UI spikes done on Linux dev; S-3A/S-4/S-5W/S-6W need Windows hardware/models |
+| M0 | Windows-first feasibility spikes | S-0 done; S-2/S-5L/S-6L done on Linux dev; S-4 device probe finds an RTX 5060 Ti + CUDA 13.5; S-3A/S-5W/S-6W need models/audio/interactive matrix |
 | M1 | Headless parity | `ll-core` + `ll-eval` implemented and tested on Linux; Windows CI job defined |
-| M2 | Windows desktop app | UI implemented and captured on Linux dev; Windows acceptance pending hardware |
+| M2 | Windows desktop app | UI implemented; Linux portfolio done; Windows GPU test-renderer portfolio + a11y counts captured; overlay/DPI/audio acceptance pending |
 | M3 | Windows packaging/release | NSIS + portable ZIP config + release workflow; clean-install test pending Windows hardware |
 | M4 | macOS | out of scope (separate decision) |
 
@@ -53,26 +55,32 @@ decision entry and an ADR update.
 
 ## Next run
 
-The Windows W-0 baseline is verified on the QEMU dev VM
+The Windows W-0 baseline is verified on the Windows 11 host
 (`docs/qa/2026-11-22-windows-vm-smoke.md`): native Rust, UI, bridge, and eval
-pass, and the GPUIX window renders on the basic display adapter. That VM has no
-GPU and no audio devices, so the hardware gates remain open.
+pass. A DXGI/CUDA probe found an RTX 5060 Ti and CUDA 13.5 (no Vulkan ICD, no
+microphone endpoint); the GPU test renderer produced the Windows portfolio and
+the dev panel now reports measured renderer values
+(`docs/qa/2026-11-22-gpu-renderer.md`).
 
-Resume on the real Windows 11 host with
-`docs/plans/2026-11-21-windows-resume-plan.md` and the copy-paste
-`docs/plans/2026-11-21-windows-resume-prompt.md`. Start with W-1 on hardware,
-then W-2, and do not repeat the W-0 build work.
+The agent shell is in session 0, so GUI work runs through
+`scripts/run-in-interactive-session.ps1` in the logged-on desktop. Next: W-1 on
+the interactive desktop (overlay matrix), then W-2 audio, and W-4 with a pinned
+GGUF on the CUDA device. Do not repeat the W-0 build work.
 
 ## Known environment limitations
 
-- The current Windows session is a QEMU dev VM with the Microsoft Basic Display
-  Adapter and no audio devices. Build and logic gates pass; W-1/W-2/W-5
-  hardware acceptance still requires the real D-051 host.
-- No Windows 11 release host is reachable from the original Linux session.
-  Win32/WASAPI code is target-gated and compiled by the Windows CI job; the
-  real-hardware acceptance matrix (S-6W/S-5W) is recorded as pending, not
-  claimed.
+- The agent shell runs in session 0. DXGI, CUDA, Rust, and UI logic tests work
+  there; GPUIX window creation and screenshot capture need the logged-on desktop
+  (`scripts/run-in-interactive-session.ps1`).
+- `Win32_VideoController` shows the Microsoft Basic Display Adapter while DXGI
+  enumerates an RTX 5060 Ti and CUDA 13.5 reports one device. Vulkan has no ICD;
+  there is no microphone endpoint. Record both views, never the display class
+  alone.
+- Win32/WASAPI acceptance still needs the interactive overlay/audio matrix; the
+  Win32 code is compiled by the Windows CI job, but the real-hardware matrix
+  (S-6W/S-5W) is recorded as pending, not claimed.
 - GPUIX 0.11 has no Linux PNG test renderer. UI verification uses a real X11
-  window plus `import -window`; logic uses `bun test`.
+  window plus `import -window` on Linux, and the native DirectX test renderer on
+  Windows.
 - Real ASR/LLM model runs require downloads and native builds; the default
   build ships deterministic mock/demo backends so CI and UI remain runnable.

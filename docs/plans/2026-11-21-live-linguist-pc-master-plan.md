@@ -334,6 +334,7 @@ livelinguist-pc/
 │   ├── crates/
 │   │   ├── ll-core/               # pure logic, no audio/ML/UI
 │   │   ├── ll-config/             # RuntimeConfig, DevOverrides, resolver
+│   │   ├── ll-accel/              # measured DXGI/DRM/Vulkan/CUDA inventory
 │   │   ├── ll-audio/              # capture, resample, VAD, ring buffer
 │   │   ├── ll-asr/                # sherpa-onnx, per-locale, mock, off
 │   │   ├── ll-llm/                # llama.cpp, calibration, model manager
@@ -378,7 +379,8 @@ livelinguist-pc/
 | Crate | Owns | MUST NOT |
 |---|---|---|
 | `ll-core` | Models, packs, validators, segmenter, prompt builder, decoding, reversion, metrics, exporters | Touch audio, ML libs, OS windows, or UI |
-| `ll-config` | `RuntimeConfig`, `DevOverrides`, precedence resolver, `RuntimeStatus` | Contain platform-specific inference code |
+| `ll-config` | `RuntimeConfig`, `DevOverrides`, precedence resolver, `RuntimeStatus` (including the measured `ui` status) | Contain platform-specific inference code |
+| `ll-accel` | Measured UI renderer and accelerator inventory: DXGI/DRM adapters, Vulkan ICDs, CUDA driver devices | Declare GPU acceleration from `cfg!(target_os)` or own model policy |
 | `ll-audio` | Device enumeration, capture, resampling, VAD, ring buffer, demo/file/silence sources | Know about transcripts or UI |
 | `ll-asr` | Streaming ASR sessions, per-locale model selection, partial/final results, mock/off | Own segmentation or simplification |
 | `ll-llm` | llama.cpp loading, backend devices, calibration, queue policy, model lifecycle, mock | Own prompt/validator policy |
@@ -563,13 +565,18 @@ validation. `RuntimeStatus` includes:
 
 - Requested vs effective backend/device/layers.
 - Loaded backend modules and CPU variant.
-- Chosen UI backend (D3D11/12 on Windows; X11 vs Wayland on Linux dev) and
-  window policy result.
+- Measured UI renderer status (`ui.backend`, adapter, hardware flag, degraded
+  reason) from `ll-accel`, plus the window policy result. Never declared from
+  the target OS.
 - Model/quant/hash; TTFT/tokens per second.
 - Last calibration, fallback reason, strict state.
 - Event-delivery health (`seq`, last event age, dropped count).
 
 Precedence: CLI > env > dev overrides > user settings > calibration > defaults.
+
+`ll-accel` owns the measurement: DXGI adapters on Windows, DRM render nodes and
+Vulkan ICDs on Linux, and the CUDA driver API for accelerator devices. A
+software-only adapter is degraded, not a GPU claim (ADR 0017).
 
 ### 7.3 `ll-audio`
 

@@ -11,6 +11,7 @@ import {
 import { colors, textStyle } from "../aurora/theme";
 import type { RuntimeStatus } from "../bridge/generated/RuntimeStatus";
 import { t } from "../i18n/locales";
+import { rendererAdapter, rendererLabel } from "./renderer";
 
 const SCENARIOS = [
   "auto",
@@ -151,6 +152,11 @@ export function DevPanel({
             value={runtime?.loadedBackendModules.join(", ") ?? "cpu"}
           />
           <Health label="CPU" value={runtime?.cpuVariant ?? "unknown"} />
+          <Health label="Renderer" value={rendererLabel(runtime?.ui)} />
+          <Health label="Adapter" value={rendererAdapter(runtime?.ui)} />
+          {runtime?.ui?.hardware === false && runtime.ui.backend !== "unknown" ? (
+            <Badge label="Software rendering" tone="amber" />
+          ) : null}
           <Health
             label={t(locale, "Model")}
             value={`${runtime?.model ?? "qwen3-0.6b"} · ${runtime?.quant ?? "q4_k_m"}`}
@@ -183,7 +189,7 @@ export function DevPanel({
           />
           <Health
             label="Window"
-            value={`${runtime?.windowPolicy ?? "console"} · ${runtime?.uiBackend ?? "vulkan"}`}
+            value={`${runtime?.windowPolicy ?? "console"} · ${rendererLabel(runtime?.ui)}`}
           />
           <Badge label={t(locale, "Content-free diagnostics")} tone="mint" />
         </Surface>

@@ -377,14 +377,16 @@ impl CoreClient {
 
     #[napi]
     pub fn runtime_status(&self) -> Result<String> {
+        let ui = ll_accel::detect_ui();
         let inner = self
             .inner
             .lock()
             .map_err(|_| Error::from_reason("bridge lock poisoned"))?;
-        let status = match inner.pipeline.as_ref() {
+        let mut status = match inner.pipeline.as_ref() {
             Some(pipeline) => pipeline.runtime_status(),
             None => RuntimeStatus::requested(&inner.runtime),
         };
+        status.ui = ui;
         serde_json::to_string(&status).map_err(|error| Error::from_reason(error.to_string()))
     }
 
@@ -461,12 +463,14 @@ impl CoreClient {
     pub fn apply_runtime_config(&self, layer_json: String) -> Result<String> {
         let layer: ConfigLayer = serde_json::from_str(&layer_json)
             .map_err(|error| Error::from_reason(format!("invalid config layer: {error}")))?;
+        let ui = ll_accel::detect_ui();
         let mut inner = self
             .inner
             .lock()
             .map_err(|_| Error::from_reason("bridge lock poisoned"))?;
         layer.apply(&mut inner.runtime);
-        let status = RuntimeStatus::requested(&inner.runtime);
+        let mut status = RuntimeStatus::requested(&inner.runtime);
+        status.ui = ui;
         serde_json::to_string(&status).map_err(|error| Error::from_reason(error.to_string()))
     }
 
@@ -474,20 +478,23 @@ impl CoreClient {
     pub fn apply_scenario(&self, scenario: String) -> Result<String> {
         let parsed = Scenario::parse(&scenario)
             .ok_or_else(|| Error::from_reason(format!("unknown scenario: {scenario}")))?;
+        let ui = ll_accel::detect_ui();
         let mut inner = self
             .inner
             .lock()
             .map_err(|_| Error::from_reason("bridge lock poisoned"))?;
         parsed.apply(&mut inner.runtime);
-        let status = RuntimeStatus::requested(&inner.runtime);
+        let mut status = RuntimeStatus::requested(&inner.runtime);
+        status.ui = ui;
         serde_json::to_string(&status).map_err(|error| Error::from_reason(error.to_string()))
     }
 
     #[napi]
     pub fn probe_backends(&self) -> Result<String> {
-        let vulkan = std::path::Path::new("/usr/share/vulkan/icd.d").exists()
-            || std::env::var_os("VK_ICD_FILENAMES").is_some();
-        let cuda = std::env::var_os("LL_CUDA_AVAILABLE").is_some();
+        let report = ll_accel::detect();
+        let hardware_gpu = report.adapters.iter().any(|adapter| !adapter.software);
+        let vulkan = report.vulkan.available && hardware_gpu;
+        let cuda = report.cuda.available && !report.cuda.devices.is_empty();
         let payload = serde_json::json!({
             "backend": "auto",
             "devices": [
@@ -495,13 +502,26 @@ impl CoreClient {
                 {"id": "vulkan", "kind": "gpu", "available": vulkan},
                 {"id": "cuda", "kind": "gpu", "available": cuda}
             ],
-            "mockCalibration": true
+            "mockCalibration": true,
+            "ui": report.ui,
+            "vulkanDetail": report.vulkan.detail,
+            "cudaDetail": report.cuda.detail,
+            "cudaDevices": report.cuda.devices
         });
         Ok(payload.to_string())
     }
 
+    /// The measured renderer and accelerator inventory. UI status comes from
+    /// DXGI/DRM, never from the target OS; no transcript data is involved.
+    #[napi]
+    pub fn probe_hardware(&self) -> Result<String> {
+        let report = ll_accel::detect();
+        serde_json::to_string(&report).map_err(|error| Error::from_reason(error.to_string()))
+    }
+
     #[napi]
     pub fn calibrate(&self) -> Result<String> {
+        let ui = ll_accel::detect_ui();
         let inner = self
             .inner
             .lock()
@@ -513,6 +533,8 @@ impl CoreClient {
             inner.runtime.backend.as_str().to_string()
         };
         status.last_calibration = Some("mock calibration (real GGUF pending)".to_string());
+        status.fallback_reason = ui.degraded_reason.clone();
+        status.ui = ui;
         serde_json::to_string(&status).map_err(|error| Error::from_reason(error.to_string()))
     }
 

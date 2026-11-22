@@ -26,6 +26,7 @@ Status labels: `proposed`, `accepted`, `baseline` (working default), `superseded
 | [0014](0014.md) | GUI floor: D3D11/12 / Vulkan | D-024 | accepted |
 | [0015](0015.md) | Windows-only v1 scope | D-053 | accepted |
 | [0016](0016.md) | Reference hardware: Dylan PC | D-051 | accepted |
+| [0017](0017.md) | Measure the renderer and accelerators; never declare them | D-052 | accepted |
 
 ## Superseded
 
