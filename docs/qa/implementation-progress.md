@@ -53,17 +53,25 @@ decision entry and an ADR update.
 
 ## Next run
 
-Resume on the Windows 11 side with
+The Windows W-0 baseline is verified on the QEMU dev VM
+(`docs/qa/2026-11-22-windows-vm-smoke.md`): native Rust, UI, bridge, and eval
+pass, and the GPUIX window renders on the basic display adapter. That VM has no
+GPU and no audio devices, so the hardware gates remain open.
+
+Resume on the real Windows 11 host with
 `docs/plans/2026-11-21-windows-resume-plan.md` and the copy-paste
-`docs/plans/2026-11-21-windows-resume-prompt.md`. The first gate is W-0:
-record the hardware, build/test natively, and open a baseline PR before changing
-policy or capture code.
+`docs/plans/2026-11-21-windows-resume-prompt.md`. Start with W-1 on hardware,
+then W-2, and do not repeat the W-0 build work.
 
 ## Known environment limitations
 
-- No Windows 11 host is reachable from this Linux session. Win32/WASAPI
-  code is target-gated and compiled by the Windows CI job; the real-hardware
-  acceptance matrix (S-6W/S-5W) is recorded as pending, not claimed.
+- The current Windows session is a QEMU dev VM with the Microsoft Basic Display
+  Adapter and no audio devices. Build and logic gates pass; W-1/W-2/W-5
+  hardware acceptance still requires the real D-051 host.
+- No Windows 11 release host is reachable from the original Linux session.
+  Win32/WASAPI code is target-gated and compiled by the Windows CI job; the
+  real-hardware acceptance matrix (S-6W/S-5W) is recorded as pending, not
+  claimed.
 - GPUIX 0.11 has no Linux PNG test renderer. UI verification uses a real X11
   window plus `import -window`; logic uses `bun test`.
 - Real ASR/LLM model runs require downloads and native builds; the default

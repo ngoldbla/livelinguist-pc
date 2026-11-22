@@ -123,3 +123,20 @@ jobs:
       - run: bun run typecheck
       - run: bun test
       - run: bun run check
+
+  ui-windows:
+    name: UI on Windows (typecheck and logic tests)
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: ui
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.5
+      # .gitattributes normalizes the checkout to LF, which Biome requires.
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck
+      - run: bun test
+      - run: bun run check
