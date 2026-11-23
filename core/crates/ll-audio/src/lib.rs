@@ -150,6 +150,24 @@ pub fn resample_linear(samples: &[f32], from_rate: u32, to_rate: u32) -> Vec<f32
     output
 }
 
+/// Average interleaved channels down to mono. Returns empty when there are no
+/// channels to average.
+pub fn downmix_to_mono(interleaved: &[f32], channels: usize) -> Vec<f32> {
+    if channels == 0 {
+        return Vec::new();
+    }
+    if channels == 1 {
+        return interleaved.to_vec();
+    }
+    interleaved
+        .chunks_exact(channels)
+        .map(|frame| frame.iter().sum::<f32>() / channels as f32)
+        .collect()
+}
+
+#[cfg(feature = "capture")]
+pub mod capture;
+
 /// Synthetic speech/silence source (demo mode and tests).
 #[derive(Debug, Clone)]
 pub struct SyntheticSource {
@@ -804,5 +822,20 @@ mod tests {
     #[test]
     fn invalid_wav_is_an_error() {
         assert!(decode_wav(b"not a wav").is_err());
+    }
+
+    #[test]
+    fn downmix_averages_stereo_pairs() {
+        assert_eq!(downmix_to_mono(&[1.0, 0.0, 1.0, 0.0], 2), vec![0.5, 0.5]);
+    }
+
+    #[test]
+    fn downmix_passes_mono_through() {
+        assert_eq!(downmix_to_mono(&[0.25, -0.5], 1), vec![0.25, -0.5]);
+    }
+
+    #[test]
+    fn downmix_without_channels_is_empty() {
+        assert!(downmix_to_mono(&[1.0, 0.0], 0).is_empty());
     }
 }
