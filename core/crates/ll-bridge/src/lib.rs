@@ -17,7 +17,7 @@ use ll_core::pack::FrameworkPack;
 use ll_core::session::{AudioSourceKind, SessionConfiguration, SimplificationMode};
 use ll_llm::{DemoBackend, FaultyBackend};
 use ll_pipeline::{Pipeline, PipelineConfig};
-use ll_window::{apply_for_current_window, WindowPolicyResult};
+use ll_window::{apply_for_current_window, begin_drag, WindowPolicyResult};
 use napi::bindgen_prelude::*;
 use napi::threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode};
 use napi_derive::napi;
@@ -445,6 +445,12 @@ impl CoreClient {
         };
         let result: WindowPolicyResult = apply_for_current_window(mode, &title_nonce);
         serde_json::to_string(&result).map_err(|error| Error::from_reason(error.to_string()))
+    }
+
+    /// Start a native window move from the overlay drag grip.
+    #[napi]
+    pub fn begin_drag(&self) -> bool {
+        begin_drag()
     }
 
     #[napi]

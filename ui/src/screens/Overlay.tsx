@@ -12,6 +12,7 @@ export function OverlayScreen({
   onPause,
   onResume,
   onSettings,
+  onDrag,
   onExpand,
   onConsole,
 }: {
@@ -21,6 +22,7 @@ export function OverlayScreen({
   onPause: () => void;
   onResume: () => void;
   onSettings: () => void;
+  onDrag: () => void;
   onExpand: () => void;
   onConsole: () => void;
 }) {
@@ -66,6 +68,13 @@ export function OverlayScreen({
           {state.reversionActive ? <Badge label="EN" tone="info" /> : null}
           <div style={{ flexGrow: 1 }} />
           <text style={textStyle(9, colors.faint)}>{statusLabel(language.asrStatus)}</text>
+          <OverlayIcon
+            glyph="⋮⋮"
+            label="Move window"
+            onClick={() => {}}
+            onMouseDown={onDrag}
+            focusable={false}
+          />
           <OverlayIcon glyph="⟳" label={t(locale, "Settings")} onClick={onSettings} />
           <OverlayIcon glyph="⤢" label={t(locale, "Expanded transcript")} onClick={onExpand} />
           <OverlayIcon glyph="▣" label={t(locale, "Console window")} onClick={onConsole} />
@@ -143,23 +152,33 @@ function OverlayIcon({
   glyph,
   label,
   onClick,
+  onMouseDown,
+  focusable = true,
 }: {
   glyph: string;
   label: string;
   onClick: () => void;
+  onMouseDown?: () => void;
+  focusable?: boolean;
 }) {
   return (
     <div
-      role="button"
-      tabIndex={0}
-      aria-label={label}
+      role={focusable ? "button" : undefined}
+      tabIndex={focusable ? 0 : undefined}
+      aria-label={focusable ? label : undefined}
+      aria-hidden={focusable ? undefined : true}
       onClick={onClick}
-      onKeyDown={(event) => {
-        if (event.key === "enter" || event.key === "space" || event.key === " ") {
-          event.preventDefault();
-          onClick();
-        }
-      }}
+      onMouseDown={onMouseDown}
+      onKeyDown={
+        focusable
+          ? (event) => {
+              if (event.key === "enter" || event.key === "space" || event.key === " ") {
+                event.preventDefault();
+                onClick();
+              }
+            }
+          : undefined
+      }
       style={{
         width: 22,
         height: 22,

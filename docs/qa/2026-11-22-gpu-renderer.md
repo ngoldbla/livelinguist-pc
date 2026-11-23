@@ -87,8 +87,9 @@ $ node tests\bridge\hardware-probe.mjs
 
 Interpretation:
 
-- The display class is still the Microsoft Basic Display Adapter, but DXGI sees
-  the RTX 5060 Ti as a hardware adapter and CUDA returns one device. The
+- At the time of the portfolio run the display class was the Microsoft Basic
+  Display Adapter while DXGI already saw the RTX 5060 Ti. The NVIDIA driver is
+  now installed and drives a 2560x1080 display; Vulkan still has no ICD. The
   previous "no GPU" record was based on `Win32_VideoController` alone and is
   corrected in the hardware record.
 - Vulkan is **not** usable: the loader exists, the ICD key is absent.
@@ -172,9 +173,9 @@ Notes:
 - This is **not** the W-1 overlay matrix: topmost, focus retention, unfocused
   click/hover, drag, mixed DPI, multi-monitor, virtual desktops, and
   overlay-over-fullscreen are not exercised.
-- The display adapter is Basic Display. The test renderer proves the DirectX
-  code path and GPU adapter enumeration; it does not prove frame pacing or that
-  each frame was presented by the RTX adapter.
+- The test renderer proves the DirectX code path and GPU adapter enumeration; it
+  does not prove frame pacing or that each presented frame used the RTX
+  adapter. The W-1 matrix is a separate, real-window run on the NVIDIA display.
 - No WASAPI capture: the host has render endpoints but no microphone endpoint.
 - No ASR/LLM measurement: no models. CUDA availability is not a tokens/s claim.
 - The test-renderer PNGs are not substituted for real-window acceptance.

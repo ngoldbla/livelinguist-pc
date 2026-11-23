@@ -157,6 +157,13 @@ Tasks:
 **Acceptance:** the plan §10.7 Windows rows all pass, with screenshots and a
 signed-off matrix. PR: **`windows: Win32 overlay acceptance`**.
 
+**Status addendum (2026-11-22):** partial pass on the interactive 2560x1080
+host. Topmost/no-activate/toolwindow, focus retention, unfocused click, drag,
+mode policy, and 100/125/150% scaling pass; the drag grip and the mode-switch
+subclass cleanup were added. Mixed-DPI and multi-monitor are blocked by the
+single display, and the virtual-desktop switch is not exercised. Results and
+non-claims: `docs/qa/2026-11-22-overlay-matrix.md`.
+
 ### W-2 — S-5W WASAPI microphone + loopback
 
 Current `ll-audio` has no capture implementation (the `capture` feature is
@@ -182,6 +189,11 @@ Tasks:
 `ll-bridge::listAudioSources`, UI Console/Live, `ll-config` audio modes.
 **Acceptance:** real mic and loopback sessions end-to-end; soak passes. PR:
 **`windows: WASAPI capture and soak`**.
+
+**Priority addendum (2026-11-22):** system audio is the initial use case
+(Zoom/Teams/Meet/Skype/YouTube). Implement WASAPI **loopback** first and test it
+by playing a non-PII WAV on the default render endpoint; no microphone endpoint
+is required. Microphone capture and its device matrix are a follow-up.
 
 ### W-3 — S-3A real ASR export, sherpa-onnx, coverage
 

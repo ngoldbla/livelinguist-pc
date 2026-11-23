@@ -33,9 +33,23 @@ pwsh -File scripts/run-in-interactive-session.ps1 `
   -FilePath scripts/screenshots-windows.ps1 -WorkingDirectory .
 ```
 
-**Not** claimed by this folder: the W-1 overlay matrix (topmost, focus
-retention, unfocused click/hover, drag, mixed DPI, multi-monitor, virtual
-desktops, overlay-over-fullscreen), frame pacing, WASAPI capture, or any
-model/ASR/LLM measurement. The display class is the Microsoft Basic Display
-Adapter even though DXGI enumerates the RTX 5060 Ti. Keep the Linux portfolio in
-`docs/screenshots/m2/` untouched.
+## Overlay matrix captures
+
+`overlay/` holds the W-1 run (`docs/qa/2026-11-22-overlay-matrix.md`):
+
+| File | What it shows |
+|---|---|
+| `overlay-100.png`, `-125`, `-150` | real 780x250 overlay at 100/125/150% scaling |
+| `console-100.png`, `-125`, `-150` | console reflow at the same scales |
+| `overlay-100-over-foreground.png` | overlay above a full-screen foreground proxy |
+| `overlay-100-after-drag.png` | after dragging the overlay grip +120,+80 |
+
+Mixed-DPI and multi-monitor are **not** in this folder: the host has one
+2560x1080 display. The harness records the blocked row and will capture
+`overlay-monitor-N.png` when a second display is present.
+
+**Not** claimed by this folder: mixed-DPI or multi-monitor results (one display),
+the virtual-desktop switch, overlay-over-exclusive-fullscreen, frame pacing,
+WASAPI capture, or any model/ASR/LLM measurement. The NVIDIA driver now drives
+the 2560x1080 display; the earlier portfolio was captured before that change.
+Keep the Linux portfolio in `docs/screenshots/m2/` untouched.

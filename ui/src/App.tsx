@@ -347,6 +347,7 @@ export function App() {
           onPause={() => void ensureTransport().pause()}
           onResume={() => void ensureTransport().resume()}
           onSettings={openSettings}
+          onDrag={() => void ensureTransport().beginDrag()}
           onExpand={() => {
             void setWindowMode("expanded");
             setScreen("live");

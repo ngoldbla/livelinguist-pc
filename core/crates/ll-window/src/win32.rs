@@ -17,18 +17,26 @@ type Hresult = i32;
 
 const HWND_TOPMOST: Hwnd = -1;
 const HWND_NOTOPMOST: Hwnd = -2;
+const WM_MOUSEACTIVATE: u32 = 0x0021;
+const MA_NOACTIVATE: isize = 3;
+const VK_LBUTTON: i32 = 0x01;
 const SWP_NOSIZE: u32 = 0x0001;
 const SWP_NOMOVE: u32 = 0x0002;
 const SWP_NOACTIVATE: u32 = 0x0010;
+const SWP_FRAMECHANGED: u32 = 0x0020;
 const GWL_EXSTYLE: i32 = -20;
 const WS_EX_NOACTIVATE: isize = 0x0800_0000;
 const WS_EX_TOOLWINDOW: isize = 0x0000_0080;
-const WM_MOUSEACTIVATE: u32 = 0x0021;
-const MA_NOACTIVATE: isize = 3;
-const WM_NCLBUTTONDOWN: u32 = 0x00A1;
-const HTCAPTION: usize = 2;
+#[cfg(test)]
+const WS_EX_TOPMOST: isize = 0x0000_0008;
 const DWMWA_WINDOW_CORNER_PREFERENCE: u32 = 33;
 const DWMWCP_ROUND: u32 = 2;
+// GPUIX installs its own window subclasses; a low id such as 1 can collide and
+// make SetWindowSubclass fail silently. Use an app-private id and record the
+// result.
+const OVERLAY_SUBCLASS_ID: usize = 0x4C4C_0001;
+#[cfg(test)]
+const WM_LL_SUBCLASS_PROBE: u32 = 0x8001;
 
 #[link(name = "user32")]
 extern "system" {
@@ -49,8 +57,26 @@ extern "system" {
     ) -> i32;
     fn GetWindowThreadProcessId(hwnd: Hwnd, process_id: *mut u32) -> u32;
     fn GetWindowTextW(hwnd: Hwnd, text: *mut u16, max_count: i32) -> i32;
-    fn ReleaseCapture() -> i32;
+    fn IsWindowVisible(hwnd: Hwnd) -> i32;
+    fn GetCursorPos(point: *mut Point) -> i32;
+    fn GetAsyncKeyState(key: i32) -> i16;
+    fn GetWindowRect(hwnd: Hwnd, rect: *mut Rect) -> i32;
+    #[cfg(test)]
     fn SendMessageW(hwnd: Hwnd, msg: u32, wparam: usize, lparam: isize) -> isize;
+}
+
+#[repr(C)]
+struct Point {
+    x: i32,
+    y: i32,
+}
+
+#[repr(C)]
+struct Rect {
+    left: i32,
+    top: i32,
+    right: i32,
+    bottom: i32,
 }
 
 #[link(name = "kernel32")]
@@ -66,6 +92,11 @@ extern "system" {
         id: usize,
         data: usize,
     ) -> i32;
+    fn RemoveWindowSubclass(
+        hwnd: Hwnd,
+        callback: Option<unsafe extern "system" fn(Hwnd, u32, usize, isize, usize, usize) -> isize>,
+        id: usize,
+    ) -> i32;
     fn DefSubclassProc(hwnd: Hwnd, msg: u32, wparam: usize, lparam: isize) -> isize;
 }
 
@@ -78,7 +109,6 @@ extern "system" {
         size: u32,
     ) -> Hresult;
 }
-
 struct FindState {
     pid: u32,
     nonce: String,
@@ -95,7 +125,17 @@ unsafe extern "system" fn enum_callback(hwnd: Hwnd, lparam: isize) -> i32 {
     let mut title = [0u16; 512];
     let length = GetWindowTextW(hwnd, title.as_mut_ptr(), title.len() as i32);
     let text = String::from_utf16_lossy(&title[..length.max(0) as usize]);
-    if state.nonce.is_empty() || text.contains(&state.nonce) {
+    if state.nonce.is_empty() {
+        // GPUI also owns a visible helper window with an empty title. Prefer
+        // the visible titled window; otherwise drag/policy can target the
+        // helper and silently do nothing.
+        if IsWindowVisible(hwnd) != 0 && !text.is_empty() {
+            state.found = hwnd;
+            return 0;
+        }
+        return 1;
+    }
+    if text.contains(&state.nonce) {
         state.found = hwnd;
         return 0;
     }
@@ -124,6 +164,10 @@ unsafe extern "system" fn subclass_proc(
 ) -> isize {
     if msg == WM_MOUSEACTIVATE {
         return MA_NOACTIVATE;
+    }
+    #[cfg(test)]
+    if msg == WM_LL_SUBCLASS_PROBE {
+        return 42;
     }
     DefSubclassProc(hwnd, msg, wparam, lparam)
 }
@@ -156,11 +200,21 @@ pub fn apply_to_window(hwnd: Hwnd, mode: WindowMode) -> Result<WindowPolicyResul
         if policy.no_activate {
             ex_style |= WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW;
             notes.push("WS_EX_NOACTIVATE|WS_EX_TOOLWINDOW".to_string());
-            SetWindowSubclass(hwnd, Some(subclass_proc), 1, 0);
-            notes.push("WM_MOUSEACTIVATE -> MA_NOACTIVATE".to_string());
+            let installed =
+                SetWindowSubclass(hwnd, Some(subclass_proc), OVERLAY_SUBCLASS_ID, 0) != 0;
+            notes.push(if installed {
+                "WM_MOUSEACTIVATE -> MA_NOACTIVATE".to_string()
+            } else {
+                "SetWindowSubclass failed; WM_MOUSEACTIVATE is not intercepted".to_string()
+            });
         } else {
             ex_style &= !WS_EX_NOACTIVATE;
-            if !policy.utility_window {
+            // Leaving overlay mode must stop intercepting WM_MOUSEACTIVATE,
+            // otherwise expanded/console can never be activated again.
+            RemoveWindowSubclass(hwnd, Some(subclass_proc), OVERLAY_SUBCLASS_ID);
+            if policy.utility_window {
+                ex_style |= WS_EX_TOOLWINDOW;
+            } else {
                 ex_style &= !WS_EX_TOOLWINDOW;
             }
         }
@@ -170,15 +224,14 @@ pub fn apply_to_window(hwnd: Hwnd, mode: WindowMode) -> Result<WindowPolicyResul
         } else {
             HWND_NOTOPMOST
         };
-        SetWindowPos(
-            hwnd,
-            after,
-            0,
-            0,
-            0,
-            0,
-            SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE,
-        );
+        let mut flags = SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE;
+        if !policy.no_activate {
+            // Clearing WS_EX_NOACTIVATE is cached by the window manager until
+            // the frame is refreshed; otherwise WM_MOUSEACTIVATE keeps
+            // answering MA_NOACTIVATE after leaving overlay mode.
+            flags |= SWP_FRAMECHANGED;
+        }
+        SetWindowPos(hwnd, after, 0, 0, 0, 0, flags);
         notes.push(format!("topmost={}", policy.topmost));
         if policy.borderless {
             let preference = DWMWCP_ROUND;
@@ -198,7 +251,11 @@ pub fn apply_to_window(hwnd: Hwnd, mode: WindowMode) -> Result<WindowPolicyResul
     })
 }
 
-/// Caption drag: release capture and ask the non-client area to move.
+/// Caption drag: follow the cursor until the primary button is released.
+///
+/// `DefWindowProc(WM_NCLBUTTONDOWN)` starts a modal move loop that depends on
+/// activation, which a `WS_EX_NOACTIVATE` overlay does not get. This custom
+/// loop keeps the topmost window under the cursor without activating it.
 pub fn begin_drag_current() -> bool {
     let pid = unsafe { GetCurrentProcessId() };
     let hwnd = find_window(pid, "");
@@ -206,8 +263,37 @@ pub fn begin_drag_current() -> bool {
         return false;
     }
     unsafe {
-        ReleaseCapture();
-        SendMessageW(hwnd, WM_NCLBUTTONDOWN, HTCAPTION, 0) != 0
+        let mut cursor = Point { x: 0, y: 0 };
+        let mut rect = Rect {
+            left: 0,
+            top: 0,
+            right: 0,
+            bottom: 0,
+        };
+        if GetCursorPos(&mut cursor) == 0 || GetWindowRect(hwnd, &mut rect) == 0 {
+            return false;
+        }
+        let offset_x = cursor.x - rect.left;
+        let offset_y = cursor.y - rect.top;
+        std::thread::spawn(move || {
+            while (GetAsyncKeyState(VK_LBUTTON) as u16 & 0x8000) != 0 {
+                let mut cursor = Point { x: 0, y: 0 };
+                if GetCursorPos(&mut cursor) == 0 {
+                    break;
+                }
+                SetWindowPos(
+                    hwnd,
+                    HWND_TOPMOST,
+                    cursor.x - offset_x,
+                    cursor.y - offset_y,
+                    0,
+                    0,
+                    SWP_NOSIZE | SWP_NOACTIVATE,
+                );
+                std::thread::sleep(std::time::Duration::from_millis(8));
+            }
+        });
+        true
     }
 }
 
@@ -221,5 +307,128 @@ mod tests {
         assert!(policy.topmost && policy.no_activate && policy.borderless);
         let console = policy_for(WindowMode::Console);
         assert!(!console.topmost && !console.no_activate);
+    }
+
+    #[repr(C)]
+    struct WndClassExW {
+        cb_size: u32,
+        style: u32,
+        lpfn_wnd_proc: Option<unsafe extern "system" fn(Hwnd, u32, usize, isize) -> isize>,
+        cb_cls_extra: i32,
+        cb_wnd_extra: i32,
+        h_instance: isize,
+        h_icon: isize,
+        h_cursor: isize,
+        hbr_background: isize,
+        lpsz_menu_name: *const u16,
+        lpsz_class_name: *const u16,
+        h_icon_sm: isize,
+    }
+
+    #[link(name = "user32")]
+    extern "system" {
+        fn RegisterClassExW(class: *const WndClassExW) -> u16;
+        fn CreateWindowExW(
+            ex_style: u32,
+            class_name: *const u16,
+            window_name: *const u16,
+            style: u32,
+            x: i32,
+            y: i32,
+            width: i32,
+            height: i32,
+            parent: Hwnd,
+            menu: isize,
+            instance: isize,
+            param: *mut c_void,
+        ) -> Hwnd;
+        fn DefWindowProcW(hwnd: Hwnd, msg: u32, wparam: usize, lparam: isize) -> isize;
+        fn ShowWindow(hwnd: Hwnd, cmd: i32) -> i32;
+        fn DestroyWindow(hwnd: Hwnd) -> i32;
+    }
+
+    #[link(name = "kernel32")]
+    extern "system" {
+        fn GetModuleHandleW(name: *const u16) -> isize;
+    }
+
+    fn wide(text: &str) -> Vec<u16> {
+        text.encode_utf16().chain(std::iter::once(0)).collect()
+    }
+
+    /// Same-process Win32 integration check: the overlay policy must set
+    /// topmost/no-activate/toolwindow and intercept WM_MOUSEACTIVATE. A
+    /// cross-process SendMessage is not a valid probe for this message.
+    #[test]
+    fn overlay_window_sets_styles_and_answers_mouse_activate() {
+        unsafe {
+            let class_name = wide("LiveLinguistOverlayPolicyTest");
+            let window_name = wide("Live Linguist policy test");
+            let instance = GetModuleHandleW(std::ptr::null());
+            let class = WndClassExW {
+                cb_size: std::mem::size_of::<WndClassExW>() as u32,
+                style: 0,
+                lpfn_wnd_proc: Some(DefWindowProcW),
+                cb_cls_extra: 0,
+                cb_wnd_extra: 0,
+                h_instance: instance,
+                h_icon: 0,
+                h_cursor: 0,
+                hbr_background: 0,
+                lpsz_menu_name: std::ptr::null(),
+                lpsz_class_name: class_name.as_ptr(),
+                h_icon_sm: 0,
+            };
+            let _ = RegisterClassExW(&class);
+            let hwnd = CreateWindowExW(
+                0,
+                class_name.as_ptr(),
+                window_name.as_ptr(),
+                0x00CF_0000,
+                0,
+                0,
+                320,
+                200,
+                0,
+                0,
+                instance,
+                std::ptr::null_mut(),
+            );
+            assert_ne!(hwnd, 0, "CreateWindowExW failed");
+            ShowWindow(hwnd, 5);
+            let baseline = SendMessageW(hwnd, WM_LL_SUBCLASS_PROBE, 0, 0);
+            assert_ne!(baseline, 42, "probe message already answered");
+            let result = apply_to_window(hwnd, WindowMode::Overlay).expect("overlay policy");
+            assert!(result.applied);
+            let ex_style = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
+            assert_ne!(ex_style & WS_EX_TOPMOST, 0, "topmost missing");
+            assert_ne!(ex_style & WS_EX_NOACTIVATE, 0, "no-activate missing");
+            assert_ne!(ex_style & WS_EX_TOOLWINDOW, 0, "toolwindow missing");
+            let probe = SendMessageW(hwnd, WM_LL_SUBCLASS_PROBE, 0, 0);
+            assert_eq!(probe, 42, "subclass not installed");
+            let answer = SendMessageW(hwnd, WM_MOUSEACTIVATE, 0, 0x0201_0002);
+            assert_eq!(answer, MA_NOACTIVATE, "WM_MOUSEACTIVATE not intercepted");
+
+            apply_to_window(hwnd, WindowMode::Expanded).expect("expanded policy");
+            let ex_style = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
+            assert_eq!(ex_style & WS_EX_NOACTIVATE, 0, "no-activate not cleared");
+            assert_ne!(
+                ex_style & WS_EX_TOOLWINDOW,
+                0,
+                "expanded toolwindow missing"
+            );
+            let probe = SendMessageW(hwnd, WM_LL_SUBCLASS_PROBE, 0, 0);
+            assert_ne!(probe, 42, "subclass survived overlay exit");
+
+            apply_to_window(hwnd, WindowMode::Console).expect("console policy");
+            let ex_style = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
+            assert_eq!(
+                ex_style & WS_EX_TOOLWINDOW,
+                0,
+                "console toolwindow not cleared"
+            );
+            assert_eq!(ex_style & WS_EX_TOPMOST, 0, "console topmost not cleared");
+            let _ = DestroyWindow(hwnd);
+        }
     }
 }

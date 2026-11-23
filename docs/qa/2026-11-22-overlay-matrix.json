@@ -1,0 +1,143 @@
+{
+  "date": "2026-11-22T20:42:23-05:00",
+  "commit": "55a91e1",
+  "host": "DYLAN-WIN11",
+  "monitors": [
+    {
+      "device": "\\\\.\\DISPLAY6",
+      "description": "Generic PnP Monitor",
+      "rect": "0,0,2560,1080",
+      "dpi": 96,
+      "primary": true
+    }
+  ],
+  "sources": [
+    {
+      "device": "\\\\.\\DISPLAY6",
+      "scalePercent": 100
+    }
+  ],
+  "originalScalePercent": 100,
+  "modes": [
+    {
+      "mode": "console",
+      "policy": {
+        "topmost": false,
+        "noActivate": false,
+        "toolWindow": false,
+        "virtualDesktop": true,
+        "title": "Live Linguist — 15708"
+      }
+    },
+    {
+      "mode": "overlay",
+      "policy": {
+        "topmost": true,
+        "noActivate": true,
+        "toolWindow": true,
+        "virtualDesktop": true,
+        "title": "Live Linguist — 3392"
+      }
+    },
+    {
+      "mode": "expanded",
+      "policy": {
+        "topmost": true,
+        "noActivate": false,
+        "toolWindow": true,
+        "virtualDesktop": true,
+        "title": "Live Linguist — 9616"
+      }
+    }
+  ],
+  "dpi": [
+    {
+      "scalePercent": 100,
+      "expectedDpi": 96,
+      "applied": true,
+      "overlay": {
+        "policy": {
+          "topmost": true,
+          "noActivate": true,
+          "toolWindow": true,
+          "virtualDesktop": true,
+          "title": "Live Linguist — 15144"
+        },
+        "rect": "796x258",
+        "capture": "docs/screenshots/m2-windows/overlay/overlay-100.png"
+      },
+      "console": {
+        "rect": "1196x828",
+        "capture": "docs/screenshots/m2-windows/overlay/console-100.png"
+      }
+    },
+    {
+      "scalePercent": 125,
+      "expectedDpi": 120,
+      "applied": true,
+      "overlay": {
+        "policy": {
+          "topmost": true,
+          "noActivate": true,
+          "toolWindow": true,
+          "virtualDesktop": true,
+          "title": "Live Linguist — 7940"
+        },
+        "rect": "993x322",
+        "capture": "docs/screenshots/m2-windows/overlay/overlay-125.png"
+      },
+      "console": {
+        "rect": "1493x1034",
+        "capture": "docs/screenshots/m2-windows/overlay/console-125.png"
+      }
+    },
+    {
+      "scalePercent": 150,
+      "expectedDpi": 144,
+      "applied": true,
+      "overlay": {
+        "policy": {
+          "topmost": true,
+          "noActivate": true,
+          "toolWindow": true,
+          "virtualDesktop": true,
+          "title": "Live Linguist — 9996"
+        },
+        "rect": "1192x386",
+        "capture": "docs/screenshots/m2-windows/overlay/overlay-150.png"
+      },
+      "console": {
+        "rect": "1792x1106",
+        "capture": "docs/screenshots/m2-windows/overlay/console-150.png"
+      }
+    }
+  ],
+  "multiMonitor": {
+    "count": 1,
+    "status": "blocked",
+    "reason": "one monitor attached; mixed-DPI/multi-monitor needs two displays"
+  },
+  "focus": {
+    "proxy": "borderless full-screen window (LlProxyWindow)",
+    "overlayVisible": true,
+    "overlayAboveApp": true,
+    "clickSent": true,
+    "focusRetained": true,
+    "foregroundBeforeIsApp": true,
+    "foregroundAfterIsApp": true,
+    "capture": "docs/screenshots/m2-windows/overlay/overlay-100-over-foreground.png",
+    "captureRect": "796x258"
+  },
+  "drag": {
+    "grip": "1545,452",
+    "sent": true,
+    "moved": true,
+    "delta": "120,80",
+    "capture": "docs/screenshots/m2-windows/overlay/overlay-100-after-drag.png"
+  },
+  "notes": [
+    "Drag and live virtual-desktop switching are not automated in this run.",
+    "Focus uses a borderless full-screen Win32 proxy window as the foreground app.",
+    "WM_MOUSEACTIVATE is verified by the ll-window same-process Win32 test; a cross-process SendMessage is not a valid probe."
+  ]
+}

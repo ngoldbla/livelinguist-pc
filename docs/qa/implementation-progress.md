@@ -16,6 +16,7 @@ This file is the live status board. Each merged PR is a validated stage.
 | 7 | Packaging, CI release workflow, final QA | #6 | merged | `docs/qa/2026-11-21-packaging.md`, `2026-11-21-final-qa.md` |
 | 8 | W-0 Windows baseline, toolchain, dev-VM smoke | pending | branch | `docs/qa/2026-11-22-windows-vm-smoke.md` |
 | 9 | W-5a measured renderer/accelerator probe + GPUIX GPU test-renderer portfolio | pending | branch | `docs/qa/2026-11-22-gpu-renderer.md`, `docs/screenshots/m2-windows/` |
+| 10 | W-1a Win32 overlay matrix: policy, focus, drag, 100/125/150% | pending | branch | `docs/qa/2026-11-22-overlay-matrix.md`, `docs/screenshots/m2-windows/overlay/` |
 
 ## Milestone mapping
 
@@ -62,23 +63,28 @@ microphone endpoint); the GPU test renderer produced the Windows portfolio and
 the dev panel now reports measured renderer values
 (`docs/qa/2026-11-22-gpu-renderer.md`).
 
-The agent shell is in session 0, so GUI work runs through
-`scripts/run-in-interactive-session.ps1` in the logged-on desktop. Next: W-1 on
-the interactive desktop (overlay matrix), then W-2 audio, and W-4 with a pinned
-GGUF on the CUDA device. Do not repeat the W-0 build work.
+The agent shell is now in the interactive desktop (session 1), so GUI work runs
+directly; `scripts/run-in-interactive-session.ps1` remains for session-0
+agents. W-1a passed on the real overlay at 100/125/150% (policy, focus
+retention, unfocused click, drag, mode table). Mixed-DPI and multi-monitor are
+blocked by the single 2560x1080 display; the harness moves/captures per monitor
+when a second one is attached. Next: attach a second display for the mixed-DPI
+row, run W-2 audio, and W-4 with a pinned GGUF on the CUDA device. Do not repeat
+the W-0 build work.
 
 ## Known environment limitations
 
-- The agent shell runs in session 0. DXGI, CUDA, Rust, and UI logic tests work
-  there; GPUIX window creation and screenshot capture need the logged-on desktop
-  (`scripts/run-in-interactive-session.ps1`).
-- `Win32_VideoController` shows the Microsoft Basic Display Adapter while DXGI
-  enumerates an RTX 5060 Ti and CUDA 13.5 reports one device. Vulkan has no ICD;
-  there is no microphone endpoint. Record both views, never the display class
-  alone.
-- Win32/WASAPI acceptance still needs the interactive overlay/audio matrix; the
-  Win32 code is compiled by the Windows CI job, but the real-hardware matrix
-  (S-6W/S-5W) is recorded as pending, not claimed.
+- **One display.** Mixed-DPI and multi-monitor overlay results cannot be
+  produced without a second display (or a virtual/indirect display driver).
+  `scripts/overlay-matrix-windows.ps1` records the blocked row and is ready.
+- **No microphone endpoint; loopback first.** Two render endpoints exist, so
+  WASAPI system-audio loopback (the initial call/video use case) is testable.
+  Microphone capture is deferred to a follow-up.
+- The agent shell can be in session 0 (services) or the interactive desktop.
+  DXGI/CUDA/Rust/UI tests work in either; GPUIX window creation needs the
+  desktop, so session-0 agents use `scripts/run-in-interactive-session.ps1`.
+- Vulkan has no ICD even with the NVIDIA display driver; CUDA works. Record the
+  probe, never the target OS.
 - GPUIX 0.11 has no Linux PNG test renderer. UI verification uses a real X11
   window plus `import -window` on Linux, and the native DirectX test renderer on
   Windows.
