@@ -62,7 +62,7 @@ is CPU-only for 1.0, so the dGPU only matters for the UI.
 - **S3 needs S2.** **S5 needs S4.**
 - **S7 needs** S1 + S2 + S5 and at least one live locale from S3 (en).
   S6 should land before S7 so integration screenshots are final.
-- **S8 needs S7. S9 needs S8.**
+- **S8 needs S7 and the MVP human checkpoint (§10). S9 needs S8.**
 - Recommended single-agent order: **S4 → S1 → S2 → S5 → S6 → S3 → S7 → S8 → S9.**
   (S3 is long-running measurement; start its fixture download early and let it
   run while you do S5/S6.)
