@@ -61,6 +61,12 @@ pub struct EvalSummary {
     pub overrun_count: u64,
     pub event_count: usize,
     pub content_free_diagnostics: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub capture_seconds: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub capture_overrun_events: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub device_rate: Option<u32>,
 }
 
 #[derive(Debug, Clone)]
@@ -70,6 +76,10 @@ pub struct EvalOptions {
     pub wav: Option<PathBuf>,
     pub out: PathBuf,
     pub text: Option<String>,
+    /// Capture system audio instead of replaying a file or the demo.
+    pub loopback: bool,
+    /// How long the loopback capture runs.
+    pub seconds: u64,
 }
 
 impl Default for EvalOptions {
@@ -80,6 +90,8 @@ impl Default for EvalOptions {
             wav: None,
             out: PathBuf::from("eval-out"),
             text: None,
+            loopback: false,
+            seconds: 60,
         }
     }
 }
@@ -113,6 +125,34 @@ impl EvalOptions {
                     options.wav = Some(PathBuf::from(value));
                     index += 2;
                 }
+                "--source" => {
+                    let value = args
+                        .get(index + 1)
+                        .ok_or_else(|| EvalError::Argument("--source needs a value".into()))?;
+                    match value.as_str() {
+                        "loopback" => options.loopback = true,
+                        other => {
+                            return Err(EvalError::Argument(format!(
+                                "unknown source: {other} (expected loopback)"
+                            )))
+                        }
+                    }
+                    index += 2;
+                }
+                "--seconds" => {
+                    let value = args
+                        .get(index + 1)
+                        .ok_or_else(|| EvalError::Argument("--seconds needs a value".into()))?;
+                    options.seconds = value.parse::<u64>().map_err(|_| {
+                        EvalError::Argument(format!(
+                            "--seconds needs a whole number of seconds, got {value}"
+                        ))
+                    })?;
+                    if options.seconds == 0 {
+                        return Err(EvalError::Argument("--seconds must be at least 1".into()));
+                    }
+                    index += 2;
+                }
                 "--out" => {
                     let value = args
                         .get(index + 1)
@@ -144,6 +184,7 @@ pub fn help_text() -> String {
         "Usage:",
         "  ll-eval [--scenario mock|cpu-strict|no-gpu|vulkan-strict|tier-c|simplify-only|asr-only|llm-only]",
         "          [--language de-DE] [--wav tests/fixtures/sample.wav] [--out DIR] [--text TEXT]",
+        "          [--source loopback] [--seconds 60]  (loopback needs --features capture)",
         "",
         "Outputs: segments.csv, latency.json, summary.json, diagnostics.json, transcript.md",
     ]
@@ -266,6 +307,9 @@ fn run_text(
         overrun_count: 0,
         event_count: 0,
         content_free_diagnostics: true,
+        capture_seconds: None,
+        capture_overrun_events: None,
+        device_rate: None,
     };
     write_json(out.join("summary.json"), &summary)?;
     write_json(
@@ -292,6 +336,10 @@ fn run_audio(
     pipeline
         .start()
         .map_err(|error| EvalError::Pipeline(error.to_string()))?;
+    #[cfg(feature = "capture")]
+    if options.loopback {
+        return run_loopback_audio(options, pipeline, out);
+    }
     let mut source: Box<dyn AudioSource> = match &options.wav {
         Some(path) => Box::new(
             FileSource::from_path(path, false)
@@ -308,6 +356,50 @@ fn run_audio(
     while let Some(buffer) = source.next_buffer() {
         event_count += pipeline.feed_audio(&buffer).len();
     }
+    finish_run(options, pipeline, event_count, out, None)
+}
+
+/// Capture system audio for `--seconds` and feed it like the `--wav` path.
+#[cfg(feature = "capture")]
+fn run_loopback_audio(
+    options: &EvalOptions,
+    mut pipeline: Pipeline,
+    out: &Path,
+) -> Result<EvalSummary, EvalError> {
+    use std::time::{Duration, Instant};
+
+    let mut capture = ll_audio::capture::LoopbackCapture::start_default()
+        .map_err(|error| EvalError::Audio(error.to_string()))?;
+    let device_rate = capture.device_rate();
+    let started = Instant::now();
+    let deadline = started + Duration::from_secs(options.seconds);
+    let mut event_count = 0usize;
+    while Instant::now() < deadline {
+        let Some(buffer) = capture.next_buffer() else {
+            break;
+        };
+        if !buffer.is_empty() {
+            event_count += pipeline.feed_audio(&buffer).len();
+        }
+    }
+    let overruns = capture.overrun_events();
+    drop(capture);
+    finish_run(
+        options,
+        pipeline,
+        event_count,
+        out,
+        Some((started.elapsed().as_secs_f64(), overruns, device_rate)),
+    )
+}
+
+fn finish_run(
+    options: &EvalOptions,
+    mut pipeline: Pipeline,
+    mut event_count: usize,
+    out: &Path,
+    capture: Option<(f64, u64, u32)>,
+) -> Result<EvalSummary, EvalError> {
     event_count += pipeline.flush().len();
     let store = pipeline.stop();
     event_count += pipeline.take_events().len();
@@ -348,6 +440,9 @@ fn run_audio(
         overrun_count: pipeline.snapshot().overrun_count,
         event_count,
         content_free_diagnostics: true,
+        capture_seconds: capture.map(|(seconds, _, _)| seconds),
+        capture_overrun_events: capture.map(|(_, overruns, _)| overruns),
+        device_rate: capture.map(|(_, _, rate)| rate),
     };
     write_json(out.join("summary.json"), &summary)?;
     Ok(summary)
@@ -377,6 +472,12 @@ pub fn run(options: &EvalOptions) -> Result<EvalSummary, EvalError> {
             "simplify-only needs --text (typed/pasted input)".into(),
         ));
     }
+    #[cfg(not(feature = "capture"))]
+    if options.loopback {
+        return Err(EvalError::Audio(
+            "system audio capture not built; rebuild with --features capture".into(),
+        ));
+    }
     run_audio(options, &runtime, &coverage, &options.out)
 }
 
@@ -388,6 +489,29 @@ mod tests {
         let dir = std::env::temp_dir().join(format!("ll-eval-{name}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         dir
+    }
+
+    #[test]
+    fn loopback_source_flags_parse() {
+        let options = EvalOptions::parse(&[
+            "--source".into(),
+            "loopback".into(),
+            "--seconds".into(),
+            "5".into(),
+        ])
+        .unwrap();
+        assert!(options.loopback);
+        assert_eq!(options.seconds, 5);
+        assert_eq!(EvalOptions::default().seconds, 60);
+
+        assert!(matches!(
+            EvalOptions::parse(&["--source".into(), "microphone".into()]),
+            Err(EvalError::Argument(_))
+        ));
+        assert!(matches!(
+            EvalOptions::parse(&["--seconds".into(), "soon".into()]),
+            Err(EvalError::Argument(_))
+        ));
     }
 
     #[test]
@@ -415,6 +539,7 @@ mod tests {
             wav: None,
             out: out.clone(),
             text: None,
+            ..EvalOptions::default()
         };
         let summary = run(&options).unwrap();
         assert!(summary.segments >= 2, "{summary:?}");
@@ -444,6 +569,7 @@ mod tests {
                 wav: None,
                 out: out.clone(),
                 text: None,
+                ..EvalOptions::default()
             };
             let summary = run(&options).unwrap();
             assert_eq!(summary.scenario, scenario.as_str());
@@ -463,6 +589,7 @@ mod tests {
                 "Il faudrait que tu viennes nous rendre visite dès que l'occasion se présentera."
                     .into(),
             ),
+            ..EvalOptions::default()
         };
         let summary = run(&options).unwrap();
         assert_eq!(summary.segments, 1);
