@@ -21,7 +21,7 @@ This file is the live status board. Each merged PR is a validated stage.
 | 11 | v1.0 scope freeze + execution plan | #13 | merged | `docs/plans/2026-11-22-v1-scope.md`, ADR 0018 |
 | 12 | Master plan, budgets, progress aligned with v1.0 | #14 | merged | `docs/budgets.md` |
 | 13 | v1.0 model pins + public ASR mirror | #15 | merged | `docs/qa/2026-11-22-model-pins.md`, ADR 0019 |
-| 14 | Docs consolidation + Windows v1 implementation plan | this PR | merged | `docs/README.md`, `docs/plans/2026-11-23-windows-v1-plan.md` |
+| 14 | Docs consolidation + Windows v1 implementation plan | #16 | merged | `docs/README.md`, `docs/plans/2026-11-23-windows-v1-plan.md` |
 
 ## Milestone mapping
 
@@ -66,7 +66,7 @@ decision entry and an ADR update. **For 1.0, D-055/D-056 and
 9. #13 — v1.0 scope freeze + execution plan
 10. #14 — master plan/budgets/progress aligned with v1.0
 11. #15 — v1.0 model pins + public ASR mirror
-12. Docs consolidation + Windows v1 implementation plan
+12. #16 — docs consolidation + Windows v1 implementation plan
 
 ## v1.0 stage board (plan S1–S9)
 
