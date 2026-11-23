@@ -49,5 +49,6 @@ DXGI, and CUDA all report the RTX 5060 Ti, driving a 2560x1080 LG display at
 
 - Tier C is an approximation on this host; label it as such.
 - Record driver + display scaling with every audio/GPU measurement.
-- Audio has render endpoints but no capture endpoint; W-2 microphone/loopback
-  still needs hardware or a documented virtual-device decision.
+- Audio has render endpoints but no capture endpoint. W-2 now starts with
+  WASAPI **system-audio loopback** (the initial Zoom/Teams/Meet/Skype/YouTube
+  use case); microphone capture is a follow-up, not a blocker.

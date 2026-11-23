@@ -190,6 +190,11 @@ Tasks:
 **Acceptance:** real mic and loopback sessions end-to-end; soak passes. PR:
 **`windows: WASAPI capture and soak`**.
 
+**Priority addendum (2026-11-22):** system audio is the initial use case
+(Zoom/Teams/Meet/Skype/YouTube). Implement WASAPI **loopback** first and test it
+by playing a non-PII WAV on the default render endpoint; no microphone endpoint
+is required. Microphone capture and its device matrix are a follow-up.
+
 ### W-3 — S-3A real ASR export, sherpa-onnx, coverage
 
 Current `SherpaAsr` is a placeholder that returns `ASR_MODEL_MISSING` unless a

@@ -77,8 +77,9 @@ the W-0 build work.
 - **One display.** Mixed-DPI and multi-monitor overlay results cannot be
   produced without a second display (or a virtual/indirect display driver).
   `scripts/overlay-matrix-windows.ps1` records the blocked row and is ready.
-- **No microphone endpoint.** Two render endpoints exist; W-2 capture/soak is
-  blocked on hardware or a virtual-device decision.
+- **No microphone endpoint; loopback first.** Two render endpoints exist, so
+  WASAPI system-audio loopback (the initial call/video use case) is testable.
+  Microphone capture is deferred to a follow-up.
 - The agent shell can be in session 0 (services) or the interactive desktop.
   DXGI/CUDA/Rust/UI tests work in either; GPUIX window creation needs the
   desktop, so session-0 agents use `scripts/run-in-interactive-session.ps1`.
