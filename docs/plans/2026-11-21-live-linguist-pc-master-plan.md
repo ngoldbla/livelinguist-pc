@@ -520,6 +520,7 @@ truth.** Rows marked "superseded for 1.0 by D-055" remain the post-1.0 design.
 | **D-054** | **Measure the UI renderer and accelerators; never declare them from the target OS.** ADR 0017. | accepted | A declared renderer lies on software adapters; DXGI/DRM/CUDA probes are evidence | Slightly more platform code |
 | **D-055** | **v1.0 is single-screen, system-audio, CPU-first, click-to-simplify.** All 29 simplifier packs; system loopback first; 0.6B Q4 CPU; live ASR per measured coverage; no mic/multi-monitor/GPU inference/1.7B/live auto-simplify. ADR 0018. | accepted | A defensible low-end 1.0; removes hardware/model dependencies from the critical path | Deferred features move to post-1.0 |
 | **D-056** | **1.0 model set:** NVIDIA Nemotron 3.5 streaming 0.6B int8 at 560 ms (one model, all 29 locales) and `Qwen3-0.6B-EasyLanguage-Q4_K_M.gguf`; both pinned by SHA-256, mirrored per file, downloaded on first run. ADR 0019. | accepted | Matches the iOS weights; no export pipeline or per-language zoo | ~1.08 GB first run; broad-coverage locales may be simplify-only |
+| **D-057** | **Code signing for 1.0:** ship v1.0.0 unsigned with SHA-256 sums and documented SmartScreen steps; apply to SignPath Foundation (free OSS signing) and sign v1.0.x from CI once accepted. ADR 0020. | accepted | No cost, no secrets in the repo, honest about SmartScreen | First users see a SmartScreen warning until signing lands |
 
 ---
 

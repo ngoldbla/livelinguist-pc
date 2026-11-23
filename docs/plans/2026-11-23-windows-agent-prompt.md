@@ -29,8 +29,12 @@ candidate by executing plan stages S1-S9:
   S5 W-4b CPU llama.cpp click-only simplification, p95/RSS on tier C
   S6 W-5a 150% / 1280x720 layout clipping fix, W-5b keyboard + Narrator pass
   S7 W-5c end-to-end real session (no demo backend), privacy checks
-  S8 W-6  NSIS + portable ZIP, clean-VM install/upgrade/uninstall
-  S9      release candidate; tag only when the product owner says so
+  S8 W-6  NSIS + portable ZIP; clean install as a fresh standard (non-admin)
+          local user on this machine (no VM); unsigned + SHA-256 sums (ADR 0020)
+  S9      release candidate; tag v1.0.0 when G0-G9 are green
+S7 is the MVP: when it merges, STOP and ask the owner for the human pass (a real
+call through loopback + a Narrator listening pass) before starting S8.
+S3 uses FLEURS (approved). This is a native Windows 11 boot, not a VM.
 Recommended order: S4 -> S1 -> S2 -> S5 -> S6 -> S3 -> S7 -> S8 -> S9.
 Start the S3 fixture download early and let measurements run in the background.
 
@@ -89,5 +93,6 @@ End every session with:
 2. At least one render endpoint (speakers/headset) enabled; volume audible is
    not required for loopback.
 3. ~10 GB free disk for models and ASR eval clips.
-4. Be available for: the Narrator listening pass, starting a real call, a
-   clean Windows 11 VM for S8, the signing decision, and the v1.0 tag.
+4. Be available at the MVP checkpoint (after S7) for a real call and a
+   Narrator listening pass, and to apply for SignPath Foundation signing
+   (ADR 0020). Admin rights are needed once in S8 to create a test user.

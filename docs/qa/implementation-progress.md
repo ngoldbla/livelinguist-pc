@@ -78,8 +78,8 @@ decision entry and an ADR update. **For 1.0, D-055/D-056 and
 | S4 | W-4a EasyLanguage prompt contract (drop rolling context, 29 goldens) | `stage-w4-prompt-contract` | ready (no model needed) |
 | S5 | W-4b CPU llama.cpp click-only simplify, p95/RSS | `stage-w4-llama-cpu` | needs S4 |
 | S6 | W-5a 150%/1280x720 layout, W-5b keyboard + Narrator | `stage-w5-layout`, `stage-w5-a11y` | ready |
-| S7 | W-5c end-to-end real session + privacy checks | `stage-w5-integration` | needs S1, S2, S5, en live |
-| S8 | W-6 NSIS + portable, clean-VM install | `stage-w6-packaging` | needs S7 |
+| S7 | W-5c end-to-end real session + privacy checks (**MVP**; then human pass) | `stage-w5-integration` | needs S1, S2, S5, en live |
+| S8 | W-6 NSIS + portable, clean-profile install, unsigned + sums | `stage-w6-packaging` | needs S7 + MVP pass |
 | S9 | Release candidate → `v1.0.0` | `release-v1.0.0` | needs S8 + owner go-ahead |
 
 ## Next run
@@ -95,9 +95,10 @@ S3 fixture download early). Concretely:
 3. **S2** — pin the sherpa-onnx Rust binding, build `OnlineRecognizer` against
    the mirror at `f73e3bc8…`, onboarding download UX.
 
-Human/owner inputs pending: ASR eval fixture approval (FLEURS recommended),
-Narrator listening pass, a real call, a clean Windows 11 VM, signing decision,
-v1.0 tag go-ahead (plan §14).
+Owner inputs resolved 2026-11-23: FLEURS approved; native Windows 11 boot (no
+VM, clean install = fresh standard user); `v1.0.0` tag approved; unsigned
+v1.0.0 + SignPath application (ADR 0020). Pending: the MVP human pass (real
+call + Narrator) after S7 (plan §14).
 
 ## Known environment limitations
 

@@ -207,16 +207,17 @@ gate) or `simplify_only` (measured miss or not measurable). Minimum live set
 
 **Branch / PR:** `stage-w3-asr-coverage` — `windows: ASR coverage matrix`.
 
-### Fixtures (decision — record in ADR 0011 addendum)
+### Fixtures (approved 2026-11-23 — FLEURS; record in ADR 0011 addendum)
 
 - Use a public, redistributable read-speech test set with reference text
-  (recommended: **FLEURS** test split, CC-BY-4.0, covers all 29). Build ~5 min
+  (**FLEURS** test split, CC-BY-4.0, covers all 29; approved by the product
+  owner 2026-11-23). Build ~5 min
   per locale from listed utterance IDs.
 - Commit only `tests/asr-eval/manifest.json` (dataset, revision, utterance IDs,
   SHA-256 per clip, license). **Never commit audio** (CI rejects `.wav` outside
   `tests/fixtures/`). A script fetches clips into a gitignored cache.
-- If FLEURS is unacceptable to the product owner, stop and ask; do not use
-  scraped or PII audio.
+- If a locale is missing from FLEURS or its clips are unusable, record it and
+  mark the row `simplify_only`; do not use scraped or PII audio.
 
 ### Build
 
@@ -422,8 +423,7 @@ Build:
 
 Test:
 
-- Journey (scope §4) on the reference host: YouTube video, then a real call app
-  if available (human may need to start the call); overlay over borderless
+- Journey (scope §4) on the reference host: YouTube video; overlay over borderless
   fullscreen; focus stays in the other app while clicking/dragging the
   overlay; pause/resume; export; clear.
 - **Privacy checks:** grep logs, diagnostics CSV, crash output, and eval
@@ -437,6 +437,20 @@ Evidence: `docs/qa/2026-11-2x-v1-integration.md` + screenshots.
 
 Exit gate (G3/G5/G6/G8 in the real app).
 
+### MVP checkpoint (human, after S7 merges)
+
+S7 is the **MVP**. When it merges, the agent stops and asks the product owner
+for the human pass:
+
+1. A real Zoom/Teams/Meet call captured through loopback, captions live,
+   overlay above the call, click-to-simplify during the call.
+2. A Narrator listening pass over onboarding, console, live, settings, summary
+   (checklist from S6 W-5b).
+
+Record results in `docs/qa/2026-11-2x-mvp-human-pass.md`. Findings become fix
+PRs before S8. Until then, S6 W-5b closes on its automated checks and the
+keyboard-only walkthrough; the Narrator item stays open, not claimed.
+
 ---
 
 ## 11. S8 — W-6 packaging; S9 — release candidate
@@ -446,26 +460,36 @@ Exit gate (G3/G5/G6/G8 in the real app).
 1. `scripts/build-windows.ps1` produces the per-user NSIS installer and
    portable ZIP with the addon + any onnxruntime/sherpa DLLs; **no models, no
    GPU backends**; app ≤ 60 MB.
-2. Clean Windows 11 23H2+ VM (no dev tools): install without admin, launch,
-   onboarding download, loopback, overlay, export, upgrade over a previous
-   build, uninstall (models kept unless the user opts to remove), portable
-   unzip-and-run.
+2. **Clean-profile install on the native Windows 11 boot (no VM).** Create a
+   new **standard (non-admin) local user** (`net user llclean <pw> /add`, or
+   Settings → Accounts → Other users), sign in to it, and test there: no dev
+   tools on its PATH, an empty `%LOCALAPPDATA%` and HKCU, and any UAC prompt
+   would demand admin credentials, so "no admin" is proven. Run: install,
+   launch, onboarding download, loopback, overlay, export, upgrade over a
+   previous build, uninstall (models kept unless the user opts to remove),
+   portable unzip-and-run. Delete the account afterwards
+   (`net user llclean /delete` from the admin account).
 3. Verify: no UAC prompt; registry writes only under HKCU; files only under
    the install dir and `%LOCALAPPDATA%\LiveLinguist`.
 4. Release workflow on a test tag attaches installer, ZIP, and SHA-256 sums.
-5. **Product-owner decision:** unsigned beta (SmartScreen warning documented)
-   vs signed build. Record in a new ADR.
+5. **Code signing per ADR 0020:** v1.0.0 ships **unsigned** with published
+   SHA-256 sums and a documented SmartScreen step ("More info → Run anyway").
+   In parallel, apply to the SignPath Foundation free OSS signing program; once
+   accepted, sign from the GitHub Actions release workflow and ship v1.0.x
+   signed. Do not buy a certificate or add signing secrets to the repo.
 
 Evidence: `docs/qa/2026-11-2x-packaging-v1.md` (replaces the 2026-11-21 file's
 status). Exit gate: G1, G9 dry run.
 
 ### S9 `release-v1.0.0`
 
-1. Clean install on the tier C machine or the labelled tier C profile.
+1. Clean-profile install (standard user, as in S8) on the native Windows 11
+   boot, run under the labelled tier C profile.
 2. Full journey + 30-min soak + keyboard/Narrator + privacy checklist.
 3. All G0–G9 gates (scope §5) green with links to evidence.
 4. Freeze docs: progress board, ADR statuses, README status section.
-5. Tag `v1.0.0` **only when the product owner says so**; attach artifacts.
+5. Tag `v1.0.0` (name approved 2026-11-23) once G0–G9 are green; attach
+   installer, portable ZIP, and SHA-256 sums.
 
 ---
 
@@ -480,7 +504,7 @@ status). Exit gate: G1, G9 dry run.
 | ASR/LLM real-model tests | feature tests gated on `LL_MODEL_DIR` | no (models) | downloaded models |
 | WER/RTF, click p95, RSS | `ll-eval` scenarios | no | models + tier C profile |
 | Overlay/DPI/a11y/journey | manual + screenshot scripts | no | interactive desktop |
-| Clean install | VM | no | clean Windows 11 VM |
+| Clean install | fresh standard local user on the native boot | no | admin to create the user |
 
 Add `-Hardware` and `-Models <dir>` switches to `scripts/verify-windows.ps1`
 in S1/S2 so one command runs everything the host can run.
@@ -506,13 +530,24 @@ Screenshots / artifacts:
 Non-claims / known gaps:
 ```
 
-## 14. What only the product owner / a human can provide
+## 14. Product-owner inputs
 
-- Approval of the ASR eval fixture source (FLEURS recommended) — S3.
-- A human Narrator listening pass and a real Zoom/Teams/Meet call — S6/S7.
-- A clean Windows 11 VM image and, ideally, a real 4-core/8 GB laptop — S8/S9.
-- Code-signing decision and certificate (if signed) — S8.
-- Go-ahead to tag `v1.0.0` — S9.
+Resolved 2026-11-23:
+
+- ASR eval fixtures: **FLEURS** approved (S3).
+- Install testing runs on the **native Windows 11 boot**, not a VM; clean
+  install = fresh standard local user (S8).
+- Tag name **`v1.0.0`** approved; tag when G0–G9 are green (S9).
+- Code signing: unsigned v1.0.0 + SHA-256 sums; apply to SignPath Foundation
+  for signed follow-ups (ADR 0020).
+
+Still needed from a human:
+
+- **MVP checkpoint after S7:** a real call through loopback and a Narrator
+  listening pass.
+- SignPath application (account owner must apply; see ADR 0020).
+- Optional: a real 4-core/8 GB laptop; otherwise tier C numbers are labelled
+  approximations from `scripts/tier-c-profile.ps1`.
 
 ## 15. Stop rules
 
