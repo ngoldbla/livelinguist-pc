@@ -155,9 +155,13 @@ Steps:
    ≤ 3.5 GB, with 2-3 threads.
 7. Tests: model missing, bad hash, OOM, timeout, cancel, strict-mode failure,
    and no-background-work assertion.
+8. Run a typed **29-pack simplifier matrix** with the real model: every pack
+   loads, rewrites in the same language, never translates, and is deterministic
+   for the eval fixtures.
 
 **Acceptance:** `docs/qa/2026-11-22-llm-cpu.md` with model hash, p95, RSS, and
-thread count; a real click path in the UI; no LLM activity without a click.
+thread count; a real click path in the UI; no LLM activity without a click; the
+29-pack typed matrix passes.
 
 **Effort:** L. **PR:** `windows: CPU llama.cpp and click-to-simplify`.
 
@@ -252,6 +256,7 @@ open P0 issue.
 - [ ] All 29 packs/catalogs present; every locale measured live or simplify-only.
 - [ ] Minimum live set en/fr/de/es/ar passes WER/RTF; no fake listening.
 - [ ] Qwen3 0.6B Q4 CPU click-to-simplify p95 ≤ 8 s on 8 GB; RSS ≤ 3.5 GB.
+- [ ] 29-pack typed simplifier matrix passes; no translation; deterministic.
 - [ ] No simplification without a user click; no background LLM work.
 - [ ] Single-screen overlay: topmost, no-activate, focus retention, drag,
       borderless fullscreen; 100/125/150% without clipping.
