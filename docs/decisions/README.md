@@ -29,6 +29,7 @@ Status labels: `proposed`, `accepted`, `baseline` (working default), `superseded
 | [0017](0017.md) | Measure the renderer and accelerators; never declare them | D-054 | accepted |
 | [0018](0018.md) | v1.0 is single-screen, system-audio, CPU-first, click-to-simplify | D-055 | accepted |
 | [0019](0019.md) | 1.0 model set: Nemotron 3.5 ASR 560 ms + Qwen3 0.6B EasyLanguage | D-056 | accepted |
+| [0020](0020.md) | Code signing: unsigned v1.0.0 + SHA-256, SignPath Foundation next | D-057 | accepted |
 
 ## Superseded
 
