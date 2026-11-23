@@ -199,23 +199,22 @@ export function Onboarding({
               subtitle={t(
                 locale,
                 "Live captions need a one-time model download (about %@). Everything runs offline afterward.",
-                "1.0 GB",
+                "1.08 GB",
               )}
             />
             <div style={{ display: "flex", flexDirection: "row", gap: 12 }}>
               <ModelChip
-                title="Qwen3 0.6B"
-                detail="EasyLanguage · Q4_K_M"
-                size="~400 MB"
+                title="Qwen3 0.6B EasyLanguage"
+                detail="Q4_K_M · Apache-2.0"
+                size="~397 MB"
                 tone="accent"
               />
               <ModelChip
-                title="Nemotron ASR"
-                detail="streaming · int8"
-                size="~600 MB"
+                title="Nemotron 3.5 ASR"
+                detail="560 ms · int8 · 40 locales"
+                size="~682 MB"
                 tone="mint"
               />
-              <ModelChip title="Silero VAD" detail="voice activity" size="~2 MB" tone="neutral" />
             </div>
             <Surface
               style={{
@@ -249,10 +248,10 @@ export function Onboarding({
             <div style={{ display: "flex", flexDirection: "row", gap: 10 }}>
               <Button label={t(locale, "Back")} kind="secondary" onClick={() => setBeat(1)} />
               <Button
-                label={t(locale, "Download models (~%@)", "1.0 GB")}
+                label={t(locale, "Download models (~%@)", "1.08 GB")}
                 onClick={() =>
                   setToast(
-                    "Model catalog is not published in this build. The downloader is implemented; hashes are required before a download can start.",
+                    "Model downloads arrive with the ASR/LLM integration in this preview build. Both model hashes are already pinned.",
                   )
                 }
               />

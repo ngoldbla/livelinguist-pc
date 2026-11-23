@@ -261,24 +261,20 @@ export function ConsoleScreen({
             {t(locale, "ON-DEVICE MODELS").toUpperCase()}
           </text>
           <ModelStatus
-            name="Qwen3 0.6B"
-            detail="EasyLanguage · Q4_K_M"
-            status={t(locale, "Demo backend")}
+            name="Qwen3 0.6B EasyLanguage"
+            detail="Q4_K_M · 397 MB"
+            status={t(locale, "Not downloaded")}
             tone="accent"
           />
           <ModelStatus
-            name="Nemotron ASR"
-            detail="streaming · int8"
+            name="Nemotron 3.5 ASR"
+            detail="560 ms · int8 · 682 MB"
             status={t(locale, "Not downloaded")}
             tone="amber"
           />
-          <ModelStatus
-            name="Silero VAD"
-            detail="voice activity"
-            status={t(locale, "Bundled logic")}
-            tone="mint"
-          />
-          <Button label={t(locale, "Download models")} kind="secondary" onClick={() => undefined} />
+          <text style={textStyle(11, colors.faint)}>
+            {t(locale, "No models are bundled. Downloads are public and tokenless.")}
+          </text>
         </Surface>
 
         <Surface style={{ padding: 18, display: "flex", flexDirection: "column", gap: 10 }}>

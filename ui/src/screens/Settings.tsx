@@ -194,30 +194,16 @@ export function SettingsScreen({
               />
               <ModelCard
                 name="Qwen3 0.6B EasyLanguage"
-                detail="Q4_K_M · Apache-2.0"
-                size="~400 MB"
-                state="catalog unpinned"
-                tone="accent"
-              />
-              <ModelCard
-                name="Qwen3 1.7B EasyLanguage"
-                detail="Q4_K_M · Apache-2.0"
-                size="~1.0 GB"
-                state="optional escalation"
+                detail="GGUF Q4_K_M · Apache-2.0"
+                size="~397 MB"
+                state="pinned · first run"
                 tone="accent"
               />
               <ModelCard
                 name="Nemotron 3.5 ASR 0.6B"
-                detail="ONNX int8 · streaming"
-                size="~600 MB"
-                state="S-3A pending"
-                tone="amber"
-              />
-              <ModelCard
-                name="Silero VAD"
-                detail="sherpa-onnx bundle · MIT"
-                size="~2 MB"
-                state="bundled logic"
+                detail="560 ms · int8 · 40 locales"
+                size="~682 MB"
+                state="pinned · first run"
                 tone="mint"
               />
               <div style={{ display: "flex", flexDirection: "row", gap: 10 }}>
@@ -225,7 +211,7 @@ export function SettingsScreen({
                   label={t(locale, "Download models")}
                   onClick={() =>
                     setToast(
-                      "Model download is disabled until publish-time SHA-256 values are committed.",
+                      "Downloads are not wired in this preview build. Both model hashes are pinned in the catalog.",
                     )
                   }
                 />

@@ -28,10 +28,12 @@ Status labels: `proposed`, `accepted`, `baseline` (working default), `superseded
 | [0016](0016.md) | Reference hardware: Dylan PC | D-051 | accepted |
 | [0017](0017.md) | Measure the renderer and accelerators; never declare them | D-054 | accepted |
 | [0018](0018.md) | v1.0 is single-screen, system-audio, CPU-first, click-to-simplify | D-055 | accepted |
+| [0019](0019.md) | 1.0 model set: Nemotron 3.5 ASR 560 ms + Qwen3 0.6B EasyLanguage | D-056 | accepted |
 
 ## Superseded
 
-None yet.
+- **0018** - the ASR clause ("streaming zipformer") is superseded by 0019; the
+  rest of the v1.0 scope stands.
 
 ## Adding or changing a decision
 
