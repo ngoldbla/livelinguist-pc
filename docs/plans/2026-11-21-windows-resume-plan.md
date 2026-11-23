@@ -157,6 +157,13 @@ Tasks:
 **Acceptance:** the plan §10.7 Windows rows all pass, with screenshots and a
 signed-off matrix. PR: **`windows: Win32 overlay acceptance`**.
 
+**Status addendum (2026-11-22):** partial pass on the interactive 2560x1080
+host. Topmost/no-activate/toolwindow, focus retention, unfocused click, drag,
+mode policy, and 100/125/150% scaling pass; the drag grip and the mode-switch
+subclass cleanup were added. Mixed-DPI and multi-monitor are blocked by the
+single display, and the virtual-desktop switch is not exercised. Results and
+non-claims: `docs/qa/2026-11-22-overlay-matrix.md`.
+
 ### W-2 — S-5W WASAPI microphone + loopback
 
 Current `ll-audio` has no capture implementation (the `capture` feature is

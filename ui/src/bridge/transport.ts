@@ -61,6 +61,7 @@ export interface Transport {
   snapshot(): Promise<Snapshot>;
   runtimeStatus(): Promise<RuntimeStatus>;
   setWindowMode(mode: "console" | "overlay" | "expanded"): Promise<WindowPolicy>;
+  beginDrag(): Promise<boolean>;
   exportTranscript(format: "markdown" | "plain" | "csv", path: string): Promise<string>;
   listSources(): Promise<AudioSourceInfo[]>;
   applyRuntimeConfig(layer: unknown): Promise<RuntimeStatus>;
@@ -81,6 +82,7 @@ interface NativeClient {
   snapshot(): string;
   runtimeStatus(): string;
   setWindowMode(mode: string, nonce: string): string;
+  beginDrag(): boolean;
   export(format: string, path: string): string;
   listAudioSources(): string;
   applyRuntimeConfig(layerJson: string): string;
@@ -181,6 +183,10 @@ class NativeTransport implements Transport {
 
   async setWindowMode(mode: "console" | "overlay" | "expanded"): Promise<WindowPolicy> {
     return JSON.parse(this.client.setWindowMode(mode, windowNonce)) as WindowPolicy;
+  }
+
+  async beginDrag(): Promise<boolean> {
+    return this.client.beginDrag();
   }
 
   async exportTranscript(format: "markdown" | "plain" | "csv", path: string): Promise<string> {
@@ -402,6 +408,10 @@ class DemoTransport implements Transport {
 
   async setWindowMode(): Promise<WindowPolicy> {
     return { applied: false, backend: "demo", notes: ["native bridge unavailable"] };
+  }
+
+  async beginDrag(): Promise<boolean> {
+    return false;
   }
 
   async exportTranscript(_format: string, path: string): Promise<string> {
