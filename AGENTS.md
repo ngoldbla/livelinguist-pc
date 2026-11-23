@@ -36,7 +36,8 @@ ADRs in `docs/decisions/` are canonical for their decision.
 Work happens on native Windows 11. Follow
 `docs/plans/2026-11-23-windows-v1-plan.md` stage by stage (S1–S9); an agent on
 the Windows host can start from the copy-paste
-`docs/plans/2026-11-23-windows-agent-prompt.md`. The current stage and next
+`docs/plans/2026-11-23-windows-agent-prompt.md`. Smaller models work from
+**task cards** in `docs/tasks/` (one card per session). The current stage and next
 step are in `docs/qa/implementation-progress.md` under **Next run**. Do not
 repeat merged work; one stage per PR.
 

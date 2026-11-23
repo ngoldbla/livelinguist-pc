@@ -8,7 +8,8 @@ Start here. Everything in `docs/` is one of four kinds: **what to do next**,
 | File | Use it for |
 |---|---|
 | [`plans/2026-11-23-windows-v1-plan.md`](plans/2026-11-23-windows-v1-plan.md) | **The execution plan.** Stages S1–S9 to ship v1.0 on Windows: what to build, which files, which tests, exit gates. |
-| [`plans/2026-11-23-windows-agent-prompt.md`](plans/2026-11-23-windows-agent-prompt.md) | Copy-paste prompt for an agent on the Windows host. |
+| [`tasks/README.md`](tasks/README.md) | **Task cards:** small one-session work orders cut from the plan. Agents work from these. |
+| [`plans/2026-11-23-windows-agent-prompt.md`](plans/2026-11-23-windows-agent-prompt.md) | Copy-paste prompts for the Windows host agent (short card-based prompt + full prompt). |
 | [`qa/implementation-progress.md`](qa/implementation-progress.md) | Live status board: merged stages, current stage, next run. |
 | [`plans/2026-11-22-v1-scope.md`](plans/2026-11-22-v1-scope.md) | What v1.0 is and is not; supported system; release gates G0–G9. |
 | [`budgets.md`](budgets.md) | Latency/RSS/fps budgets per hardware tier. |
