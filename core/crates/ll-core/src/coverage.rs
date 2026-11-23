@@ -66,7 +66,7 @@ impl CoverageMatrix {
                 .map(|language| CoverageEntry {
                     language,
                     status: AsrStatus::Tbd,
-                    candidate: "Nemotron 3.5 / zipformer TBD".to_string(),
+                    candidate: "Nemotron 3.5 ASR 0.6B (560 ms int8)".to_string(),
                     wer_fixture: None,
                 })
                 .collect(),

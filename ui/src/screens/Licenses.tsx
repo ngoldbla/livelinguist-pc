@@ -32,16 +32,15 @@ export function LicensesScreen({ locale, onBack }: { locale: string; onBack: () 
           title={t(locale, "MODELS")}
           rows={[
             {
-              name: "Qwen3 0.6B / 1.7B EasyLanguage",
-              detail: "Qwen3, Apache-2.0; fine-tuned EasyLanguage checkpoints",
+              name: "Qwen3 0.6B EasyLanguage",
+              detail: "LoRA fine-tune of Qwen3 0.6B for same-language simplification; GGUF Q4_K_M",
               tag: "Apache-2.0",
             },
             {
               name: "Nemotron 3.5 ASR 0.6B",
-              detail: "NVIDIA Nemotron; license must be resolved before publishing the ONNX export",
-              tag: "resolve upstream",
+              detail: "NVIDIA multilingual streaming ASR; int8 conversion by sherpa-onnx",
+              tag: "NVIDIA Open Model",
             },
-            { name: "Silero VAD", detail: "sherpa-onnx bundle", tag: "MIT (verify)" },
           ]}
         />
         <LicenseBlock

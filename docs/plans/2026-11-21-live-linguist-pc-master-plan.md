@@ -487,9 +487,9 @@ truth.** Rows marked "superseded for 1.0 by D-055" remain the post-1.0 design.
 | D-027 | No DOM/web UI libraries | baseline | GPUIX is not a browser | Build Aurora components |
 | D-028 | Skills: 2 custom + max 3 external, pinned/reviewed | baseline | Supply-chain/prompt-injection reduction | Less breadth |
 | D-029 | Accessibility + cognitive clarity are release gates | baseline | Product audience | GPUIX a11y gaps |
-| D-030 | Qwen3 0.6B Q4_K_M primary; 1.7B escalation; Nemotron ASR | superseded for 1.0 by D-055 | Matches Mac fine-tunes | 1.0: 0.6B only; per-language zipformer ASR |
+| D-030 | Qwen3 0.6B Q4_K_M primary; 1.7B escalation; Nemotron ASR | superseded for 1.0 by D-055/D-056 | Matches Mac fine-tunes | 1.0: 0.6B only; one Nemotron 3.5 ASR |
 | **D-031** | **Per-locale ASR policy:** matrix in section 12; all 29 simplifier packs ship; locales without usable streaming ASR are `simplify_only` (paste/type + simplification, no fake listening). Live coverage is per measured model with en/fr/de/es/ar as the minimum set. | accepted | Prevents a false "listening" promise; preserves the simplification value | Some locales have no live captions; UI must be explicit |
-| **D-032** | **ASR export is a kill-risk gate:** first S-3 task is export -> `sherpa-onnx` `OnlineRecognizer` -> streaming endpointing. Fallback: per-language streaming zipformer. | baseline | The custom Nemotron ONNX export may fail | If it fails, more per-language models and downloads |
+| **D-032** | **ASR export is a kill-risk gate:** first S-3 task is export -> `sherpa-onnx` `OnlineRecognizer` -> streaming endpointing. Fallback: per-language streaming zipformer. | superseded for 1.0 by D-056 (sherpa publishes the int8 package; no export) | The custom Nemotron ONNX export may fail | If it fails, more per-language models and downloads |
 | **D-033** | **Event delivery test:** 100 events/s for 10 min under Bun **and** Node; p99 delivery into React state; fallback is a GPUIX frame/tick pump. | baseline | GPUI main loop may starve TSFN callbacks | If stalled, bridge redesign |
 | **D-034** | **Launcher sets `WAYLAND_DISPLAY`**, not JS; assert GPUI chose X11 and record it in `RuntimeStatus`. | baseline | `process.env` may not reach native `getenv()` reliably | If X11 unavailable, native Wayland mode |
 | **D-035** | **Audio overflow invariant:** never drop a finalized transcript; overflow is counted, surfaced, and degrades. | baseline | A bounded buffer cannot literally never drop | User sees a degradation banner |
@@ -513,6 +513,7 @@ truth.** Rows marked "superseded for 1.0 by D-055" remain the post-1.0 design.
 | **D-053** | **Windows 11 x64 only; Windows 10 and Windows ARM64 are out of scope.** | accepted | Reduces test surface; GPUIX is fine on 11 | Windows 10 users excluded |
 | **D-054** | **Measure the UI renderer and accelerators; never declare them from the target OS.** ADR 0017. | accepted | A declared renderer lies on software adapters; DXGI/DRM/CUDA probes are evidence | Slightly more platform code |
 | **D-055** | **v1.0 is single-screen, system-audio, CPU-first, click-to-simplify.** All 29 simplifier packs; system loopback first; 0.6B Q4 CPU; live ASR per measured coverage; no mic/multi-monitor/GPU inference/1.7B/live auto-simplify. ADR 0018. | accepted | A defensible low-end 1.0; removes hardware/model dependencies from the critical path | Deferred features move to post-1.0 |
+| **D-056** | **1.0 model set:** NVIDIA Nemotron 3.5 streaming 0.6B int8 at 560 ms (one model, all 29 locales) and `Qwen3-0.6B-EasyLanguage-Q4_K_M.gguf`; both pinned by SHA-256, mirrored per file, downloaded on first run. ADR 0019. | accepted | Matches the iOS weights; no export pipeline or per-language zoo | ~1.08 GB first run; broad-coverage locales may be simplify-only |
 
 ---
 
@@ -630,8 +631,10 @@ Rules:
 ### 7.4 `ll-asr`
 
 - Per-locale model selection from the section 12 matrix.
-- Primary candidate: Nemotron 3.5 streaming 0.6B transducer, int8 encoder.
-- Fallback: per-language streaming zipformer/Parakeet models.
+- Pinned model: NVIDIA Nemotron 3.5 streaming 0.6B, int8, 560 ms (sherpa-onnx
+  packaging), one model for all 29 locales. No per-language zoo and no export
+  step (ADR 0019).
+- Language is selected per stream with its two-letter key; `auto` is dev-only.
 - Modes: `SherpaOnnx`, `Mock`, `Off`.
 - CPU only in v1; no GPU provider in the official Rust crate.
 - Emits partials with `streamId`/`utteranceId`, and finalized segments.
@@ -1080,6 +1083,9 @@ install for packaging.
 
 ### 12.1 Per-locale ASR matrix (blocking A1)
 
+One Nemotron 3.5 560 ms int8 model serves every row (ADR 0019); the "candidate"
+text below is historical. A row is `ok` only after its own WER/CER measurement.
+
 Status values:
 
 - `ok` - streaming ASR passes the WER gate on the locale fixture.
@@ -1093,35 +1099,35 @@ The matrix is filled by S-3 and T-003. Any locale not `ok`/`degraded` is
 
 | Locale | Candidate ASR | Streaming | WER fixture | Status | UI behavior |
 |---|---|---|---|---|---|
-| de | Nemotron / zipformer TBD | TBD | TBD | tbd | TBD |
-| fr | Nemotron / zipformer TBD | TBD | TBD | tbd | TBD |
-| es | Nemotron / zipformer TBD | TBD | TBD | tbd | TBD |
-| en | Nemotron / zipformer TBD | TBD | TBD | tbd | TBD |
-| ar | Nemotron / zipformer TBD | TBD | TBD | tbd | TBD |
-| da | Nemotron / zipformer TBD | TBD | TBD | tbd | TBD |
-| et | Nemotron / zipformer TBD | TBD | TBD | tbd | TBD |
-| fi | Nemotron / zipformer TBD | TBD | TBD | tbd | TBD |
-| hi | Nemotron / zipformer TBD | TBD | TBD | tbd | TBD |
-| it | Nemotron / zipformer TBD | TBD | TBD | tbd | TBD |
-| ja | Nemotron / zipformer TBD | TBD | TBD | tbd | TBD |
-| ko | Nemotron / zipformer TBD | TBD | TBD | tbd | TBD |
-| nl | Nemotron / zipformer TBD | TBD | TBD | tbd | TBD |
-| pt-BR | Nemotron / zipformer TBD | TBD | TBD | tbd | TBD |
-| pt-PT | Nemotron / zipformer TBD | TBD | TBD | tbd | TBD |
-| ru | Nemotron / zipformer TBD | TBD | TBD | tbd | TBD |
-| sk | Nemotron / zipformer TBD | TBD | TBD | tbd | TBD |
-| sv | Nemotron / zipformer TBD | TBD | TBD | tbd | TBD |
-| tr | Nemotron / zipformer TBD | TBD | TBD | tbd | TBD |
-| vi | Nemotron / zipformer TBD | TBD | TBD | tbd | TBD |
-| zh-CN | Nemotron / zipformer TBD | TBD | TBD | tbd | TBD |
-| uk | Nemotron / zipformer TBD | TBD | TBD | tbd | TBD |
-| ro | Nemotron / zipformer TBD | TBD | TBD | tbd | TBD |
-| bg | Nemotron / zipformer TBD | TBD | TBD | tbd | TBD |
-| pl | Nemotron / zipformer TBD | TBD | TBD | tbd | TBD |
-| hr | Nemotron / zipformer TBD | TBD | TBD | tbd | TBD |
-| nb | Nemotron / zipformer TBD | TBD | TBD | tbd | TBD |
-| hu | Nemotron / zipformer TBD | TBD | TBD | tbd | TBD |
-| cs | Nemotron / zipformer TBD | TBD | TBD | tbd | TBD |
+| de | Nemotron 3.5 560 ms | TBD | TBD | tbd | TBD |
+| fr | Nemotron 3.5 560 ms | TBD | TBD | tbd | TBD |
+| es | Nemotron 3.5 560 ms | TBD | TBD | tbd | TBD |
+| en | Nemotron 3.5 560 ms | TBD | TBD | tbd | TBD |
+| ar | Nemotron 3.5 560 ms | TBD | TBD | tbd | TBD |
+| da | Nemotron 3.5 560 ms | TBD | TBD | tbd | TBD |
+| et | Nemotron 3.5 560 ms | TBD | TBD | tbd | TBD |
+| fi | Nemotron 3.5 560 ms | TBD | TBD | tbd | TBD |
+| hi | Nemotron 3.5 560 ms | TBD | TBD | tbd | TBD |
+| it | Nemotron 3.5 560 ms | TBD | TBD | tbd | TBD |
+| ja | Nemotron 3.5 560 ms | TBD | TBD | tbd | TBD |
+| ko | Nemotron 3.5 560 ms | TBD | TBD | tbd | TBD |
+| nl | Nemotron 3.5 560 ms | TBD | TBD | tbd | TBD |
+| pt-BR | Nemotron 3.5 560 ms | TBD | TBD | tbd | TBD |
+| pt-PT | Nemotron 3.5 560 ms | TBD | TBD | tbd | TBD |
+| ru | Nemotron 3.5 560 ms | TBD | TBD | tbd | TBD |
+| sk | Nemotron 3.5 560 ms | TBD | TBD | tbd | TBD |
+| sv | Nemotron 3.5 560 ms | TBD | TBD | tbd | TBD |
+| tr | Nemotron 3.5 560 ms | TBD | TBD | tbd | TBD |
+| vi | Nemotron 3.5 560 ms | TBD | TBD | tbd | TBD |
+| zh-CN | Nemotron 3.5 560 ms | TBD | TBD | tbd | TBD |
+| uk | Nemotron 3.5 560 ms | TBD | TBD | tbd | TBD |
+| ro | Nemotron 3.5 560 ms | TBD | TBD | tbd | TBD |
+| bg | Nemotron 3.5 560 ms | TBD | TBD | tbd | TBD |
+| pl | Nemotron 3.5 560 ms | TBD | TBD | tbd | TBD |
+| hr | Nemotron 3.5 560 ms | TBD | TBD | tbd | TBD |
+| nb | Nemotron 3.5 560 ms | TBD | TBD | tbd | TBD |
+| hu | Nemotron 3.5 560 ms | TBD | TBD | tbd | TBD |
+| cs | Nemotron 3.5 560 ms | TBD | TBD | tbd | TBD |
 
 Rules:
 
@@ -1138,19 +1144,23 @@ Rules:
 
 | Role | Artifact | Repo (target) | Size | License |
 |---|---|---|---|---|
-| ASR | Nemotron 3.5 streaming 0.6B ONNX int8 (`encoder.int8.onnx`, `decoder.onnx`, `joiner.onnx`, `tokens.txt`) | `ndgold/nemotron-3.5-asr-streaming-0.6b-onnx` | ~600 MB | Resolve from upstream before publishing |
-| ASR fallback | Per-language streaming zipformer/Parakeet | TBD per S-3 | 100-300 MB each | Per model |
-| LLM live | Qwen3 0.6B EasyLanguage `Q4_K_M.gguf` | `ndgold/Qwen3-0.6B-EasyLanguage-GGUF` | ~400 MB | Apache-2.0 |
-| LLM quality | Qwen3 1.7B EasyLanguage `Q4_K_M.gguf` | `ndgold/Qwen3-1.7B-EasyLanguage-GGUF` | ~1 GB | Apache-2.0 |
-| VAD | `silero_vad.onnx` | sherpa-onnx bundle | ~2 MB | MIT (verify) |
+| ASR | Nemotron 3.5 streaming 0.6B int8, 560 ms (`encoder.int8.onnx`, `decoder.int8.onnx`, `joiner.int8.onnx`, `tokens.txt`) | `ndgold/nemotron-3.5-asr-streaming-0.6b-onnx` (mirror of sherpa-onnx `asr-models`) | 682 MB | NVIDIA Open Model License (OpenMDW v1.1) |
+| LLM | Qwen3 0.6B EasyLanguage `Q4_K_M.gguf` | `ndgold/Qwen3-0.6B-EasyLanguage-GGUF` @ `658db5ad…` | 397 MB | Apache-2.0 |
+
+One ASR model and one LLM ship in 1.0. The 1.7B artifact is not distributed;
+the energy VAD needs no model file. Hashes and provenance:
+`docs/qa/2026-11-22-model-pins.md`.
 
 ### 12.3 Export and publish gates
 
-- **First S-3 task:** export upstream Nemotron to ONNX, load it in the Rust
-  `sherpa-onnx` `OnlineRecognizer`, and run streaming with endpointing.
-- If it fails: use per-language streaming zipformer/Parakeet; record the
-  trade-off and download sizes.
-- License check before publishing the derived ONNX export (X-010).
+- **First S-3 task:** publish the sherpa int8 560 ms files to the mirror with a
+  `PROVENANCE.md` (asset id + archive digest) and the NVIDIA license. The
+  per-file hashes are already committed in `ModelCatalog::plan_default()`.
+- No export step: sherpa-onnx publishes the int8 ONNX package; the mirror is the
+  download target. A changed mirror fails the hash check instead of installing
+  different weights.
+- Chunk size is fixed at 560 ms for 1.0; 160 ms is measured once on tier C and
+  only adopted if 560 ms misses the latency gate.
 - WER gate: int8 delta <= 2 pp vs fp32 on locale fixtures.
 - Hashes generated at publish time and committed; no TOFU.
 - Conversion is idempotent: skip if repo/files/hashes already exist and verify.

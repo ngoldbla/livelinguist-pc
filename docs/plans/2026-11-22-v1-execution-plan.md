@@ -17,9 +17,9 @@
 | W-1 single-screen overlay | merged (#12) |
 | v1.0 scope + execution plan | merged (#13) |
 | Audio capture | none; file/demo/silence only |
-| ASR | mock/scripted + `ASR_MODEL_MISSING` seam |
-| LLM | demo/mock; no llama.cpp, no GGUF |
-| UI | implemented; demo/simplify-only paths; single-screen a11y counts pass |
+| ASR | one pinned model set (Nemotron 3.5, 560 ms int8); runtime still scripted/mock |
+| LLM | one pinned EasyLanguage GGUF; no llama.cpp runtime yet |
+| UI | implemented; demo/simplify-only paths; model cards show the pinned set |
 | Packaging | configuration exists; not validated |
 
 ## 1. Sequencing
@@ -41,7 +41,9 @@ Phase 0  land the stack + align docs
 - Phases 1, 2, 3, and the layout half of W-5 can run in parallel.
 - Integration waits for loopback + one live ASR language + click simplification.
 - Packaging waits for integration; the release candidate waits for packaging.
-- ASR model acquisition is the longest lead time; start it first.
+- ASR model acquisition is resolved: the pinned set is in
+  `ModelCatalog::plan_default()` (ADR 0019). The long poles are publishing the
+  ASR mirror and measuring 29 locales.
 
 ## 2. Phase 0 — land the stack and align the docs (complete)
 
@@ -93,41 +95,44 @@ audio when capture is unavailable.
 
 ## 4. Phase 2 — W-3 streaming ASR and 29-locale coverage
 
-**Goal:** live captions for every locale with a passing model; all 29 locales
-remain useful through the simplifier.
+**Goal:** live captions for every locale the pinned model transcribes well; all
+29 locales remain useful through the simplifier.
 
-This is the longest phase and the main schedule risk. Start model acquisition
-before the code lands.
+The model is chosen and pinned (ADR 0019). This phase is runtime, delivery, and
+measurement — not model selection.
 
 Steps:
 
-1. **Model selection and pins.**
-   - Prefer per-language streaming zipformer int8 models from the sherpa-onnx
-     model zoo; record exact repo, revision, license, size, and SHA-256.
-   - Minimum live set: en, fr, de, es, ar. Evaluate the remaining 24 as
-     candidates, not promises.
-   - Do not depend on the unreachable `ndgold/nemotron-3.5-asr-streaming-0.6b-onnx`
-     artifact; it stays an optional experiment.
-   - If a locale has no model that passes the gate, it ships `simplify_only`.
+1. **Model mirror (done).** The four int8 files are public at
+   `ndgold/nemotron-3.5-asr-streaming-0.6b-onnx`, commit `f73e3bc8…`, with
+   `PROVENANCE.md` (asset id 470963822, archive digest `c6bf5e0d…`) and the
+   NVIDIA license. `ModelCatalog::plan_default()` pins that commit and the
+   per-file SHA-256 values; no publish step remains.
 2. **Runtime.** Complete the `sherpa` feature with `OnlineRecognizer`:
    streaming partials, endpointing, finalized segments, cancellation, and an
-   explicit `ASR_MODEL_MISSING` state. No fake listening, ever.
-3. **Model UX.** Model cards with size, language, license, hash, download,
-   resume, disk preflight, and a clear retry on a bad hash. No trust on first
-   use.
-4. **Evaluation.** Five-minute non-PII fixture per language; report WER, RTF,
-   p95 chunk latency, and endpoint behavior. Gate: WER ≤ 15%, RTF ≤ 0.5,
-   p95 chunk ≤ 500 ms on a 4-core.
-5. **Coverage.** Fill the 29-row matrix; promote a row to `ok` only after its
-   measurement. The UI shows live vs simplify-only honestly.
-6. **Tests.** Model missing, bad hash, endpointing, multilingual WER, RTF,
-   p95 chunk, and a mid-session model switch failure.
+   explicit `ASR_MODEL_MISSING` state. Pass the two-letter language key derived
+   from `Language`; auto-detect stays dev-only. No fake listening, ever.
+3. **First-run model UX.** Onboarding downloads both pinned artifacts
+   (~1.08 GB), resumable per file, SHA-256 verified before use, disk preflight,
+   clear retry on a bad hash, and progress off the UI thread.
+4. **Evaluation.** Five-minute non-PII fixture per locale; report WER (CER for
+   ja/ko/zh), RTF, p95 chunk latency, and endpoint behavior. Gate: WER ≤ 15%,
+   RTF ≤ 0.5, p95 chunk ≤ 500 ms on a 4-core.
+5. **Coverage.** Fill the 29-row matrix. The 19 transcription-ready locales are
+   expected to pass; the 13 broad-coverage locales (pl, sv, cs, nb, da, bg, fi,
+   hr, sk, zh, hu, ro, et) are measured and ship `simplify_only` if they miss.
+   Promote a row only after its measurement.
+6. **Chunk check.** Measure 160 ms against 560 ms once on the 4-core profile.
+   560 ms stays the default unless it misses the latency gate; a change is a
+   catalog/model version bump, not a code branch.
+7. **Tests.** Model missing, bad hash, endpointing, multilingual WER, RTF, p95
+   chunk, and a mid-session model switch failure.
 
-**Acceptance:** `docs/qa/2026-11-22-asr-v1.md` with the matrix and hashes;
-real live captions in the minimum set; all other rows `simplify_only` with a
-measured status.
+**Acceptance:** `docs/qa/2026-11-22-asr-v1.md` with the matrix and hashes; the
+mirror is public and downloads cleanly; real live captions in every locale that
+passes the gate; every other row `simplify_only` with a measured status.
 
-**Effort:** L. **PRs:** `windows: ASR model catalog and download`, then
+**Effort:** M-L. **PRs:** `windows: ASR model mirror and download`, then
 `windows: streaming ASR and coverage matrix`.
 
 ## 5. Phase 3 — W-4 CPU llama.cpp and click-only simplification
@@ -139,11 +144,18 @@ Steps:
 
 1. Add the `llama` feature with `llama-cpp-2` on CPU; pin the version; build on
    MSVC; no GPU backend modules in the 1.0 installer.
-2. Pin the Qwen3 0.6B Q4_K_M GGUF (EasyLanguage fine-tune if licensed, otherwise
-   a documented stock fallback), SHA-256, license, and download/resume UX.
-3. Implement `LlamaBackend` against `SimplifierBackend`: chat template,
-   `enable_thinking=false`, think-block stripping as a safety net, mmap on,
-   mlock off.
+2. The simplifier is already pinned:
+   `ndgold/Qwen3-0.6B-EasyLanguage-GGUF` at
+   `658db5ad6a05e3f549990b10e8d8c59a78866695`,
+   `Qwen3-0.6B-EasyLanguage-Q4_K_M.gguf` (396,704,608 bytes, Apache-2.0).
+   No GGUF conversion work is needed for 1.0; the 1.7B artifact is not shipped.
+3. Implement `LlamaBackend` against `SimplifierBackend`, rendering the model
+   card's **exact** prompt contract: `<|im_start|>` turns, the pack's system
+   prompt with its trailing `/no_think`, `Original:` / `Rewritten:`, and an
+   assistant turn pre-filled with an empty think block. No few-shot examples and
+   no rolling context — the fine-tune is out-of-distribution with them. Drop
+   `previous` from the click path and pin the rendered prompt with a golden test
+   per language. `mmap` on, `mlock` off.
 4. Wire the click-only queue: one active + one queued, newest click replaces
    the queued item, cancel works on active or queued, live/partial text never
    triggers a simplification.

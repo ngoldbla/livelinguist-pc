@@ -1,8 +1,10 @@
 # ASR coverage and demo evidence (S-3A partial)
 
 - Date: 2026-11-21
-- Status: **partial** — mock/demo path implemented and exercised; real Nemotron
-  export and WER gate are blocked on model access and Windows/Linux ASR builds.
+- Status: **partial** - mock/demo path implemented and exercised. The model is
+  now pinned (Nemotron 3.5 560 ms int8) and the WER gate is pending the mirror
+  and the `sherpa` runtime; see `docs/qa/2026-11-22-model-pins.md` and ADR 0019.
+  The "candidate" column below is historical.
 - Decision: D-031, D-032, INV-015
 
 ## What runs today

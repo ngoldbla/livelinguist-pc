@@ -82,6 +82,9 @@ pub struct ModelArtifact {
     pub revision: String,
     pub files: Vec<ModelFile>,
     pub license: String,
+    /// Where the mirrored files came from, for audit. Never used to download.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub upstream: Option<String>,
 }
 
 impl ModelArtifact {
@@ -101,54 +104,62 @@ pub struct ModelCatalog {
 }
 
 impl ModelCatalog {
-    /// The plan's default artifacts. Hashes stay empty until the publish step
-    /// generates them (INV-008); the downloader refuses unpinned files by
-    /// default rather than trusting first use.
+    /// The pinned 1.0 model set: one ASR model for all 29 locales and one
+    /// simplifier. Both are downloaded on first run and verified before use
+    /// (ADR 0019). Every file carries a published SHA-256, so a mirror that
+    /// changes fails loudly instead of installing different weights.
     pub fn plan_default() -> Self {
+        let asr_files = vec![
+            ModelFile::pinned(
+                "encoder.int8.onnx",
+                657_601_403,
+                "012e9321373af99021415e0b0eb3ec827b4be3153be6f30d9b448fe65e896e68",
+            ),
+            ModelFile::pinned(
+                "decoder.int8.onnx",
+                14_978_075,
+                "19f9c98fc6d0a2c33a65a43b36fdb2e914c26c0aa9764be3aebc502a1e982fb0",
+            ),
+            ModelFile::pinned(
+                "joiner.int8.onnx",
+                9_504_438,
+                "4101c7c679a0bc30483794b27a059e34e79232aa2068d78d51231a22c8b0d7ce",
+            ),
+            ModelFile::pinned(
+                "tokens.txt",
+                131_440,
+                "729cc103155bafa785f9cd45746cd41cabe97eab7182fc04d594129587958f8a",
+            ),
+        ];
         Self {
             artifacts: vec![
                 ModelArtifact {
-                    id: "asr-nemotron-0.6b".to_string(),
+                    id: "asr-nemotron-3.5-0.6b-560ms".to_string(),
                     role: ModelRole::Asr,
                     repo: "ndgold/nemotron-3.5-asr-streaming-0.6b-onnx".to_string(),
-                    revision: "main".to_string(),
-                    files: vec![
-                        ModelFile::unpinned("encoder.int8.onnx", 500_000_000),
-                        ModelFile::unpinned("decoder.onnx", 60_000_000),
-                        ModelFile::unpinned("joiner.onnx", 40_000_000),
-                        ModelFile::unpinned("tokens.txt", 100_000),
-                    ],
-                    license: "resolve upstream before publishing".to_string(),
+                    revision: "f73e3bc81614fa69e24b091b892e8672983fbb9c".to_string(),
+                    files: asr_files,
+                    license: "NVIDIA Open Model License (OpenMDW v1.1)".to_string(),
+                    upstream: Some(
+                        "https://github.com/k2-fsa/sherpa-onnx/releases/tag/asr-models \
+                         asset sha256:c6bf5e0df765f9d5b43bc9e0536d4b4b3e7d40bdf5ecf13e45f134c51c05ae3a"
+                            .to_string(),
+                    ),
                 },
                 ModelArtifact {
                     id: "llm-qwen3-0.6b-easylanguage".to_string(),
                     role: ModelRole::Llm,
                     repo: "ndgold/Qwen3-0.6B-EasyLanguage-GGUF".to_string(),
-                    revision: "main".to_string(),
-                    files: vec![ModelFile::unpinned(
+                    revision: "658db5ad6a05e3f549990b10e8d8c59a78866695".to_string(),
+                    files: vec![ModelFile::pinned(
                         "Qwen3-0.6B-EasyLanguage-Q4_K_M.gguf",
-                        400_000_000,
+                        396_704_608,
+                        "1be8c19cc1153d33535c3ad6a3306be7d84ecc4ae7a171bf6c1b428c6737ffb8",
                     )],
                     license: "Apache-2.0".to_string(),
-                },
-                ModelArtifact {
-                    id: "llm-qwen3-1.7b-easylanguage".to_string(),
-                    role: ModelRole::Llm,
-                    repo: "ndgold/Qwen3-1.7B-EasyLanguage-GGUF".to_string(),
-                    revision: "main".to_string(),
-                    files: vec![ModelFile::unpinned(
-                        "Qwen3-1.7B-EasyLanguage-Q4_K_M.gguf",
-                        1_000_000_000,
-                    )],
-                    license: "Apache-2.0".to_string(),
-                },
-                ModelArtifact {
-                    id: "vad-silero".to_string(),
-                    role: ModelRole::Vad,
-                    repo: "k2-fsa/sherpa-onnx".to_string(),
-                    revision: "v1.12.0".to_string(),
-                    files: vec![ModelFile::unpinned("silero_vad.onnx", 2_000_000)],
-                    license: "MIT (verify upstream)".to_string(),
+                    upstream: Some(
+                        "https://huggingface.co/ndgold/Qwen3-0.6B-EasyLanguage-GGUF".to_string(),
+                    ),
                 },
             ],
         }
@@ -447,15 +458,48 @@ mod tests {
     }
 
     #[test]
-    fn unpinned_catalog_is_flagged_and_downloader_refuses() {
+    fn plan_default_is_two_pinned_artifacts() {
         let catalog = ModelCatalog::plan_default();
-        assert_eq!(catalog.unpinned().len(), 4);
-        let artifact = catalog.get("llm-qwen3-0.6b-easylanguage").unwrap();
+        assert_eq!(catalog.artifacts.len(), 2);
+        assert!(catalog.unpinned().is_empty());
+
+        let asr = catalog.get("asr-nemotron-3.5-0.6b-560ms").unwrap();
+        assert_eq!(asr.role, ModelRole::Asr);
+        assert_eq!(asr.files.len(), 4);
+        assert!(asr.is_pinned());
+        assert_eq!(asr.total_bytes(), 682_215_356);
+        assert!(asr.license.contains("NVIDIA"));
+        assert!(asr.upstream.as_deref().unwrap().contains("c6bf5e0d"));
+        assert_eq!(asr.revision.len(), 40);
+
+        let llm = catalog.get("llm-qwen3-0.6b-easylanguage").unwrap();
+        assert_eq!(llm.role, ModelRole::Llm);
+        assert_eq!(llm.files.len(), 1);
+        assert_eq!(llm.total_bytes(), 396_704_608);
+        assert_eq!(llm.license, "Apache-2.0");
+        assert_eq!(llm.revision.len(), 40);
+        assert_eq!(
+            llm.files[0].sha256.as_deref(),
+            Some("1be8c19cc1153d33535c3ad6a3306be7d84ecc4ae7a171bf6c1b428c6737ffb8")
+        );
+    }
+
+    #[test]
+    fn downloader_refuses_an_unpinned_file() {
+        let artifact = ModelArtifact {
+            id: "test".to_string(),
+            role: ModelRole::Llm,
+            repo: "org/repo".to_string(),
+            revision: "main".to_string(),
+            files: vec![ModelFile::unpinned("model.gguf", 10)],
+            license: "test".to_string(),
+            upstream: None,
+        };
         let client = reqwest::blocking::Client::new();
         let dir = tempfile::tempdir().unwrap();
         let result = download_file(
             &client,
-            artifact,
+            &artifact,
             &artifact.files[0],
             &dir.path().join("model.gguf"),
             false,
@@ -471,7 +515,7 @@ mod tests {
         let restored = ModelCatalog::from_json(&json).unwrap();
         assert_eq!(restored, catalog);
         assert_eq!(
-            catalog.get("asr-nemotron-0.6b").unwrap().role,
+            catalog.get("asr-nemotron-3.5-0.6b-560ms").unwrap().role,
             ModelRole::Asr
         );
     }

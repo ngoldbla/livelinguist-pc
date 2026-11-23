@@ -32,6 +32,11 @@ streaming 0.6B (NeMo RNN-T) that sherpa-onnx or ORT can run? If not, does
 Parakeet/Canary streaming reach comparable French/German quality? The Mac
 measured ~19 ms/chunk on ANE; CPU RTF is the M0 number that matters.
 
+**Resolved 2026-11-22:** yes. sherpa-onnx publishes int8 ONNX packages for
+Nemotron 3.5 at 80/160/320/560/1120 ms, and one model covers all 29 pack
+locales. 1.0 uses the 560 ms package; no export step and no per-language
+models. See ADR 0019 and `docs/qa/2026-11-22-model-pins.md`.
+
 ## Simplification LLM
 
 | Option | Runtime | x86 acceleration | Notes |

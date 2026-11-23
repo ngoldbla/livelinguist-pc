@@ -35,7 +35,7 @@ This file is the live status board. Each merged PR is a validated stage.
 |---|---|---|---|
 | S-0 | PASS — all pins resolve | 2026-11-21 | `docs/qa/2026-11-21-version-verification.md` |
 | S-2 | PASS — 100 ev/s x 10 min under Node and Bun; 60k/60k, p99 1.07/1.94 ms, 0 drops | 2026-11-21 | `docs/qa/2026-11-21-event-delivery.md` |
-| S-3A | Partial: mock/eval path + 29-row matrix; real export/WER blocked on model access | 2026-11-21 | `docs/qa/2026-11-21-asr-coverage.md` |
+| S-3A | Partial: model pinned (Nemotron 3.5 560 ms int8, ADR 0019); mock/eval path + 29-row matrix done; runtime and WER blocked on the mirror + `sherpa` wiring | 2026-11-22 | `docs/qa/2026-11-22-model-pins.md` |
 | S-4 | Partial: calibration/ladder/queue implemented; **CPU-only 1.0**; mock measured; GPU inference deferred | 2026-11-21 | `docs/qa/2026-11-21-llm-backends.md` |
 | S-5L | Partial: file/demo/silence + ring/VAD/chunker tested; WASAPI loopback capture pending | 2026-11-21 | `docs/qa/2026-11-21-audio.md` |
 | S-6L | PASS — X11 EWMH overlay verified on Linux dev | 2026-11-21 | `docs/qa/2026-11-21-overlay.md` |
@@ -45,8 +45,8 @@ This file is the live status board. Each merged PR is a validated stage.
 
 ## Decisions
 
-All 18 ADRs are present in `docs/decisions/`. New structural changes need a
-decision entry and an ADR update. **For 1.0, D-055 and
+All 19 ADRs are present in `docs/decisions/`. New structural changes need a
+decision entry and an ADR update. **For 1.0, D-055/D-056 and
 `docs/plans/2026-11-22-v1-scope.md` are the source of truth.**
 
 ## Merged PR sequence
@@ -63,15 +63,16 @@ decision entry and an ADR update. **For 1.0, D-055 and
 
 ## Next run
 
-Phase 0 of the v1.0 execution plan is complete: the stack is merged, the scope
-is frozen, and the master plan/progress board/budgets are aligned. Start the
-parallel tracks:
+The v1.0 model set is now pinned (ADR 0019,
+`docs/qa/2026-11-22-model-pins.md`): Nemotron 3.5 streaming 0.6B int8 at 560 ms
+for all 29 locales, and `Qwen3-0.6B-EasyLanguage-Q4_K_M.gguf`; both mirrored per
+file and downloaded on first run. Start the parallel tracks:
 
 1. **W-2** WASAPI system-audio loopback capture + 30-minute soak.
-2. **W-3** ASR model pins/hashes and WER/RTF for the minimum live set
-   (en/fr/de/es/ar), then the streaming `sherpa-onnx` integration and 29-locale
-   coverage matrix.
-3. **W-4** CPU llama.cpp + Qwen3 0.6B Q4_K_M, click-only simplification, p95/RSS.
+2. **W-3** wire `sherpa-onnx` `OnlineRecognizer` against the published mirror,
+   then WER/RTF per locale and the 29-locale coverage matrix.
+3. **W-4** CPU llama.cpp, the exact EasyLanguage prompt contract, click-only
+   simplification, p95/RSS.
 4. **W-5** layout/a11y fixes (150% clipping, 1280x720, keyboard/Narrator) can
    start independently.
 
