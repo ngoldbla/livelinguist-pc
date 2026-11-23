@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Full local verification for the Linux dev environment.
-# Windows hardware acceptance is separate (see docs/qa/2026-11-21-windows.md).
+# Windows hardware acceptance is separate (see docs/plans/2026-11-23-windows-v1-plan.md).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"

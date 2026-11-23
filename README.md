@@ -13,34 +13,27 @@ easy-language register for that language — **FALC**, **Leichte Sprache**,
 
 ## Source of truth
 
-- **Master plan:** [`docs/plans/2026-11-21-live-linguist-pc-master-plan.md`](docs/plans/2026-11-21-live-linguist-pc-master-plan.md)
-- **Decisions:** [`docs/decisions/`](docs/decisions/) (canonical ADRs)
+- **Docs map:** [`docs/README.md`](docs/README.md) — start here
+- **Execution plan (v1.0, Windows):** [`docs/plans/2026-11-23-windows-v1-plan.md`](docs/plans/2026-11-23-windows-v1-plan.md)
+  and the copy-paste [agent prompt](docs/plans/2026-11-23-windows-agent-prompt.md)
+- **v1.0 scope:** [`docs/plans/2026-11-22-v1-scope.md`](docs/plans/2026-11-22-v1-scope.md)
 - **Progress board:** [`docs/qa/implementation-progress.md`](docs/qa/implementation-progress.md)
+- **Decisions:** [`docs/decisions/`](docs/decisions/) (canonical ADRs)
+- **Architecture reference:** [`docs/plans/2026-11-21-live-linguist-pc-master-plan.md`](docs/plans/2026-11-21-live-linguist-pc-master-plan.md)
 - **Agent rules:** [`AGENTS.md`](AGENTS.md)
-- **Windows resume:** [`docs/plans/2026-11-21-windows-resume-plan.md`](docs/plans/2026-11-21-windows-resume-plan.md)
-  and the copy-paste [`resume prompt`](docs/plans/2026-11-21-windows-resume-prompt.md)
 
-## Scope (v1)
+## Scope (v1.0)
 
-**In scope**
+A single-screen Windows 11 x64 (23H2+) user installs per-user without admin,
+plays a call or video, sees live verbatim captions from **system audio**
+(WASAPI loopback) where the locale passes the ASR gate, and **clicks** any
+sentence to get a same-language easy-language rewrite in any of the **29**
+packs. Inference is CPU-only (sherpa-onnx Nemotron 3.5 ASR + llama.cpp Qwen3
+0.6B EasyLanguage), models are downloaded on first run and hash-verified.
 
-- **Windows 11 x64 (23H2+)** — the only product/release target.
-- Linux x86-64 — development and evaluation only; no Linux package in v1.
-- Full pipeline: audio -> VAD -> ASR -> endpointing -> segmentation ->
-  simplification -> deterministic validation -> two-tier captions.
-- On-demand simplification default; live mode behind advanced settings.
-- 29 locales with explicit ASR coverage; simplify-only mode where streaming ASR
-  is not usable.
-- Console, caption overlay, transcript, settings, summary, onboarding, licenses.
-- Export: Markdown, plain text, diagnostics CSV.
-- Developer settings for CPU/GPU/mock/fault scenarios.
-- Packaging: NSIS installer + portable ZIP for Windows 11 x64.
-
-**Out of scope**
-
-- Translation, cloud inference, mobile, ARM Linux, Windows ARM64, browser.
-- Linux packaging/support in this plan (future track).
-- Windows 10, speaker diarization, per-app capture (stretch), macOS/iOS shipping.
+Not in 1.0: microphone, per-app capture, multi-monitor/mixed-DPI, GPU
+inference, 1.7B, automatic simplification, Windows 10/ARM64, Linux/macOS
+packages, translation, cloud. Full list: [`docs/plans/2026-11-22-v1-scope.md`](docs/plans/2026-11-22-v1-scope.md).
 
 ## Repository layout
 
@@ -79,22 +72,14 @@ env -u WAYLAND_DISPLAY bun ui/src/main.tsx
 
 ## Status
 
-Implementation follows the master plan in validated stages. The core, bridge,
-and UI are exercised on Linux dev; Windows hardware acceptance (Win32 overlay,
-WASAPI loopback, D3D, packaging) is recorded when run on the Windows side.
-See the progress board for the current stage and evidence.
+Done: deterministic core and 29 packs, pipeline and `ll-eval`, napi bridge,
+GPUIX UI on demo data, Windows toolchain and verify script, measured renderer,
+single-screen Win32 overlay, pinned v1.0 models.
 
-Implemented and tested on Linux dev:
-
-- 29 framework packs ported verbatim; deterministic core (prompts, segmenter,
-  validators, reversion, metrics, exports) with golden tests.
-- Protocol/config/audio/ASR/LLM/model/pipeline crates and a headless `ll-eval`
-  CLI with content-free diagnostics.
-- napi bridge with monotonic envelopes and a 100 events/s TSFN harness.
-- GPUIX UI: onboarding, console, live/expanded transcript, compact overlay,
-  settings, developer health card, summary, licenses; 29 locale catalogs.
-- X11 EWMH overlay policy verified; Win32 policy compiles for the Windows target.
-- NSIS/portable packaging configuration and a Windows release workflow.
+Next (see the plan): WASAPI loopback capture, sherpa-onnx streaming ASR and
+the 29-locale coverage matrix, the exact EasyLanguage prompt contract and CPU
+llama.cpp, 150% layout and accessibility, end-to-end integration, packaging,
+release candidate.
 
 UI portfolio: [`docs/screenshots/m2/`](docs/screenshots/m2/README.md).
 

@@ -1,9 +1,11 @@
 # AGENTS.md — Live Linguist PC
 
-This repository implements the master plan in
-`docs/plans/2026-11-21-live-linguist-pc-master-plan.md`. Read it before changing
-anything structural. The plan is the integrated index; ADRs in
-`docs/decisions/` are canonical for their decision.
+Start at `docs/README.md` (the docs map). The active execution plan is
+`docs/plans/2026-11-23-windows-v1-plan.md`; what 1.0 is lives in
+`docs/plans/2026-11-22-v1-scope.md`. The master plan
+`docs/plans/2026-11-21-live-linguist-pc-master-plan.md` is the architecture and
+spec reference; read the relevant section before changing anything structural.
+ADRs in `docs/decisions/` are canonical for their decision.
 
 ## Non-negotiables (golden rules)
 
@@ -29,13 +31,14 @@ anything structural. The plan is the integrated index; ADRs in
     with code. Keep diagnostics and exports content-free.
 12. **Pin and review third-party skills.** No floating `npx skills add` in CI.
 
-## Resuming on Windows
+## Where to start (Windows v1.0)
 
-The current baseline is the Linux-validated handoff. The next run happens on
-native Windows 11; start with
-`docs/plans/2026-11-21-windows-resume-plan.md` and the copy-paste
-`docs/plans/2026-11-21-windows-resume-prompt.md`. Do not repeat merged Linux
-work; close the Windows gates (W-0..W-6) one PR at a time.
+Work happens on native Windows 11. Follow
+`docs/plans/2026-11-23-windows-v1-plan.md` stage by stage (S1–S9); an agent on
+the Windows host can start from the copy-paste
+`docs/plans/2026-11-23-windows-agent-prompt.md`. The current stage and next
+step are in `docs/qa/implementation-progress.md` under **Next run**. Do not
+repeat merged work; one stage per PR.
 
 ## Repository map
 
@@ -106,7 +109,7 @@ listed in `tests/golden/INVENTORY.md`.
 
 ## Git workflow
 
-- Branch per validated stage: `stage-N-<slug>`.
+- Branch per validated stage: `stage-<id>-<slug>` (for example `stage-w2-loopback`).
 - Commit with focused messages. Open a PR with evidence (commands, test output,
   screenshots for UI stages), merge only after the stage's checks pass.
 - Never force-push `main`; never commit generated model files or secrets.

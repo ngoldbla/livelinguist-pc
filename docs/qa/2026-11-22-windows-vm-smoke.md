@@ -4,7 +4,7 @@
 - Status: toolchain and smoke **pass** on the QEMU dev VM; Windows hardware
   acceptance is **not claimed**.
 - Branch: `stage-w0-windows-baseline`
-- Plan: `docs/plans/2026-11-21-windows-resume-plan.md` (W-0)
+- Plan: Windows resume plan (W-0), since replaced by `docs/plans/2026-11-23-windows-v1-plan.md`
 
 ## Machine
 
