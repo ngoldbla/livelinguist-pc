@@ -1,4 +1,4 @@
-# Loopback probe (cpal) — 2026-11-23
+# Audio loopback (cpal) — 2026-11-23
 
 Host: Windows 11, default output device `LG HDR WFHD (NVIDIA High Definition Audio)`.
 Probe: `cargo run -p ll-audio --features capture --example loopback_probe`
@@ -25,3 +25,27 @@ The program exits normally after 10 s with no sound (frames may be 0).
 ## Result
 
 cpal WASAPI loopback works on this machine. No `windows`-crate fallback needed.
+
+## 30-minute soak
+
+`ll-eval` with the loopback source for 1800 s, `tests/fixtures/sample.wav`
+looping on the same output device:
+
+```powershell
+cargo run --release -p ll-eval --features capture -- --scenario mock --language en-US --source loopback --seconds 1800 --out target\soak
+```
+
+```json
+{
+  "captureSeconds": 1800.0046542,
+  "captureOverrunEvents": 0,
+  "overrunCount": 0,
+  "deviceRate": 48000,
+  "segments": 8,
+  "eventCount": 890,
+  "contentFreeDiagnostics": true
+}
+```
+
+Zero capture overruns across 30 minutes: the 2 s ring at 48 kHz stereo was
+never full. Summary is content-free (counts and rates only).
