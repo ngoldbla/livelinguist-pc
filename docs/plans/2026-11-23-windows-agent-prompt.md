@@ -10,12 +10,14 @@ that can hold the whole plan.
 Paste this as-is for every session. The agent picks the next `todo` card.
 
 ```text
-You are working in C:\dev\livelinguist-pc on Windows 11.
+You are working in the livelinguist-pc repository on Windows 11. The current
+directory is the repository root. If it is not, find the folder that contains
+AGENTS.md and docs\tasks\README.md and work from there.
 
 Do exactly ONE task card, then stop.
 
 1. Run: git switch main; git pull
-2. Open docs/tasks/README.md. Find the first card whose status is "todo".
+2. Open docs/tasks/README.md. Find the first card in the table whose status is "todo".
 3. Open that card file. Do its steps in order. Do not read other docs unless
    the card names them.
 4. Run the card's "Done when" commands.
@@ -35,7 +37,7 @@ planning agent (or a stronger model) to unblock or rewrite the card.
 ```text
 You are building Live Linguist PC v1.0 on native Windows 11 x64.
 
-Repository: C:\dev\livelinguist-pc (GitHub: ngoldbla/livelinguist-pc)
+Repository: the current directory (GitHub: ngoldbla/livelinguist-pc)
 Start from: latest main (git fetch; git switch main; git pull).
 Product: on-device, same-language easy-language captions for system audio.
 Never translate. Never send audio or transcripts off the device.
