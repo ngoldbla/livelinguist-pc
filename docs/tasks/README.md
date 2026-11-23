@@ -16,7 +16,7 @@ writing new cards. Agents work from cards.
 | [T02](T02-loopback-capture.md) | `LoopbackCapture` in `ll-audio` | done |
 | [T03](T03-loopback-bridge.md) | Bridge: "System audio" source | done |
 | [T04](T04-loopback-soak.md) | `ll-eval` loopback source + 30-min soak | done |
-| [T05](T05-loopback-pr.md) | ADR 0003, evidence, PR for S1 | todo |
+| [T05](T05-loopback-pr.md) | ADR 0003, evidence, PR for S1 | done |
 
 More cards (S2 sherpa ASR, S5 llama.cpp, S6 layout, ...) are written after
 S1 merges. If you reach the end of this list, stop and report.
