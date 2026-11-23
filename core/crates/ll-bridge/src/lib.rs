@@ -117,6 +117,10 @@ impl CoreClient {
     pub fn start(&self, request_json: String, on_event: ThreadsafeFunction<String>) -> Result<()> {
         let request: StartRequest = serde_json::from_str(&request_json)
             .map_err(|error| Error::from_reason(format!("invalid start request: {error}")))?;
+        if let Err(reason) = preflight_source(&request.source) {
+            return Err(Error::from_reason(reason));
+        }
+        let callback = Arc::new(on_event);
         let language = Language::from_locale(&request.language)
             .ok_or_else(|| Error::from_reason(format!("unknown language: {}", request.language)))?;
         let scenario = Scenario::parse(&request.scenario).unwrap_or(Scenario::Mock);
@@ -128,15 +132,27 @@ impl CoreClient {
         let pack = FrameworkPack::for_language(language)
             .map_err(|error| Error::from_reason(error.to_string()))?;
         let conversation = DemoConversation::from_pack(&pack, 4);
-        let mut session = SessionConfiguration::new(
-            language,
-            match request.source.as_str() {
-                "demo" => AudioSourceKind::Demo,
-                "silence" => AudioSourceKind::Silence,
-                _other => AudioSourceKind::Demo,
-            },
-        );
-        let _ = request.source;
+        let source_kind = match request.source.as_str() {
+            "demo" => AudioSourceKind::Demo,
+            "silence" => AudioSourceKind::Silence,
+            "monitor" => AudioSourceKind::SystemAudio,
+            _other => AudioSourceKind::Demo,
+        };
+        #[cfg(feature = "capture")]
+        let capture = if matches!(source_kind, AudioSourceKind::SystemAudio) {
+            match ll_audio::capture::LoopbackCapture::start_default() {
+                Ok(capture) => Some(capture),
+                Err(error) => {
+                    emit_error(&callback, "AUDIO_SOURCE_UNAVAILABLE", &error.to_string());
+                    return Err(Error::from_reason(format!(
+                        "system audio capture failed: {error}"
+                    )));
+                }
+            }
+        } else {
+            None
+        };
+        let mut session = SessionConfiguration::new(language, source_kind);
         session.simplification_mode = match request.mode.as_str() {
             "live" => SimplificationMode::Automatic,
             _ => SimplificationMode::OnDemand,
@@ -167,7 +183,6 @@ impl CoreClient {
             .start()
             .map_err(|error| Error::from_reason(error.to_string()))?;
         let events = pipeline.take_events();
-        let callback = Arc::new(on_event);
         {
             let mut inner = self
                 .inner
@@ -181,6 +196,10 @@ impl CoreClient {
             inner.last_error = None;
         }
         emit(callback.as_ref(), events);
+        #[cfg(feature = "capture")]
+        if let Some(capture) = capture {
+            start_monitor_feeder(Arc::clone(&self.inner), capture);
+        }
         Ok(())
     }
 
@@ -459,8 +478,8 @@ impl CoreClient {
             {"id": "demo", "label": "Demo conversation", "kind": "demo", "available": true},
             {"id": "silence", "label": "Synthetic silence", "kind": "silence", "available": true},
             {"id": "file", "label": "Audio file", "kind": "file", "available": true},
-            {"id": "mic", "label": "Microphone", "kind": "mic", "available": false, "note": "device capture pending"},
-            {"id": "monitor", "label": "System audio", "kind": "monitor", "available": false, "note": "device capture pending"}
+            {"id": "mic", "label": "Microphone", "kind": "mic", "available": false, "note": "post-1.0"},
+            monitor_source_entry()
         ]);
         Ok(sources.to_string())
     }
@@ -623,6 +642,87 @@ fn emit(callback: &ThreadsafeFunction<String>, events: Vec<ll_protocol::Envelope
     }
 }
 
+#[cfg(feature = "capture")]
+fn emit_error(callback: &ThreadsafeFunction<String>, code: &str, message: &str) {
+    let mut emitter = ll_protocol::EventEmitter::new();
+    let envelope = emitter.emit(ll_protocol::CoreEvent::Error {
+        code: code.to_string(),
+        message: message.to_string(),
+        recoverable: true,
+    });
+    emit(callback, vec![envelope]);
+}
+
+/// `start` can only build the sources this build was compiled with.
+fn preflight_source(source: &str) -> std::result::Result<(), String> {
+    if source != "monitor" {
+        return Ok(());
+    }
+    #[cfg(feature = "capture")]
+    {
+        Ok(())
+    }
+    #[cfg(not(feature = "capture"))]
+    {
+        Err("system audio capture not built".to_string())
+    }
+}
+
+fn monitor_source_entry() -> serde_json::Value {
+    let available = {
+        #[cfg(feature = "capture")]
+        {
+            ll_audio::capture::default_output_available()
+        }
+        #[cfg(not(feature = "capture"))]
+        {
+            false
+        }
+    };
+    if available {
+        serde_json::json!({
+            "id": "monitor", "label": "System audio", "kind": "monitor", "available": true
+        })
+    } else {
+        serde_json::json!({
+            "id": "monitor", "label": "System audio", "kind": "monitor", "available": false,
+            "note": "device capture pending"
+        })
+    }
+}
+
+/// Pull loopback buffers into the running pipeline until the session stops.
+#[cfg(feature = "capture")]
+fn start_monitor_feeder(
+    inner: Arc<Mutex<BridgeInner>>,
+    mut capture: ll_audio::capture::LoopbackCapture,
+) {
+    let _ = std::thread::Builder::new()
+        .name("loopback-feed".into())
+        .spawn(move || loop {
+            let Some(buffer) = capture.next_buffer() else {
+                break;
+            };
+            let (events, callback) = {
+                let Ok(mut guard) = inner.lock() else {
+                    break;
+                };
+                let Some(pipeline) = guard.pipeline.as_mut() else {
+                    break;
+                };
+                let events = if buffer.is_empty() {
+                    Vec::new()
+                } else {
+                    pipeline.feed_audio(&buffer)
+                };
+                (events, guard.callback.clone())
+            };
+            if let Some(callback) = callback {
+                emit(&callback, events);
+            }
+        });
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -634,6 +734,29 @@ mod tests {
         assert_eq!(request.mode, "on_demand");
         assert_eq!(request.scenario, "mock");
         assert!(!request.detection);
+    }
+
+    #[test]
+    #[cfg(not(feature = "capture"))]
+    fn monitor_source_is_unavailable_without_capture() {
+        let client = CoreClient::new();
+        let sources: serde_json::Value =
+            serde_json::from_str(&client.list_audio_sources().unwrap()).unwrap();
+        let monitor = sources
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|source| source["id"] == "monitor")
+            .expect("monitor source listed");
+        assert_eq!(monitor["available"], serde_json::Value::Bool(false));
+
+        // `start` rejects "monitor" with this error before it builds any source,
+        // so no demo session is created.
+        assert_eq!(
+            preflight_source("monitor").unwrap_err(),
+            "system audio capture not built"
+        );
+        assert!(preflight_source("demo").is_ok());
     }
 
     #[test]

@@ -173,8 +173,7 @@ export function ConsoleScreen({
               title={t(locale, "System audio")}
               detail={t(locale, "WASAPI loopback on Windows; PipeWire monitor on Linux dev.")}
               active={source === "monitor"}
-              badge="pending"
-              disabled
+              badge={t(locale, "Ready")}
               onClick={() => onSource("monitor")}
             />
           </Surface>

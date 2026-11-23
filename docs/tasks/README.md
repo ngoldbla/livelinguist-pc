@@ -14,7 +14,7 @@ writing new cards. Agents work from cards.
 |---|---|---|
 | [T01](T01-loopback-probe.md) | Loopback probe example (cpal) | done |
 | [T02](T02-loopback-capture.md) | `LoopbackCapture` in `ll-audio` | done |
-| [T03](T03-loopback-bridge.md) | Bridge: "System audio" source | todo |
+| [T03](T03-loopback-bridge.md) | Bridge: "System audio" source | done |
 | [T04](T04-loopback-soak.md) | `ll-eval` loopback source + 30-min soak | todo |
 | [T05](T05-loopback-pr.md) | ADR 0003, evidence, PR for S1 | todo |
 

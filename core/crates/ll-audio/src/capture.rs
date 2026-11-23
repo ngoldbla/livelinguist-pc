@@ -150,6 +150,11 @@ fn device_error(error: cpal::Error) -> AudioError {
     AudioError::Device(error.to_string())
 }
 
+/// True when cpal sees a default output device that loopback can capture.
+pub fn default_output_available() -> bool {
+    cpal::default_host().default_output_device().is_some()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
