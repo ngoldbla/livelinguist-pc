@@ -739,15 +739,10 @@ mod tests {
     #[test]
     #[cfg(not(feature = "capture"))]
     fn monitor_source_is_unavailable_without_capture() {
-        let client = CoreClient::new();
-        let sources: serde_json::Value =
-            serde_json::from_str(&client.list_audio_sources().unwrap()).unwrap();
-        let monitor = sources
-            .as_array()
-            .unwrap()
-            .iter()
-            .find(|source| source["id"] == "monitor")
-            .expect("monitor source listed");
+        // The napi entry point returns this entry; testing the entry itself keeps
+        // the unit test free of napi runtime symbols.
+        let monitor = monitor_source_entry();
+        assert_eq!(monitor["id"], "monitor");
         assert_eq!(monitor["available"], serde_json::Value::Bool(false));
 
         // `start` rejects "monitor" with this error before it builds any source,
