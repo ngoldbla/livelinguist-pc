@@ -84,12 +84,21 @@ decision entry and an ADR update. **For 1.0, D-055/D-056 and
 
 ## Next run
 
-Agents: work from `docs/tasks/README.md`. T01–T05 (S1) are done; T06–T07
-finish S1 follow-ups, T08–T10 are S4, T11–T14 are S2.
+Agents: work from `docs/tasks/README.md` — cards T06–T40 cover everything to
+`v1.0.0`. T01–T05 (S1) are done.
 
-Order of cards: T06–T07 (S1 follow-ups: stateful resampling, device loss),
-then T08–T10 (S4 prompt contract), then T11–T14 (S2 real ASR). After that:
-first-run download screen, S5 llama.cpp, S6 layout/a11y, S3 coverage matrix.
+| Cards | Stage |
+|---|---|
+| T06–T07 | S1 follow-ups (stateful resampling, device loss) |
+| T08–T10 | S4 prompt contract |
+| T11–T14 | S2 real ASR |
+| T15–T16 | first-run model download |
+| T17–T22 | S5 llama.cpp click-to-simplify |
+| T23–T28 | S6 layout + a11y |
+| T29–T33 | S3 coverage matrix (FLEURS) |
+| T34–T36 | S7 integration → **MVP, human pass** |
+| T37–T39 | S8 packaging |
+| T40 | S9 release `v1.0.0` |
 
 Owner inputs resolved 2026-11-23: FLEURS approved; native Windows 11 boot (no
 VM, clean install = fresh standard user); `v1.0.0` tag approved; unsigned

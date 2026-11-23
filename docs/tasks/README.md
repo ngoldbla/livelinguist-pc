@@ -26,11 +26,37 @@ writing new cards. Agents work from cards.
 | [T12](T12-sherpa-probe.md) | sherpa-onnx probe on a TTS speech clip | `stage-w3-asr-runtime` | todo |
 | [T13](T13-sherpa-engine.md) | Real streaming `SherpaAsr` | `stage-w3-asr-runtime` | todo |
 | [T14](T14-sherpa-in-app.md) | Real ASR in `ll-eval` and the app (PR) | `stage-w3-asr-runtime` | todo |
+| [T15](T15-model-download-bridge.md) | Bridge: model status, download, cancel | `stage-w3-model-download` | todo |
+| [T16](T16-model-download-ui.md) | Onboarding download screen (PR) | `stage-w3-model-download` | todo |
+| [T17](T17-llama-probe.md) | llama.cpp CPU probe | `stage-w4-llama-cpu` | todo |
+| [T18](T18-llama-backend.md) | `LlamaBackend` | `stage-w4-llama-cpu` | todo |
+| [T19](T19-click-queue.md) | Click-only queue rules | `stage-w4-llama-cpu` | todo |
+| [T20](T20-llama-in-app.md) | Real simplifier in `ll-eval` and the app | `stage-w4-llama-cpu` | todo |
+| [T21](T21-tier-c-latency.md) | Tier C profile, click p95, RSS | `stage-w4-llama-cpu` | todo |
+| [T22](T22-simplify-matrix.md) | 29-pack simplifier matrix (PR) | `stage-w4-llama-cpu` | todo |
+| [T23](T23-work-area.md) | Bridge `workArea()` | `stage-w5-layout` | todo |
+| [T24](T24-window-size-clamp.md) | Fit windows to the work area | `stage-w5-layout` | todo |
+| [T25](T25-layout-min-size.md) | Screens fit the minimum size + screenshots (PR) | `stage-w5-layout` | todo |
+| [T26](T26-a11y-checks.md) | Automated a11y checks on every screen | `stage-w5-a11y` | todo |
+| [T27](T27-keyboard-captions.md) | Keyboard simplify + Read latest | `stage-w5-a11y` | todo |
+| [T28](T28-a11y-checklist.md) | Contrast, reduced effects, a11y checklist (PR) | `stage-w5-a11y` | todo |
+| [T29](T29-fleurs-manifest.md) | FLEURS manifest + fetch script | `stage-w3-asr-coverage` | todo |
+| [T30](T30-wer-metrics.md) | Normalizer, WER, CER | `stage-w3-asr-coverage` | todo |
+| [T31](T31-asr-wer-scenario.md) | `ll-eval` asr-wer scenario | `stage-w3-asr-coverage` | todo |
+| [T32](T32-asr-minimum-set.md) | Measure en/fr/de/es/ar | `stage-w3-asr-coverage` | todo |
+| [T33](T33-asr-coverage-matrix.md) | All 29 locales + coverage statuses (PR) | `stage-w3-asr-coverage` | todo |
+| [T34](T34-release-build-integration.md) | Real-backend build, measured health | `stage-w5-integration` | todo |
+| [T35](T35-privacy-checks.md) | Privacy check script | `stage-w5-integration` | todo |
+| [T36](T36-mvp-journey.md) | Journey + soak, then STOP for human pass (PR) | `stage-w5-integration` | todo |
+| [T37](T37-packaging-build.md) | Installer + portable ZIP build | `stage-w6-packaging` | todo |
+| [T38](T38-clean-profile-install.md) | Clean-profile install test (needs admin once) | `stage-w6-packaging` | todo |
+| [T39](T39-release-workflow.md) | Release workflow dry run + install notes (PR) | `stage-w6-packaging` | todo |
+| [T40](T40-release-candidate.md) | Release gates and `v1.0.0` | `release-v1.0.0` | todo |
 
 Cards marked **(PR)** end their branch: open the PR, merge when CI is green.
-More cards (first-run download screen, llama.cpp, 150% layout, coverage
-matrix) are written after T14. If you reach the end of this list, stop and
-report.
+Two cards stop for a human on purpose: **T36** (MVP: real call + Narrator
+listening pass) and **T38** (needs admin once to create a test user). T37 will
+not start until the human-pass file exists. After T40 the list is finished.
 
 ## Rules for every card
 
