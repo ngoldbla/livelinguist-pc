@@ -1,8 +1,36 @@
-# Windows agent prompt — build Live Linguist PC v1.0
+# Windows agent prompt
 
-Paste the block below into a new agent session on the **native Windows 11
-host** (not WSL). Change the repo path if the checkout is not at
-`C:\dev\livelinguist-pc`.
+Two versions. Use the **short prompt** for smaller or faster models (for
+example DeepSeek Flash in OpenChamber): it gives the agent one task card per
+session instead of the whole plan. Use the full prompt only for a strong model
+that can hold the whole plan.
+
+## Short prompt (one task card per session)
+
+Paste this as-is for every session. The agent picks the next `todo` card.
+
+```text
+You are working in C:\dev\livelinguist-pc on Windows 11.
+
+Do exactly ONE task card, then stop.
+
+1. Run: git switch main; git pull
+2. Open docs/tasks/README.md. Find the first card whose status is "todo".
+3. Open that card file. Do its steps in order. Do not read other docs unless
+   the card names them.
+4. Run the card's "Done when" commands.
+5. Follow the rules in docs/tasks/README.md (branch, commit, anti-loop rule).
+6. End with the 4-line report from docs/tasks/README.md and stop.
+
+Do not plan beyond this card. Do not reread files you already read. If you
+are unsure, do the simplest thing that makes the "Done when" commands pass.
+If you are stuck twice on the same error, write docs/tasks/BLOCKED.md and stop.
+```
+
+If a session ends `blocked`, paste `docs/tasks/BLOCKED.md` back to the
+planning agent (or a stronger model) to unblock or rewrite the card.
+
+## Full prompt (strong models only)
 
 ```text
 You are building Live Linguist PC v1.0 on native Windows 11 x64.

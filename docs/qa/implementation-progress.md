@@ -84,6 +84,8 @@ decision entry and an ADR update. **For 1.0, D-055/D-056 and
 
 ## Next run
 
+Agents: work from `docs/tasks/README.md` (task cards T01–T05 cover S1).
+
 Recommended order: **S4 → S1 → S2 → S5 → S6 → S3 → S7 → S8 → S9** (start the
 S3 fixture download early). Concretely:
 
