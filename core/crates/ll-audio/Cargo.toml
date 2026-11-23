@@ -13,10 +13,11 @@ ll-core = { workspace = true }
 ringbuf = { workspace = true }
 thiserror = { workspace = true }
 cpal = { workspace = true, optional = true }
+rubato = { workspace = true, optional = true }
 
 [features]
 default = []
-capture = ["dep:cpal"]
+capture = ["dep:cpal", "dep:rubato"]
 
 [[example]]
 name = "loopback_probe"
