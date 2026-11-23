@@ -17,6 +17,12 @@ review_input: "Review: Live Linguist PC - Master Plan (2026-11-21, plan_version 
 
 # Live Linguist PC - Master Plan (v3)
 
+> **Role since 2026-11-23: architecture and spec reference.** Execute v1.0 from
+> `docs/plans/2026-11-23-windows-v1-plan.md`; the 1.0 scope is
+> `docs/plans/2026-11-22-v1-scope.md`. Where this file describes GPU inference,
+> 1.7B, microphone, multi-monitor, or automatic simplification, it is post-1.0.
+> Docs map: `docs/README.md`.
+
 > **Status:** working baseline. Decisions marked `accepted` are confirmed by the
 > product owner. Decisions marked `baseline` are the working default and may be
 > overturned with a new decision entry. As of v3 there are no `proposed`
@@ -232,7 +238,7 @@ The port uses:
 > multi-monitor/mixed-DPI, no GPU inference, no 1.7B, no automatic/live
 > simplification. The longer-term design below remains the reference for
 > post-1.0 work. Execution order:
-> `docs/plans/2026-11-22-v1-execution-plan.md`.
+> `docs/plans/2026-11-23-windows-v1-plan.md`.
 
 ### 3.1 In scope (v1)
 
@@ -1751,7 +1757,7 @@ Optional, only if a gap appears: `supercent-io/skills-template/web-accessibility
 - Live Linguist Mac/iOS: `https://github.com/ngoldbla/live-linguist` (private)
 - Windows PRD: `docs/prd/PRD-windows.md` in the reference repo
 - Live budget notes: `docs/qa/2026-06-10-live-budget-levers.md`
-- Current PC repo: `README.md`, `docs/stack-options.md`,
+- Current PC repo: `README.md`, `docs/README.md`,
   `docs/decisions/README.md`
 
 ### Frameworks and runtimes

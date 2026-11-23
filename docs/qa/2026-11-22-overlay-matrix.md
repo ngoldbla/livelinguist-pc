@@ -4,7 +4,7 @@
 - Status: **single-monitor matrix passes at 100/125/150%; mixed-DPI and
   multi-monitor are blocked on this host (one display).**
 - Branch: `stage-w5-gpu-evidence`
-- Plan: `docs/plans/2026-11-21-windows-resume-plan.md` (W-1)
+- Plan: Windows resume plan (W-1), since replaced by `docs/plans/2026-11-23-windows-v1-plan.md`
 - Machine: `docs/qa/2026-11-21-windows-hardware.md`
 - Raw results: `docs/qa/2026-11-22-overlay-matrix.json`
 - Captures: `docs/screenshots/m2-windows/overlay/`

@@ -1,6 +1,7 @@
 # Implementation progress
 
-Master plan: `docs/plans/2026-11-21-live-linguist-pc-master-plan.md` (v3).
+Execution plan: `docs/plans/2026-11-23-windows-v1-plan.md` (stages S1–S9).
+Scope: `docs/plans/2026-11-22-v1-scope.md`. Docs map: `docs/README.md`.
 This file is the live status board. Each merged PR is a validated stage.
 
 ## Stage board
@@ -13,11 +14,14 @@ This file is the live status board. Each merged PR is a validated stage.
 | 4 | `ll-bridge` napi + envelope + event-delivery harness + X11 window policy + UI screens | #5 | merged | `docs/qa/2026-11-21-ui.md`, `2026-11-21-overlay.md`, `2026-11-21-event-delivery.md` |
 | 5 | UI shell: Aurora, onboarding, console, store, i18n | #5 | merged | `docs/screenshots/m2/` |
 | 6 | UI overlay, transcript, settings, summary, licenses, dev panel | #5 | merged | `docs/screenshots/m2/` |
-| 7 | Packaging, CI release workflow, final QA | #6 | merged | `docs/qa/2026-11-21-packaging.md`, `2026-11-21-final-qa.md` |
+| 7 | Packaging, CI release workflow, final QA | #6 | merged | `docs/qa/2026-11-21-packaging.md` |
 | 8 | W-0 Windows baseline, toolchain, dev-VM smoke | #10 | merged | `docs/qa/2026-11-22-windows-vm-smoke.md` |
 | 9 | W-5a measured renderer/accelerator probe + GPUIX GPU test-renderer portfolio | #11 | merged | `docs/qa/2026-11-22-gpu-renderer.md`, `docs/screenshots/m2-windows/` |
 | 10 | W-1a single-screen Win32 overlay matrix: policy, focus, drag, 100/125/150% | #12 | merged | `docs/qa/2026-11-22-overlay-matrix.md`, `docs/screenshots/m2-windows/overlay/` |
-| 11 | v1.0 scope freeze + execution plan | #13 | merged | `docs/plans/2026-11-22-v1-scope.md`, `2026-11-22-v1-execution-plan.md`, ADR 0018 |
+| 11 | v1.0 scope freeze + execution plan | #13 | merged | `docs/plans/2026-11-22-v1-scope.md`, ADR 0018 |
+| 12 | Master plan, budgets, progress aligned with v1.0 | #14 | merged | `docs/budgets.md` |
+| 13 | v1.0 model pins + public ASR mirror | #15 | merged | `docs/qa/2026-11-22-model-pins.md`, ADR 0019 |
+| 14 | Docs consolidation + Windows v1 implementation plan | #16 | merged | `docs/README.md`, `docs/plans/2026-11-23-windows-v1-plan.md` |
 
 ## Milestone mapping
 
@@ -60,25 +64,40 @@ decision entry and an ADR update. **For 1.0, D-055/D-056 and
 7. #11 W-5a — measured renderer/accelerator probe + GPUIX GPU portfolio
 8. #12 W-1a — single-screen Win32 overlay matrix (policy, focus, drag, DPI)
 9. #13 — v1.0 scope freeze + execution plan
+10. #14 — master plan/budgets/progress aligned with v1.0
+11. #15 — v1.0 model pins + public ASR mirror
+12. #16 — docs consolidation + Windows v1 implementation plan
+
+## v1.0 stage board (plan S1–S9)
+
+| Stage | Plan | Branch | Status |
+|---|---|---|---|
+| S1 | W-2 WASAPI loopback + 30-min soak | `stage-w2-loopback` | **next — current blocker** |
+| S2 | W-3a sherpa-onnx runtime + first-run model UX | `stage-w3-asr-runtime` | ready |
+| S3 | W-3b per-locale WER/RTF, 29-row matrix | `stage-w3-asr-coverage` | needs S2 |
+| S4 | W-4a EasyLanguage prompt contract (drop rolling context, 29 goldens) | `stage-w4-prompt-contract` | ready (no model needed) |
+| S5 | W-4b CPU llama.cpp click-only simplify, p95/RSS | `stage-w4-llama-cpu` | needs S4 |
+| S6 | W-5a 150%/1280x720 layout, W-5b keyboard + Narrator | `stage-w5-layout`, `stage-w5-a11y` | ready |
+| S7 | W-5c end-to-end real session + privacy checks | `stage-w5-integration` | needs S1, S2, S5, en live |
+| S8 | W-6 NSIS + portable, clean-VM install | `stage-w6-packaging` | needs S7 |
+| S9 | Release candidate → `v1.0.0` | `release-v1.0.0` | needs S8 + owner go-ahead |
 
 ## Next run
 
-The v1.0 model set is now pinned (ADR 0019,
-`docs/qa/2026-11-22-model-pins.md`): Nemotron 3.5 streaming 0.6B int8 at 560 ms
-for all 29 locales, and `Qwen3-0.6B-EasyLanguage-Q4_K_M.gguf`; both mirrored per
-file and downloaded on first run. Start the parallel tracks:
+Recommended order: **S4 → S1 → S2 → S5 → S6 → S3 → S7 → S8 → S9** (start the
+S3 fixture download early). Concretely:
 
-1. **W-2** WASAPI system-audio loopback capture + 30-minute soak.
-2. **W-3** wire `sherpa-onnx` `OnlineRecognizer` against the published mirror,
-   then WER/RTF per locale and the 29-locale coverage matrix.
-3. **W-4** CPU llama.cpp, the exact EasyLanguage prompt contract, click-only
-   simplification, p95/RSS.
-4. **W-5** layout/a11y fixes (150% clipping, 1280x720, keyboard/Narrator) can
-   start independently.
+1. **S4** — add the `EasyLanguagePrompt` renderer from the GGUF model card,
+   remove `previous` from the click path in `ll-pipeline`, add 29 prompt goldens.
+2. **S1** — decide cpal vs `windows`-crate WASAPI loopback (ADR 0003), implement
+   `ll-audio/src/capture.rs`, wire `listAudioSources`/`selectAudioSource`,
+   run the 30-minute soak.
+3. **S2** — pin the sherpa-onnx Rust binding, build `OnlineRecognizer` against
+   the mirror at `f73e3bc8…`, onboarding download UX.
 
-Integration waits for loopback + one live ASR language + click simplification.
-Packaging waits for integration. Execution order and gates:
-`docs/plans/2026-11-22-v1-execution-plan.md`.
+Human/owner inputs pending: ASR eval fixture approval (FLEURS recommended),
+Narrator listening pass, a real call, a clean Windows 11 VM, signing decision,
+v1.0 tag go-ahead (plan §14).
 
 ## Known environment limitations
 

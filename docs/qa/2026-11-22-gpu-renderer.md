@@ -4,7 +4,7 @@
 - Status: **renderer and accelerator evidence measured; hardware UI gates that
   need a real display/audio path remain open.**
 - Branch: `stage-w5-gpu-evidence`
-- Plan: `docs/plans/2026-11-21-windows-resume-plan.md` (W-5, W-4 groundwork)
+- Plan: Windows resume plan (W-5, W-4 groundwork), since replaced by `docs/plans/2026-11-23-windows-v1-plan.md`
 - Machine record: `docs/qa/2026-11-21-windows-hardware.md`
 
 ## What changed
