@@ -103,13 +103,11 @@ measurement — not model selection.
 
 Steps:
 
-1. **Publish the model mirror.** Put the four int8 files from
-   `sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-560ms-int8-2026-06-11` into the
-   public `ndgold/nemotron-3.5-asr-streaming-0.6b-onnx` repository, with
+1. **Model mirror (done).** The four int8 files are public at
+   `ndgold/nemotron-3.5-asr-streaming-0.6b-onnx`, commit `f73e3bc8…`, with
    `PROVENANCE.md` (asset id 470963822, archive digest `c6bf5e0d…`) and the
-   NVIDIA license. Per-file SHA-256 values are already in
-   `ModelCatalog::plan_default()`; replace `revision: "main"` with the mirror
-   commit once it exists.
+   NVIDIA license. `ModelCatalog::plan_default()` pins that commit and the
+   per-file SHA-256 values; no publish step remains.
 2. **Runtime.** Complete the `sherpa` feature with `OnlineRecognizer`:
    streaming partials, endpointing, finalized segments, cancellation, and an
    explicit `ASR_MODEL_MISSING` state. Pass the two-letter language key derived

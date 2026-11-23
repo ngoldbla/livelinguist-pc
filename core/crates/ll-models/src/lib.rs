@@ -137,7 +137,7 @@ impl ModelCatalog {
                     id: "asr-nemotron-3.5-0.6b-560ms".to_string(),
                     role: ModelRole::Asr,
                     repo: "ndgold/nemotron-3.5-asr-streaming-0.6b-onnx".to_string(),
-                    revision: "main".to_string(),
+                    revision: "f73e3bc81614fa69e24b091b892e8672983fbb9c".to_string(),
                     files: asr_files,
                     license: "NVIDIA Open Model License (OpenMDW v1.1)".to_string(),
                     upstream: Some(
@@ -470,6 +470,7 @@ mod tests {
         assert_eq!(asr.total_bytes(), 682_215_356);
         assert!(asr.license.contains("NVIDIA"));
         assert!(asr.upstream.as_deref().unwrap().contains("c6bf5e0d"));
+        assert_eq!(asr.revision.len(), 40);
 
         let llm = catalog.get("llm-qwen3-0.6b-easylanguage").unwrap();
         assert_eq!(llm.role, ModelRole::Llm);

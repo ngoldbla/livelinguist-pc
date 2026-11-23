@@ -69,8 +69,8 @@ for all 29 locales, and `Qwen3-0.6B-EasyLanguage-Q4_K_M.gguf`; both mirrored per
 file and downloaded on first run. Start the parallel tracks:
 
 1. **W-2** WASAPI system-audio loopback capture + 30-minute soak.
-2. **W-3** publish the ASR mirror, wire `sherpa-onnx` `OnlineRecognizer`, then
-   WER/RTF per locale and the 29-locale coverage matrix.
+2. **W-3** wire `sherpa-onnx` `OnlineRecognizer` against the published mirror,
+   then WER/RTF per locale and the 29-locale coverage matrix.
 3. **W-4** CPU llama.cpp, the exact EasyLanguage prompt contract, click-only
    simplification, p95/RSS.
 4. **W-5** layout/a11y fixes (150% clipping, 1280x720, keyboard/Narrator) can
