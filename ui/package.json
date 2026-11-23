@@ -11,7 +11,8 @@
     "test": "bun test",
     "check": "biome check src scripts",
     "format": "biome format --write src scripts",
-    "screenshots": "bun run scripts/screenshots.ts"
+    "screenshots": "bun run scripts/screenshots.ts",
+    "screenshots:windows": "bun run scripts/screenshots-windows.tsx"
   },
   "dependencies": {
     "@gpuix/native": "0.11.0",

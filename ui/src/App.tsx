@@ -155,7 +155,12 @@ export function App() {
       void ensureTransport()
         .setWindowMode(windowMode)
         .then(() => ensureTransport().runtimeStatus())
-        .then((runtime) => bootStore.setRuntime(runtime))
+        .then((runtime) => {
+          bootStore.setRuntime(runtime);
+          if (runtime.ui?.degradedReason && runtime.ui.backend !== "demo") {
+            setToast(`Software rendering: ${runtime.ui.degradedReason}`);
+          }
+        })
         .catch(() => undefined);
       if (target === "summary") {
         void startSession()
@@ -228,7 +233,16 @@ export function App() {
         .filter((device) => device.available)
         .map((device) => device.id)
         .join(", ");
-      setToast(`Backends: ${available}`);
+      const parts = [available || "no accelerators"];
+      if (probe.ui) {
+        parts.push(
+          `${probe.ui.backend}: ${probe.ui.hardware ? "GPU" : "software"}${probe.ui.adapter ? ` (${probe.ui.adapter})` : ""}`,
+        );
+      }
+      if (probe.cudaDevices && probe.cudaDevices.length > 0) {
+        parts.push(`CUDA: ${probe.cudaDevices.map((device) => device.name).join(", ")}`);
+      }
+      setToast(`Backends: ${parts.join(" · ")}`);
     } catch {
       setToast("Backend probe failed.");
     }

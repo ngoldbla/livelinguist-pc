@@ -262,6 +262,15 @@ Tasks:
 **Acceptance:** real Windows screenshots + a11y checklist; no regressions in
 `ui` tests. PR: **`windows: D3D UI and accessibility acceptance`**.
 
+**Status addendum (2026-11-22):** task 1 is done for reporting: `RuntimeStatus.ui`
+is measured through DXGI (RTX 5060 Ti) instead of declared from the target OS,
+with a CUDA 13.5 device and no Vulkan ICD recorded. Task 2 is partially done:
+the GPUIX DirectX test renderer captures the portfolio offscreen (11 screens,
+1536x1061 canvas) and the overlay from its real 780x250 window; 0 unlabeled
+controls and 4 console Tab stops. Remaining: the interactive overlay/DPI matrix,
+frame pacing, and the full Narrator/NVDA pass. Evidence:
+`docs/qa/2026-11-22-gpu-renderer.md`.
+
 ### W-6 — M3 packaging and release
 
 Tasks:

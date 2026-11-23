@@ -103,6 +103,12 @@ if (-not $SkipBridge) {
     Copy-Item target\release\livelinguist_core.dll tests\bridge\livelinguist-core.node -Force
     Copy-Item target\release\livelinguist_core.dll ui\livelinguist-core.node -Force
     Invoke-Native $node @('tests\bridge\bridge-smoke.mjs')
+    $env:LL_BRIDGE_ADDON = (Resolve-Path 'tests\bridge\livelinguist-core.node').Path
+    try {
+        Invoke-Native $node @('tests\bridge\hardware-probe.mjs')
+    } finally {
+        Remove-Item Env:LL_BRIDGE_ADDON -ErrorAction SilentlyContinue
+    }
     Invoke-Native $node @('tests\bridge\event-delivery.mjs', '10')
     Invoke-Native $bun @('tests\bridge\event-delivery.mjs', '10')
 }

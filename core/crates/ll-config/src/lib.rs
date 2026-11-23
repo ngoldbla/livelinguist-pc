@@ -592,6 +592,108 @@ pub struct EventDeliveryStatus {
     pub dropped: u64,
 }
 
+/// What the UI renderer and the machine's accelerators actually are.
+///
+/// These values are measured at runtime (DXGI / DRM / Vulkan / CUDA), never
+/// declared from the target OS. `unknown` means "not probed yet", and a
+/// software adapter is reported as degraded, not as a working GPU.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(
+    export,
+    rename_all = "camelCase",
+    export_to = "../../../../ui/src/bridge/generated/"
+)]
+pub struct UiRendererStatus {
+    /// `directx`, `vulkan`, `metal`, `software`, or `unknown`.
+    pub backend: String,
+    /// The renderer API the platform requires is present and enumerable.
+    pub api_available: bool,
+    /// A hardware adapter was enumerated for that API.
+    pub hardware: bool,
+    pub adapter: Option<String>,
+    pub driver: Option<String>,
+    pub degraded_reason: Option<String>,
+    pub notes: Vec<String>,
+}
+
+impl Default for UiRendererStatus {
+    fn default() -> Self {
+        Self {
+            backend: "unknown".to_string(),
+            api_available: false,
+            hardware: false,
+            adapter: None,
+            driver: None,
+            degraded_reason: Some("renderer not probed".to_string()),
+            notes: Vec::new(),
+        }
+    }
+}
+
+/// One adapter enumerated from DXGI or DRM sysfs.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(
+    export,
+    rename_all = "camelCase",
+    export_to = "../../../../ui/src/bridge/generated/"
+)]
+pub struct AdapterInfo {
+    pub name: String,
+    pub vendor_id: u32,
+    pub device_id: u32,
+    #[ts(type = "number")]
+    pub dedicated_vram_mb: u64,
+    pub software: bool,
+    /// `discrete`, `integrated`, or `software`.
+    pub kind: String,
+}
+
+/// One accelerator device reported by a runtime such as CUDA.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(
+    export,
+    rename_all = "camelCase",
+    export_to = "../../../../ui/src/bridge/generated/"
+)]
+pub struct AcceleratorDevice {
+    pub name: String,
+    #[ts(type = "number")]
+    pub vram_total_mb: u64,
+    pub compute: Option<String>,
+}
+
+/// Availability of an accelerator runtime (not a performance measurement).
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(
+    export,
+    rename_all = "camelCase",
+    export_to = "../../../../ui/src/bridge/generated/"
+)]
+pub struct RuntimeSupport {
+    pub available: bool,
+    pub detail: String,
+    pub devices: Vec<AcceleratorDevice>,
+}
+
+/// The hardware report used by the dev panel and the backend probe.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(
+    export,
+    rename_all = "camelCase",
+    export_to = "../../../../ui/src/bridge/generated/"
+)]
+pub struct HardwareReport {
+    pub ui: UiRendererStatus,
+    pub adapters: Vec<AdapterInfo>,
+    pub vulkan: RuntimeSupport,
+    pub cuda: RuntimeSupport,
+}
+
 /// The dev panel / health card status (plan §14.4).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
@@ -609,7 +711,7 @@ pub struct RuntimeStatus {
     pub effective_gpu_layers: u32,
     pub loaded_backend_modules: Vec<String>,
     pub cpu_variant: String,
-    pub ui_backend: String,
+    pub ui: UiRendererStatus,
     pub window_policy: String,
     pub model: String,
     pub quant: String,
@@ -633,7 +735,7 @@ impl Default for RuntimeStatus {
             effective_gpu_layers: 0,
             loaded_backend_modules: vec!["cpu".to_string()],
             cpu_variant: cpu_variant(),
-            ui_backend: default_ui_backend(),
+            ui: UiRendererStatus::default(),
             window_policy: "console".to_string(),
             model: "qwen3-0.6b-easylanguage".to_string(),
             quant: "q4_k_m".to_string(),
@@ -704,16 +806,6 @@ fn cpu_variant() -> String {
     }
     #[allow(unreachable_code)]
     std::env::consts::ARCH.to_string()
-}
-
-fn default_ui_backend() -> String {
-    if cfg!(target_os = "windows") {
-        "d3d12".to_string()
-    } else if cfg!(target_os = "macos") {
-        "metal".to_string()
-    } else {
-        "vulkan".to_string()
-    }
 }
 
 #[cfg(test)]
@@ -830,6 +922,18 @@ mod tests {
         assert!(!status.cpu_variant.is_empty());
         let status = status.with_effective("cpu", "cpu", vec!["cpu".into()], None);
         assert_eq!(status.loaded_backend_modules, vec!["cpu"]);
+    }
+
+    #[test]
+    fn renderer_starts_unprobed_and_is_never_declared_from_the_target_os() {
+        let status = RuntimeStatus::requested(&RuntimeConfig::default());
+        assert_eq!(status.ui.backend, "unknown");
+        assert!(!status.ui.api_available);
+        assert!(!status.ui.hardware);
+        assert_eq!(
+            status.ui.degraded_reason.as_deref(),
+            Some("renderer not probed")
+        );
     }
 
     #[test]

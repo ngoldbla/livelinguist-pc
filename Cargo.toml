@@ -14,6 +14,7 @@ authors = ["Live Linguist contributors"]
 ll-core = { path = "core/crates/ll-core" }
 ll-config = { path = "core/crates/ll-config" }
 ll-audio = { path = "core/crates/ll-audio" }
+ll-accel = { path = "core/crates/ll-accel" }
 ll-asr = { path = "core/crates/ll-asr" }
 ll-llm = { path = "core/crates/ll-llm" }
 ll-models = { path = "core/crates/ll-models" }

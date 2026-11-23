@@ -12,6 +12,7 @@ bun test
 bun run check           # Biome
 bun run start           # real window
 bun run screenshots     # real X11 captures into docs/screenshots/m2
+bun run screenshots:windows  # GPUIX DirectX test renderer (desktop session)
 ```
 
 On a Wayland desktop, force X11 for the dev overlay:
@@ -45,17 +46,23 @@ env -u WAYLAND_DISPLAY bun src/main.tsx
 - Single window; overlay/expanded are layouts + native window policy, not new
   windows.
 - GPUIX 0.11 has no Linux PNG test renderer; screenshots use the real X11
-  window (`import -window`). See `scripts/screenshots.ts`.
+  window (`import -window`). On Windows the native DirectX test renderer is
+  available and captures offscreen; it needs a logged-on desktop session, not
+  session 0. See `scripts/screenshots-windows.tsx` and
+  `scripts/run-in-interactive-session.ps1`.
 - Caption announcements: no live-region API in 0.11; the expanded view exposes
   a "Read latest" action and Q-013 tracks the upstream addition.
 
 ## Screenshot scenarios
 
 `scripts/screenshots.ts` launches one process per screen with
-`LL_SCREEN=<screen>`, waits for the window, and captures it. The X11 overlay
-policy is applied by the native bridge (`setWindowMode`), which sets
-`_NET_WM_STATE_ABOVE`, skip-taskbar/pager, sticky desktop, utility window type,
-input=false, and Motif borderless.
+`LL_SCREEN=<screen>`, waits for the window, and captures it. On Windows,
+`scripts/screenshots-windows.tsx` mounts the same app in GPUIX's GPU test
+renderer and captures each screen offscreen; `scripts/screenshots-windows.ps1`
+also captures the real 780x250 overlay window. The X11 overlay policy is applied
+by the native bridge (`setWindowMode`), which sets `_NET_WM_STATE_ABOVE`,
+skip-taskbar/pager, sticky desktop, utility window type, input=false, and Motif
+borderless.
 
 ## Known limits
 

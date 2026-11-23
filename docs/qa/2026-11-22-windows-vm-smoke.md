@@ -14,7 +14,7 @@
 | Machine | QEMU Standard PC (Q35 + ICH9, 2009) |
 | CPU | AMD Ryzen 9 3900X, 6 cores / 6 logical (VM) |
 | RAM | 64 GB |
-| GPU | Microsoft Basic Display Adapter (driver 10.0.26100.1) |
+| GPU | Microsoft Basic Display Adapter (driver 10.0.26100.1); DXGI also enumerates an NVIDIA RTX 5060 Ti — see the correction below |
 | Display | 1280 x 800 |
 | Audio | no `Win32_SoundDevice` entries |
 | Disk | 430.7 GB free on C: |
@@ -85,13 +85,35 @@ rendering. It proves the window and native path start on a GPU-less Windows VM;
 it is not a D3D11/12 hardware, frame-rate, overlay-over-fullscreen, or
 multi-monitor acceptance.
 
+## Correction: the GPU is present (2026-11-22)
+
+`Win32_VideoController` reports only the Microsoft Basic Display Adapter, and the
+first W-0 pass read that as "no GPU". A DXGI/CUDA probe on the same host
+(`cargo run -p ll-accel --example probe`) enumerates:
+
+- NVIDIA GeForce RTX 5060 Ti, 16050 MB dedicated VRAM, hardware DXGI adapter;
+- one CUDA device, 16283 MB, compute capability 12.0, driver 13.5;
+- Vulkan loader present but **no ICD registered**;
+- 128 GB RAM and a 12-core/24-thread Ryzen 9 3900X.
+
+So the host has GPU compute and a working DirectX path; the display class is
+still Basic Display, which is why the W-1 overlay matrix and frame-pacing claims
+remain open. Full evidence: `docs/qa/2026-11-22-gpu-renderer.md` and
+`docs/qa/2026-11-21-windows-hardware.md`.
+
+The agent's shell runs in **session 0 (services)**. DXGI probing and `cargo test`
+work there, but GPUIX cannot create the DirectX window (`DWM interval: Access is
+denied` → `Creating DirectX renderer`). Window and GPU-test-renderer work must
+run in the logged-on desktop session; see `scripts/run-in-interactive-session.ps1`.
+
 ## Known limitations and open gates
 
-- **No GPU.** W-1 (Win32 overlay over full-screen video, mixed DPI,
-  multi-monitor) and W-5 (D3D hardware, performance, accessibility captures)
-  still need the real Windows 11 host.
-- **No audio devices.** W-2 (WASAPI microphone/loopback and the 30-minute soak)
-  cannot run on this VM.
+- **GPU present, display path unvalidated.** W-1 (Win32 overlay over
+  full-screen video, mixed DPI, multi-monitor) and frame-pacing claims still
+  need the interactive desktop matrix; DXGI/CUDA enumeration is recorded in
+  `docs/qa/2026-11-22-gpu-renderer.md`.
+- **No microphone endpoint.** The host exposes two render endpoints; WASAPI
+  microphone/loopback capture and the 30-minute soak (W-2) remain open.
 - **No real models.** ASR and LLM paths remain mock/demo; W-3/W-4 need pinned
   artifacts and downloads.
 - **No packaging tools.** W-6 needs NSIS (or `cargo-packager`) and a clean

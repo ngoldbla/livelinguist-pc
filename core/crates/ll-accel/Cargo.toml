@@ -1,0 +1,23 @@
+[package]
+name = "ll-accel"
+description = "Measured UI renderer and accelerator inventory (DXGI, DRM, Vulkan, CUDA)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+ll-config = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }
+
+[target.'cfg(windows)'.dependencies]
+windows = { workspace = true, features = [
+  "Win32_Foundation",
+  "Win32_Graphics_Dxgi",
+  "Win32_System_LibraryLoader",
+  "Win32_System_Registry",
+] }
