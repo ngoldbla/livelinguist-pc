@@ -17,3 +17,7 @@ cpal = { workspace = true, optional = true }
 [features]
 default = []
 capture = ["dep:cpal"]
+
+[[example]]
+name = "loopback_probe"
+required-features = ["capture"]
