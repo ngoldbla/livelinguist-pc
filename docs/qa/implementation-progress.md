@@ -14,18 +14,19 @@ This file is the live status board. Each merged PR is a validated stage.
 | 5 | UI shell: Aurora, onboarding, console, store, i18n | #5 | merged | `docs/screenshots/m2/` |
 | 6 | UI overlay, transcript, settings, summary, licenses, dev panel | #5 | merged | `docs/screenshots/m2/` |
 | 7 | Packaging, CI release workflow, final QA | #6 | merged | `docs/qa/2026-11-21-packaging.md`, `2026-11-21-final-qa.md` |
-| 8 | W-0 Windows baseline, toolchain, dev-VM smoke | pending | branch | `docs/qa/2026-11-22-windows-vm-smoke.md` |
-| 9 | W-5a measured renderer/accelerator probe + GPUIX GPU test-renderer portfolio | pending | branch | `docs/qa/2026-11-22-gpu-renderer.md`, `docs/screenshots/m2-windows/` |
-| 10 | W-1a Win32 overlay matrix: policy, focus, drag, 100/125/150% | pending | branch | `docs/qa/2026-11-22-overlay-matrix.md`, `docs/screenshots/m2-windows/overlay/` |
+| 8 | W-0 Windows baseline, toolchain, dev-VM smoke | #10 | merged | `docs/qa/2026-11-22-windows-vm-smoke.md` |
+| 9 | W-5a measured renderer/accelerator probe + GPUIX GPU test-renderer portfolio | #11 | merged | `docs/qa/2026-11-22-gpu-renderer.md`, `docs/screenshots/m2-windows/` |
+| 10 | W-1a single-screen Win32 overlay matrix: policy, focus, drag, 100/125/150% | #12 | merged | `docs/qa/2026-11-22-overlay-matrix.md`, `docs/screenshots/m2-windows/overlay/` |
+| 11 | v1.0 scope freeze + execution plan | #13 | merged | `docs/plans/2026-11-22-v1-scope.md`, `2026-11-22-v1-execution-plan.md`, ADR 0018 |
 
 ## Milestone mapping
 
 | Milestone | Plan scope | Repo status |
 |---|---|---|
-| M0 | Windows-first feasibility spikes | S-0 done; S-2/S-5L/S-6L done on Linux dev; S-4 device probe finds an RTX 5060 Ti + CUDA 13.5; S-3A/S-5W/S-6W need models/audio/interactive matrix |
+| M0 | Windows-first feasibility spikes | S-0/S-2/S-5L/S-6L done; DXGI/CUDA probe finds an RTX 5060 Ti (CPU-only for 1.0); S-3A real models and S-5W loopback are next |
 | M1 | Headless parity | `ll-core` + `ll-eval` implemented and tested on Linux; Windows CI job defined |
-| M2 | Windows desktop app | UI implemented; Linux portfolio done; Windows GPU test-renderer portfolio + a11y counts captured; overlay/DPI/audio acceptance pending |
-| M3 | Windows packaging/release | NSIS + portable ZIP config + release workflow; clean-install test pending Windows hardware |
+| M2 | Windows desktop app | UI implemented; single-screen overlay + a11y counts pass; Windows portfolio captured; loopback/ASR/LLM integration is the remaining path |
+| M3 | Windows packaging/release | NSIS + portable ZIP config + release workflow; clean-install test pending |
 | M4 | macOS | out of scope (separate decision) |
 
 ## Spike ledger
@@ -35,16 +36,18 @@ This file is the live status board. Each merged PR is a validated stage.
 | S-0 | PASS — all pins resolve | 2026-11-21 | `docs/qa/2026-11-21-version-verification.md` |
 | S-2 | PASS — 100 ev/s x 10 min under Node and Bun; 60k/60k, p99 1.07/1.94 ms, 0 drops | 2026-11-21 | `docs/qa/2026-11-21-event-delivery.md` |
 | S-3A | Partial: mock/eval path + 29-row matrix; real export/WER blocked on model access | 2026-11-21 | `docs/qa/2026-11-21-asr-coverage.md` |
-| S-4 | Partial: calibration/ladder/queue implemented; mock measured; real GPU pending | 2026-11-21 | `docs/qa/2026-11-21-llm-backends.md` |
-| S-5L | Partial: file/demo/silence + ring/VAD/chunker tested; device capture pending | 2026-11-21 | `docs/qa/2026-11-21-audio.md` |
+| S-4 | Partial: calibration/ladder/queue implemented; **CPU-only 1.0**; mock measured; GPU inference deferred | 2026-11-21 | `docs/qa/2026-11-21-llm-backends.md` |
+| S-5L | Partial: file/demo/silence + ring/VAD/chunker tested; WASAPI loopback capture pending | 2026-11-21 | `docs/qa/2026-11-21-audio.md` |
 | S-6L | PASS — X11 EWMH overlay verified on Linux dev | 2026-11-21 | `docs/qa/2026-11-21-overlay.md` |
+| S-6W | Partial — single-screen Win32 overlay passes (policy, focus, drag, 100/125/150%); multi-monitor/mixed-DPI descoped for 1.0 | 2026-11-22 | `docs/qa/2026-11-22-overlay-matrix.md` |
 | S-7 | Dev settings + runtime health implemented | — | UI settings |
 | S-8 | UI screens captured on Linux dev | 2026-11-21 | `docs/screenshots/m2/` |
 
 ## Decisions
 
-All 16 ADRs are present in `docs/decisions/`. New structural changes need a
-decision entry and an ADR update.
+All 18 ADRs are present in `docs/decisions/`. New structural changes need a
+decision entry and an ADR update. **For 1.0, D-055 and
+`docs/plans/2026-11-22-v1-scope.md` are the source of truth.**
 
 ## Merged PR sequence
 
@@ -53,38 +56,42 @@ decision entry and an ADR update.
 3. #4 Stage 3 — protocol, config, audio, engines, pipeline, eval
 4. #5 Stage 4 — napi bridge, native window policy, GPUIX UI, screenshots
 5. #6 Stage 5 — final QA, packaging, refreshed UI portfolio
+6. #10 W-0 — Windows baseline, toolchain, smoke, Windows CI
+7. #11 W-5a — measured renderer/accelerator probe + GPUIX GPU portfolio
+8. #12 W-1a — single-screen Win32 overlay matrix (policy, focus, drag, DPI)
+9. #13 — v1.0 scope freeze + execution plan
 
 ## Next run
 
-The Windows W-0 baseline is verified on the Windows 11 host
-(`docs/qa/2026-11-22-windows-vm-smoke.md`): native Rust, UI, bridge, and eval
-pass. A DXGI/CUDA probe found an RTX 5060 Ti and CUDA 13.5 (no Vulkan ICD, no
-microphone endpoint); the GPU test renderer produced the Windows portfolio and
-the dev panel now reports measured renderer values
-(`docs/qa/2026-11-22-gpu-renderer.md`).
+Phase 0 of the v1.0 execution plan is complete: the stack is merged, the scope
+is frozen, and the master plan/progress board/budgets are aligned. Start the
+parallel tracks:
 
-The agent shell is now in the interactive desktop (session 1), so GUI work runs
-directly; `scripts/run-in-interactive-session.ps1` remains for session-0
-agents. W-1a passed on the real overlay at 100/125/150% (policy, focus
-retention, unfocused click, drag, mode table). Mixed-DPI and multi-monitor are
-blocked by the single 2560x1080 display; the harness moves/captures per monitor
-when a second one is attached. Next: attach a second display for the mixed-DPI
-row, run W-2 audio, and W-4 with a pinned GGUF on the CUDA device. Do not repeat
-the W-0 build work.
+1. **W-2** WASAPI system-audio loopback capture + 30-minute soak.
+2. **W-3** ASR model pins/hashes and WER/RTF for the minimum live set
+   (en/fr/de/es/ar), then the streaming `sherpa-onnx` integration and 29-locale
+   coverage matrix.
+3. **W-4** CPU llama.cpp + Qwen3 0.6B Q4_K_M, click-only simplification, p95/RSS.
+4. **W-5** layout/a11y fixes (150% clipping, 1280x720, keyboard/Narrator) can
+   start independently.
+
+Integration waits for loopback + one live ASR language + click simplification.
+Packaging waits for integration. Execution order and gates:
+`docs/plans/2026-11-22-v1-execution-plan.md`.
 
 ## Known environment limitations
 
-- **One display.** Mixed-DPI and multi-monitor overlay results cannot be
-  produced without a second display (or a virtual/indirect display driver).
-  `scripts/overlay-matrix-windows.ps1` records the blocked row and is ready.
+- **One display; multi-monitor/mixed-DPI are descoped for 1.0.** The single-screen
+  overlay matrix passes at 100/125/150%. The harness is ready if a second display
+  is attached post-1.0.
 - **No microphone endpoint; loopback first.** Two render endpoints exist, so
   WASAPI system-audio loopback (the initial call/video use case) is testable.
-  Microphone capture is deferred to a follow-up.
+  Microphone capture is deferred.
 - The agent shell can be in session 0 (services) or the interactive desktop.
   DXGI/CUDA/Rust/UI tests work in either; GPUIX window creation needs the
   desktop, so session-0 agents use `scripts/run-in-interactive-session.ps1`.
-- Vulkan has no ICD even with the NVIDIA display driver; CUDA works. Record the
-  probe, never the target OS.
+- Vulkan has no ICD even with the NVIDIA display driver; **1.0 inference is
+  CPU-only**, so this is not a 1.0 blocker. Record the probe, never the target OS.
 - GPUIX 0.11 has no Linux PNG test renderer. UI verification uses a real X11
   window plus `import -window` on Linux, and the native DirectX test renderer on
   Windows.

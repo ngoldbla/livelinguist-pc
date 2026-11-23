@@ -225,21 +225,35 @@ The port uses:
 
 ## 3. Scope
 
+> **v1.0 scope freeze (2026-11-22).** For the 1.0 release,
+> `docs/plans/2026-11-22-v1-scope.md` and ADR 0018 narrow this section:
+> one screen, system-audio loopback first, CPU-only inference, all 29
+> simplifier packs, click-only simplification, no microphone, no
+> multi-monitor/mixed-DPI, no GPU inference, no 1.7B, no automatic/live
+> simplification. The longer-term design below remains the reference for
+> post-1.0 work. Execution order:
+> `docs/plans/2026-11-22-v1-execution-plan.md`.
+
 ### 3.1 In scope (v1)
 
 - **x86-64 Windows 11 (23H2+) is the only v1 product and release target.**
 - **Linux x86-64 is the development/evaluation environment**; it is not a
   packaged release target in this plan. The code stays portable for a future
   Linux track.
-- Windows UI uses D3D11/12; model acceleration uses Vulkan and optional CUDA.
+- Windows UI uses D3D11/12. **v1.0 inference is CPU-only**: sherpa-onnx
+  streaming ASR and llama.cpp Qwen3 0.6B. GPU acceleration is post-1.0.
 - Full pipeline: audio -> VAD -> ASR -> endpointing -> segmentation ->
-  simplification -> validation -> two-tier captions.
-- On-demand simplification default; automatic/live mode behind advanced settings.
-- 29 locales with explicit ASR coverage; simplify-only mode for locales without
-  usable streaming ASR.
+  **user-clicked** simplification -> validation -> two-tier captions
+  (verbatim live text + simplified text for the clicked phrase).
+- **Click-only simplification:** only the phrase the user clicks (or types/
+  pastes) is simplified. There is no automatic or live simplification in 1.0.
+- **All 29 FrameworkPacks and 29 UI catalogs ship.** Live ASR coverage is
+  measured per locale with en/fr/de/es/ar as the minimum live set; locales
+  without a passing model are simplify-only and say so.
 - Console, caption overlay, transcript, settings, summary, onboarding, licenses.
 - Export: Markdown, plain text, diagnostics CSV.
-- Developer settings for CPU/GPU/mock/fault scenarios.
+- Developer settings for CPU/mock/fault scenarios; GPU scenarios are
+  experimental and not a 1.0 gate.
 - Packaging: NSIS installer and portable ZIP for Windows 11 x64 only.
 
 ### 3.2 Out of scope (v1)
@@ -249,8 +263,12 @@ The port uses:
 - Mobile, ARM Linux, Windows ARM64, browser/wasm shipping.
 - **Linux packaging/support in this plan** (future track only).
 - **Windows 10** (Windows 11 x64 only).
+- **Microphone capture** and per-app audio capture (system loopback only in 1.0).
+- **Multi-monitor and mixed-DPI**, and virtual-desktop pinning.
+- **GPU inference (Vulkan/CUDA), GPU calibration, and the 1.7B model.**
+- **Automatic/live simplification** (click-only is the 1.0 product rule).
+- Full RTL chrome mirroring (Arabic text still renders).
 - Speaker diarization.
-- Per-app audio capture (stretch after system loopback).
 - macOS/iOS shipping (later decision).
 - A second UI stack for no-GPU machines.
 - Automatic (unprompted) update checks.
@@ -259,9 +277,9 @@ The port uses:
 
 | Tier | Target hardware | RAM | Product behavior |
 |---|---|---|---|
-| A | Windows 11 dual boot on Dylan PC: dGPU + 8+ cores | 16 GB+ | Live ASR + live/on-demand simplify; LLM on GPU |
-| B | Dylan PC with dGPU disabled / iGPU, or a GPU-less profile | 8-16 GB | Live ASR; on-demand simplify; GPU only if calibration wins |
-| C | 4-core/8 GB Windows machine, or a CPU-limited Dylan PC approximation | 8 GB | On-demand only; 0.6B Q4; 2-3 threads; verbatim fallback |
+| A | Windows 11 dual boot on Dylan PC: dGPU + 8+ cores | 16 GB+ | Live ASR; click-only simplify; CPU inference; 60 fps UI |
+| B | Windows 11 laptop/desktop with integrated or low-end GPU, 8-16 GB | 8-16 GB | Live ASR when RTF passes; click-only simplify; 60 fps UI |
+| C | 4-core/8 GB Windows machine, or a CPU-limited approximation | 8 GB | Live captions if ASR RTF ≤ 0.5, otherwise chunked with a banner; click-only simplify; 0.6B Q4; 2-3 threads; 30 fps reduced effects |
 
 Tier C RSS budget: **<= 3.5 GB total** for UI + core + ASR + 0.6B Q4, leaving
 headroom for the OS and the call/video app. This is a hypothesis to measure.
@@ -272,17 +290,17 @@ threads, and an 8 GB memory cgroup, and label it an approximation. True tier C
 numbers require a low-end 4-core/8 GB machine or a 2-4 vCPU VM for headless
 `ll-eval`.
 
-### 3.4 Reference hardware (D-051; exact specs to fill)
+### 3.4 Reference hardware (D-051; measured 2026-11-22)
 
 | Tier | Machine | Specs | Purpose |
 |---|---|---|---|
-| A | **Dylan PC**, Windows 11 x64 (dual boot) | CPU/GPU/RAM: TBD | Full GPU path, D3D UI, WASAPI, overlay |
-| B | Dylan PC with dGPU disabled / iGPU | TBD | iGPU vs CPU calibration, no-dGPU path |
+| A | **Dylan PC**, Windows 11 x64 | Ryzen 9 3900X 12C/24T, 128 GB, RTX 5060 Ti 16 GB, 2560x1080 | CPU-only 1.0 path; D3D UI; overlay; loopback |
+| B | Integrated/low-end GPU laptop | TBD | iGPU/low-end UI and CPU model budgets |
 | C | 4-core/8 GB Windows laptop or CPU-limited profile | TBD | Tier C model/UI budget; approximation if needed |
 | Linux dev | Dylan PC, Linux side | Distro/kernel/GPU: TBD | Core/UI development, ASR/LLM eval |
 
 Record exact CPU, GPU, RAM, Windows build, driver, and display scaling in every
-measurement. No performance claim is valid until this table is filled.
+measurement. Full record: `docs/qa/2026-11-21-windows-hardware.md`.
 
 ---
 
@@ -435,6 +453,9 @@ default; `proposed` = needs sign-off; `open` = unresolved. ADRs in
 index. `docs/decisions/README.md` maintains the D-ID <-> ADR mapping; each ADR
 links back to its D-ID. Until an ADR exists, this table is the only record.
 
+**For 1.0, D-055 and `docs/plans/2026-11-22-v1-scope.md` are the source of
+truth.** Rows marked "superseded for 1.0 by D-055" remain the post-1.0 design.
+
 | ID | Decision | Status | Rationale | Trade-off / revisit trigger |
 |---|---|---|---|---|
 | D-001 | UI is GPUIX 0.11 + React 19.2, exact-pinned | baseline | GPUIX chosen; React 19.2 is the recommended adapter | Pre-1.0 churn; Solid remains an alternative |
@@ -449,9 +470,9 @@ links back to its D-ID. Until an ADR exists, this table is the only record.
 | D-010 | Honest fallback if topmost/no-activate fails | baseline | Predictable support | User friction |
 | D-011 | LLM runtime is llama.cpp (`llama-cpp-2`) | accepted | One GGUF across CPU/Vulkan/CUDA | C++ build |
 | D-012 | ASR runtime is sherpa-onnx on CPU | accepted | Streaming transducer, int8 | No GPU ASR in v1 |
-| D-013 | Dynamic backends + first-run calibration | baseline | Works without GPU; picks fastest | Calibration time |
-| D-014 | CPU baseline; GPU accelerator | baseline | Widest hardware reach | Slower on CPU-only |
-| D-015 | Vulkan universal; CUDA optional | baseline | Cross-vendor; no huge default runtime | CUDA faster on NVIDIA |
+| D-013 | Dynamic backends + first-run calibration | superseded for 1.0 by D-055 | Works without GPU; picks fastest | CPU-only 1.0: no GPU calibration gate |
+| D-014 | CPU baseline; GPU accelerator | superseded for 1.0 by D-055 | Widest hardware reach | CPU-only inference in 1.0 |
+| D-015 | Vulkan universal; CUDA optional | superseded for 1.0 by D-055 | Cross-vendor; no huge default runtime | Deferred to post-1.0 |
 | D-016 | Models downloaded, pinned, verified | baseline | Small installer; no secrets | First-run network |
 | D-017 | Deterministic layer pure Rust; no UniFFI | baseline | Clean ownership; tests are spec | Duplicates logic |
 | D-018 | Developer settings with strict scenarios | accepted | Makes failures testable | More surface |
@@ -466,8 +487,8 @@ links back to its D-ID. Until an ADR exists, this table is the only record.
 | D-027 | No DOM/web UI libraries | baseline | GPUIX is not a browser | Build Aurora components |
 | D-028 | Skills: 2 custom + max 3 external, pinned/reviewed | baseline | Supply-chain/prompt-injection reduction | Less breadth |
 | D-029 | Accessibility + cognitive clarity are release gates | baseline | Product audience | GPUIX a11y gaps |
-| D-030 | Qwen3 0.6B Q4_K_M primary; 1.7B escalation; Nemotron ASR | baseline | Matches Mac fine-tunes | Quality gate may force Q8_0 |
-| **D-031** | **Per-locale ASR policy:** matrix in section 12; locales without usable streaming ASR are `simplify_only` (paste/type + simplification, no fake listening) | accepted | Prevents a false "listening" promise; preserves the simplification value | Some locales have no live captions; UI must be explicit |
+| D-030 | Qwen3 0.6B Q4_K_M primary; 1.7B escalation; Nemotron ASR | superseded for 1.0 by D-055 | Matches Mac fine-tunes | 1.0: 0.6B only; per-language zipformer ASR |
+| **D-031** | **Per-locale ASR policy:** matrix in section 12; all 29 simplifier packs ship; locales without usable streaming ASR are `simplify_only` (paste/type + simplification, no fake listening). Live coverage is per measured model with en/fr/de/es/ar as the minimum set. | accepted | Prevents a false "listening" promise; preserves the simplification value | Some locales have no live captions; UI must be explicit |
 | **D-032** | **ASR export is a kill-risk gate:** first S-3 task is export -> `sherpa-onnx` `OnlineRecognizer` -> streaming endpointing. Fallback: per-language streaming zipformer. | baseline | The custom Nemotron ONNX export may fail | If it fails, more per-language models and downloads |
 | **D-033** | **Event delivery test:** 100 events/s for 10 min under Bun **and** Node; p99 delivery into React state; fallback is a GPUIX frame/tick pump. | baseline | GPUI main loop may starve TSFN callbacks | If stalled, bridge redesign |
 | **D-034** | **Launcher sets `WAYLAND_DISPLAY`**, not JS; assert GPUI chose X11 and record it in `RuntimeStatus`. | baseline | `process.env` may not reach native `getenv()` reliably | If X11 unavailable, native Wayland mode |
@@ -476,7 +497,7 @@ links back to its D-ID. Until an ADR exists, this table is the only record.
 | **D-037** | **Core dumps disabled by default; crash reports contain stack/codes only, never transcript text.** | baseline | Privacy | Harder debugging; opt-in debug builds |
 | **D-038** | **Event envelope `{ v, seq, ts, event }`; `getSnapshot()` returns `lastSeq`; UI drops `seq <= lastSeq`.** | baseline | Snapshot/event race | Slightly larger payloads |
 | **D-039** | **ADRs canonical for rationale/evidence; this plan is the integrated index.** | baseline | Avoids two sources of truth | Must keep index current |
-| **D-040** | **2-D degradation ladder:** model {1.7B, 0.6B} x backend {GPU full, GPU partial, CPU}, then verbatim. | baseline | The old ladder repeated 0.6B | More state to test |
+| **D-040** | **2-D degradation ladder:** model {1.7B, 0.6B} x backend {GPU full, GPU partial, CPU}, then verbatim. | superseded for 1.0 by D-055 | The old ladder repeated 0.6B | 1.0: 0.6B CPU → verbatim |
 | **D-041** | **On-demand queue policy:** one active + one queued; newest click replaces the queued item; live mode yields to on-demand; `cancelSimplify` exists. | baseline | Predictable UX; avoids unbounded queue | User clicks can replace queued work |
 | **D-042** | **Per-locale prefix KV cache** with save/restore; measure prefill on tier C. | baseline | 0.6B prefill is the tier C bottleneck | Memory per locale; evict LRU |
 | **D-043** | **Generate TS types from `ll-protocol` with `ts-rs`; napi is a thin pass-through.** | baseline | napi `--dts` handles unions poorly | Extra codegen step |
@@ -490,6 +511,8 @@ links back to its D-ID. Until an ADR exists, this table is the only record.
 | **D-051** | **Reference hardware: Dylan PC (Windows 11 dual boot) is tier A; GPU-less/limited Dylan PC is tier B/C approximation; exact specs recorded per measurement.** | accepted | Tier hypotheses need machines; one box covers GPU/no-GPU paths | True tier C still needs a low-end machine/VM |
 | **D-052** | **Linux packaging is a future track, not in this plan.** | accepted | User base is Windows; avoids v1 Linux packaging scope | Linux package deferred |
 | **D-053** | **Windows 11 x64 only; Windows 10 and Windows ARM64 are out of scope.** | accepted | Reduces test surface; GPUIX is fine on 11 | Windows 10 users excluded |
+| **D-054** | **Measure the UI renderer and accelerators; never declare them from the target OS.** ADR 0017. | accepted | A declared renderer lies on software adapters; DXGI/DRM/CUDA probes are evidence | Slightly more platform code |
+| **D-055** | **v1.0 is single-screen, system-audio, CPU-first, click-to-simplify.** All 29 simplifier packs; system loopback first; 0.6B Q4 CPU; live ASR per measured coverage; no mic/multi-monitor/GPU inference/1.7B/live auto-simplify. ADR 0018. | accepted | A defensible low-end 1.0; removes hardware/model dependencies from the critical path | Deferred features move to post-1.0 |
 
 ---
 
@@ -1280,11 +1303,11 @@ faults, latency within tier, and content-free diagnostics.
 
 ### 15.1 Targets and measurement definitions
 
-| Tier | Live p50 | On-demand p95 | UI |
+| Tier | Live p50 | Click-to-simplified p95 | UI |
 |---|---|---|---|
 | A | <= 1.5 s | <= 8 s | 60 fps |
 | B | <= 2.5 s | <= 8 s | 60 fps |
-| C | on-demand only | <= 8 s | >= 30 fps, reduced effects |
+| C | live if ASR RTF <= 0.5; otherwise chunked with a banner | <= 8 s | >= 30 fps, reduced effects |
 
 Definitions (CI asserts from event timestamps):
 
@@ -1297,10 +1320,11 @@ Definitions (CI asserts from event timestamps):
 
 ### 15.2 Low-end rules
 
-- CPU baseline; GPU optional.
-- On-demand default on tier C.
+- **CPU-only inference in 1.0** (sherpa-onnx ASR + llama.cpp 0.6B); GPU
+  acceleration is post-1.0.
+- **Click-only simplification:** no automatic or live simplification.
 - Thread budget leaves headroom for ASR/audio/UI.
-- `mmap`; unload 1.7B after idle.
+- `mmap` on, `mlock` off; unload the model after idle (optional post-1.0).
 - Disk preflight 6 GB; model total ~1 GB default.
 - Reduced-effects mode: static field, no animations/glows, 30 fps.
 - **Windows UI floor: D3D11/12 hardware.** WARP is best-effort/degraded, not a
