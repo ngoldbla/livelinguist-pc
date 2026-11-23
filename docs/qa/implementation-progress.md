@@ -84,18 +84,12 @@ decision entry and an ADR update. **For 1.0, D-055/D-056 and
 
 ## Next run
 
-Agents: work from `docs/tasks/README.md` (task cards T01–T05 cover S1).
+Agents: work from `docs/tasks/README.md`. T01–T05 (S1) are done; T06–T07
+finish S1 follow-ups, T08–T10 are S4, T11–T14 are S2.
 
-Recommended order: **S4 → S1 → S2 → S5 → S6 → S3 → S7 → S8 → S9** (start the
-S3 fixture download early). Concretely:
-
-1. **S4** — add the `EasyLanguagePrompt` renderer from the GGUF model card,
-   remove `previous` from the click path in `ll-pipeline`, add 29 prompt goldens.
-2. **S1** — decide cpal vs `windows`-crate WASAPI loopback (ADR 0003), implement
-   `ll-audio/src/capture.rs`, wire `listAudioSources`/`selectAudioSource`,
-   run the 30-minute soak.
-3. **S2** — pin the sherpa-onnx Rust binding, build `OnlineRecognizer` against
-   the mirror at `f73e3bc8…`, onboarding download UX.
+Order of cards: T06–T07 (S1 follow-ups: stateful resampling, device loss),
+then T08–T10 (S4 prompt contract), then T11–T14 (S2 real ASR). After that:
+first-run download screen, S5 llama.cpp, S6 layout/a11y, S3 coverage matrix.
 
 Owner inputs resolved 2026-11-23: FLEURS approved; native Windows 11 boot (no
 VM, clean install = fresh standard user); `v1.0.0` tag approved; unsigned
