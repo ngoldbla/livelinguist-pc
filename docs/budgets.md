@@ -3,11 +3,16 @@
 Targets are hypotheses until the Windows reference hardware is measured. Linux
 dev numbers validate the plumbing, not product performance.
 
-| Tier | Hardware | Live p50 | On-demand p95 | UI |
+| Tier | Hardware | Live p50 | Click-to-simplified p95 | UI |
 |---|---|---|---|---|
 | A | Dylan PC, dGPU + 8+ cores, 16 GB+ | <= 1.5 s | <= 8 s | 60 fps |
-| B | Dylan PC with dGPU disabled / iGPU, 8-16 GB | <= 2.5 s | <= 8 s | 60 fps |
-| C | 4-core/8 GB Windows machine or CPU-limited profile | on-demand only | <= 8 s | >= 30 fps, reduced effects |
+| B | Integrated/low-end GPU, 8-16 GB | <= 2.5 s | <= 8 s | 60 fps |
+| C | 4-core/8 GB Windows machine or CPU-limited profile | live if ASR RTF <= 0.5; otherwise chunked with a banner | <= 8 s | >= 30 fps, reduced effects |
+
+v1.0 inference is **CPU-only** (sherpa-onnx ASR + llama.cpp 0.6B); GPU
+acceleration is post-1.0. Simplification is **click-only**: there is no
+automatic or live simplification, so the click-to-simplified budget is the only
+LLM latency gate.
 
 Tier C RSS budget: **<= 3.5 GB** total for UI + core + ASR + 0.6B Q4. Hypothesis,
 to be measured.
@@ -31,9 +36,10 @@ to be measured.
 
 ## Low-end rules
 
-- On-demand default; 0.6B Q4_K_M; 2-3 threads on tier C.
-- `mmap` on, `mlock` off; unload 1.7B after idle.
+- Click-only simplification; 0.6B Q4_K_M; 2-3 threads on tier C.
+- `mmap` on, `mlock` off; unload the model after idle (optional post-1.0).
 - Disk preflight 6 GB; ~1 GB default models.
 - Reduced-effects mode: static field, no motion/glow, 30 fps target.
 - Windows UI floor D3D11/12; Linux dev floor Vulkan; WARP/Lavapipe are
   best-effort and never claimed as 60 fps.
+- No GPU inference in 1.0; do not rescue a slow CPU with a GPU dependency.

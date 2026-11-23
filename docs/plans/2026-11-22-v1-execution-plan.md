@@ -12,10 +12,10 @@
 
 | Area | State |
 |---|---|
-| W-0 baseline | committed; PR #10 open |
-| GPU/renderer evidence | committed; PR #11 open (stacked on #10) |
-| W-1 single-screen overlay | committed; PR #12 open (stacked on #11) |
-| v1.0 scope | committed; PR #13 open (stacked on #12) |
+| W-0 baseline | merged (#10) |
+| GPU/renderer evidence | merged (#11) |
+| W-1 single-screen overlay | merged (#12) |
+| v1.0 scope + execution plan | merged (#13) |
 | Audio capture | none; file/demo/silence only |
 | ASR | mock/scripted + `ASR_MODEL_MISSING` seam |
 | LLM | demo/mock; no llama.cpp, no GGUF |
@@ -43,25 +43,23 @@ Phase 0  land the stack + align docs
 - Packaging waits for integration; the release candidate waits for packaging.
 - ASR model acquisition is the longest lead time; start it first.
 
-## 2. Phase 0 — land the stack and align the docs
+## 2. Phase 0 — land the stack and align the docs (complete)
 
 **Goal:** the repo has one scope, no contradictory plans, and a green base.
 
-Steps:
+Done:
 
-1. Merge #10 → #11 → #12 → #13 in order; retarget each to `main` after the
-   lower PR lands. Do not squash away the stage boundaries.
-2. Update `docs/plans/2026-11-21-live-linguist-pc-master-plan.md` §3 and the
-   decision table to match the v1.0 scope doc: CPU-only inference, 29
-   simplifier languages, click-only, loopback-first, single-screen.
-3. Update `docs/qa/implementation-progress.md` with the v1.0 gates and the
-   post-1.0 deferred list.
-4. Confirm CI and `scripts/verify-windows.ps1` are green on the merged base.
+1. Merged #10 → #11 → #12 → #13 in order with merge commits; retargeted each to
+   `main` after the lower PR landed.
+2. Updated the master plan §3 and decision table to match the v1.0 scope:
+   CPU-only inference, 29 simplifier languages, click-only, loopback-first,
+   single-screen; D-054/D-055 added and superseded rows marked.
+3. Updated `docs/qa/implementation-progress.md`, `docs/budgets.md`, and added
+   the superseded-for-1.0 banner to the Windows resume plan.
+4. CI was green on every PR before merge.
 
-**Acceptance:** master plan, scope doc, ADRs, and progress board agree; no open
-PR carries a superseded requirement.
-
-**Effort:** S. **PR:** none (merge/update only).
+**Acceptance:** master plan, scope doc, ADRs, budgets, and progress board agree;
+no open PR carries a superseded requirement.
 
 ## 3. Phase 1 — W-2 WASAPI system-audio loopback
 
@@ -234,19 +232,19 @@ open P0 issue.
 
 ## 9. PR map and dependencies
 
-| Order | Branch | Scope | Depends on |
+| Order | Branch | Scope | Status |
 |---|---|---|---|
-| 1 | `stage-w0-windows-baseline` | W-0 baseline (#10) | — |
-| 2 | `stage-gpu-renderer` | GPU evidence (#11) | #10 |
-| 3 | `stage-w5-gpu-evidence` | W-1 overlay (#12) | #11 |
-| 4 | `docs/v1-scope` | v1.0 scope (#13) | #12 |
-| 5 | `stage-w2-loopback` | loopback capture | scope |
-| 6 | `stage-w3-asr-model` | model catalog/download | scope (parallel with 5) |
-| 7 | `stage-w3-asr` | streaming ASR + coverage | 6 |
-| 8 | `stage-w4-llama-cpu` | CPU 0.6B + click path | scope (parallel with 5-7) |
-| 9 | `stage-w5-ui-v1` | integration + a11y | 5, 7, 8 |
-| 10 | `stage-w6-packaging` | installer/release | 9 |
-| 11 | `release-v1.0.0` | tag + artifacts | 10 |
+| 1 | `stage-w0-windows-baseline` | W-0 baseline (#10) | merged |
+| 2 | `stage-gpu-renderer` | GPU evidence (#11) | merged |
+| 3 | `stage-w5-gpu-evidence` | W-1 overlay (#12) | merged |
+| 4 | `docs/v1-scope` | v1.0 scope/plan (#13) | merged |
+| 5 | `stage-w2-loopback` | loopback capture | next |
+| 6 | `stage-w3-asr-model` | model catalog/download | planned |
+| 7 | `stage-w3-asr` | streaming ASR + coverage | planned |
+| 8 | `stage-w4-llama-cpu` | CPU 0.6B + click path | planned |
+| 9 | `stage-w5-ui-v1` | integration + a11y | planned |
+| 10 | `stage-w6-packaging` | installer/release | planned |
+| 11 | `release-v1.0.0` | tag + artifacts | planned |
 
 ## 10. v1.0 acceptance checklist
 

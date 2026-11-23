@@ -1,5 +1,13 @@
 # Windows 11 resume plan (handoff)
 
+> **Superseded for v1.0 (2026-11-22).** Use
+> `docs/plans/2026-11-22-v1-scope.md` and
+> `docs/plans/2026-11-22-v1-execution-plan.md` for the 1.0 release: one screen,
+> system-audio loopback, CPU-only inference, all 29 simplifier packs, click-only
+> simplification; microphone, multi-monitor/mixed-DPI, GPU inference, 1.7B, and
+> live auto-simplify are deferred. This file remains the detailed Windows gate
+> history and post-1.0 reference.
+
 - Date: 2026-11-21
 - Status: handoff / execution plan
 - Baseline: `main` after PR #7, commits #2–#7 merged
