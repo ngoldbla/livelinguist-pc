@@ -1,5 +1,6 @@
 import type { StyleDesc } from "@gpuix/react";
 import type { ReactNode } from "react";
+import { captionAccessibleLabel } from "../captionKeys";
 import { directionFor } from "../i18n/direction";
 import type { Segment } from "../store/sessionStore";
 import { card, colors, focusRing, glass, gradient, textStyle } from "./theme";
@@ -105,7 +106,15 @@ export function SectionHeader({
 
 type Tone = "neutral" | "accent" | "mint" | "amber" | "rose" | "info";
 
-const toneStyles: Record<Tone, { bg: string; fg: string; border: string }> = {
+/** Primary button fills; white labels need >= 4.5:1 on every one (contrast test). */
+export const PRIMARY_FILL = {
+  from: "#7263E6",
+  to: "#5F4BE8",
+  hover: "#7466D9",
+  active: "#6656DD",
+} as const;
+
+export const toneStyles: Record<Tone, { bg: string; fg: string; border: string }> = {
   neutral: { bg: "#FFFFFF0D", fg: colors.muted, border: colors.border },
   accent: { bg: colors.accentSoft, fg: "#C9C1FF", border: "#8B7CFF44" },
   mint: { bg: colors.mintSoft, fg: "#A7F4E7", border: "#59E1C844" },
@@ -168,7 +177,7 @@ export function Button({
   const palette: StyleDesc =
     kind === "primary"
       ? {
-          background: gradient("#8B7CFF", "#5F4BE8", 110),
+          background: gradient(PRIMARY_FILL.from, PRIMARY_FILL.to, 110),
           borderWidth: 1,
           borderColor: "#FFFFFF22",
           boxShadow: {
@@ -225,10 +234,10 @@ export function Button({
         ...palette,
         hover: disabled
           ? undefined
-          : { backgroundColor: kind === "primary" ? "#9A8CFF" : "#FFFFFF16" },
+          : { backgroundColor: kind === "primary" ? PRIMARY_FILL.hover : "#FFFFFF16" },
         active: disabled
           ? undefined
-          : { backgroundColor: kind === "primary" ? "#7B6BF0" : "#FFFFFF20" },
+          : { backgroundColor: kind === "primary" ? PRIMARY_FILL.active : "#FFFFFF20" },
         focusVisible: focusRing,
         ...style,
       }}
@@ -437,17 +446,24 @@ export function SummaryTile({
 export function CaptionRow({
   segment,
   onSimplify,
+  onKey,
   locale,
   compact = false,
   captionSize,
   showTier1 = true,
+  simplifying = false,
+  autoFocus = false,
 }: {
   segment: Segment;
   onSimplify?: (id: string) => void;
+  /** List-level keyboard handling (Up/Down/Enter); returns true if handled. */
+  onKey?: (key: string) => boolean;
   locale: string;
   compact?: boolean;
   captionSize?: number;
   showTier1?: boolean;
+  simplifying?: boolean;
+  autoFocus?: boolean;
 }) {
   const rtl = directionFor(locale) === "rtl";
   const statusTone =
@@ -456,11 +472,18 @@ export function CaptionRow({
     <div
       role="button"
       tabIndex={0}
-      aria-label={`${segment.text}. ${segment.simplified ?? ""}`}
-      aria-description="Simplify this sentence"
+      // biome-ignore lint/a11y/noAutofocus: set only after the user's own Up/Down or Read latest; GPUIX has no imperative focus().
+      autoFocus={autoFocus}
+      aria-label={captionAccessibleLabel(segment.text, segment.simplified, simplifying)}
+      aria-description="Enter or Space simplifies this sentence; Up and Down move between sentences"
       onClick={() => onSimplify?.(segment.id)}
       onKeyDown={(event) => {
-        if (event.key === "enter" || event.key === "space" || event.key === " ") {
+        const key = event.key ?? "";
+        if (onKey?.(key)) {
+          event.preventDefault();
+          return;
+        }
+        if (key === "enter" || key === "space" || key === " ") {
           event.preventDefault();
           onSimplify?.(segment.id);
         }
@@ -523,7 +546,9 @@ export function CaptionRow({
           {segment.simplified}
         </text>
       ) : (
-        <text style={textStyle(12, colors.faint)}>Tap to simplify this sentence.</text>
+        <text style={textStyle(12, colors.faint)}>
+          {simplifying ? "Simplifying…" : "Click or press Enter to simplify this sentence."}
+        </text>
       )}
       {segment.flags.length > 0 ? (
         <div style={{ display: "flex", flexDirection: "row", gap: 6, flexWrap: "wrap" }}>

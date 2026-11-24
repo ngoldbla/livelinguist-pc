@@ -6,6 +6,7 @@ const { render } = await import("@gpuix/react");
 const { App } = await import("./App");
 const { readWorkArea, windowTitle } = await import("./bridge/transport");
 const { fitWindow } = await import("./windowSize");
+const { windowKeys } = await import("./captionKeys");
 
 const screen = (process.env.LL_SCREEN ?? "").toLowerCase();
 const [defaultWidth, defaultHeight] =
@@ -44,4 +45,9 @@ render(<App />, {
   focus: process.env.GPUIX_BACKGROUND !== "1",
   titlebarTransparent: true,
   windowBackground: "opaque",
+  // Window-level shortcuts (Ctrl+Shift+L: Read latest) go through a small bus
+  // the screens subscribe to.
+  onKeyDown: (event) => {
+    if (windowKeys.dispatch(event.key ?? "", event.modifiers)) event.preventDefault();
+  },
 });

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Badge,
   Button,
@@ -10,6 +10,13 @@ import {
   Toast,
 } from "../aurora/components";
 import { colors, focusRing, gradient, textStyle } from "../aurora/theme";
+import {
+  captionKeyAction,
+  isReadLatestShortcut,
+  latestCaptionIndex,
+  READ_LATEST_SHORTCUT,
+  windowKeys,
+} from "../captionKeys";
 import { languageByCode, statusLabel } from "../i18n/languages";
 import { t } from "../i18n/locales";
 import type { SessionView, SimplificationMode } from "../store/sessionStore";
@@ -28,6 +35,7 @@ export function LiveScreen({
   onWindowMode,
   onTypedSimplify,
   compact = false,
+  simplifyingId = null,
 }: {
   state: SessionView;
   locale: string;
@@ -44,6 +52,7 @@ export function LiveScreen({
     text: string,
   ) => Promise<{ text: string | null; status: string; flags: string[] }>;
   compact?: boolean;
+  simplifyingId?: string | null;
 }) {
   const language = languageByCode(state.language);
   const [typed, setTyped] = useState("");
@@ -54,13 +63,43 @@ export function LiveScreen({
     state.segments[state.segments.length - 1];
   const simplifiedCount = state.segments.filter((segment) => segment.simplified).length;
 
+  // Keyboard focus: GPUIX has no imperative focus(), so the focused row is
+  // remounted with autoFocus (key carries a nonce) when focus should move.
+  const [focus, setFocus] = useState<{ index: number; nonce: number }>({ index: -1, nonce: 0 });
+  const moveFocus = (index: number) => setFocus((current) => ({ index, nonce: current.nonce + 1 }));
+
+  const onCaptionKey = (index: number, key: string): boolean => {
+    const result = captionKeyAction(index, state.segments.length, key);
+    if (result.action === "move") {
+      if (result.index !== index) moveFocus(result.index);
+      return true;
+    }
+    if (result.action === "simplify") {
+      const segment = state.segments[result.index];
+      if (segment) onSimplify(segment.id);
+      return true;
+    }
+    return false;
+  };
+
+  // Read latest: show it and move keyboard focus to that caption row so the
+  // screen reader reads the row's label (GPUIX has no live-region announce).
   const readLatest = () => {
     if (!latest) {
       setToast(t(locale, "Waiting for speech"));
       return;
     }
     setToast(`${latest.simplified ?? latest.text}`);
+    moveFocus(latestCaptionIndex(state.segments));
   };
+
+  useEffect(() =>
+    windowKeys.subscribe((key, modifiers) => {
+      if (!isReadLatestShortcut(key, modifiers)) return false;
+      readLatest();
+      return true;
+    }),
+  );
 
   const submitTyped = async () => {
     if (!typed.trim()) return;
@@ -116,7 +155,11 @@ export function LiveScreen({
           ) : null}
           {!compact ? (
             <div style={{ display: "flex", flexDirection: "row", gap: 6 }}>
-              <Button label={t(locale, "Read latest")} kind="ghost" onClick={readLatest} />
+              <Button
+                label={`${t(locale, "Read latest")} (${READ_LATEST_SHORTCUT})`}
+                kind="ghost"
+                onClick={readLatest}
+              />
               <Button label={t(locale, "Settings")} kind="secondary" onClick={onSettings} />
             </div>
           ) : null}
@@ -198,11 +241,14 @@ export function LiveScreen({
                 paddingRight: 4,
               }}
             >
-              {state.segments.map((segment) => (
+              {state.segments.map((segment, index) => (
                 <CaptionRow
-                  key={segment.id}
+                  key={index === focus.index ? `${segment.id}-f${focus.nonce}` : segment.id}
                   segment={segment}
                   onSimplify={onSimplify}
+                  onKey={(key) => onCaptionKey(index, key)}
+                  autoFocus={index === focus.index}
+                  simplifying={segment.id === simplifyingId}
                   locale={locale}
                   compact={compact}
                   captionSize={captionSize}

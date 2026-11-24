@@ -130,7 +130,7 @@ export function SettingsScreen({
                 label={t(locale, "Reduced effects")}
                 checked={settings.reducedEffects}
                 onChange={(checked) => onChange({ reducedEffects: checked })}
-                description="Static field, no motion, 30 fps target on low-end machines."
+                description="Turns off the background glow. The app has no animations and redraws only when something changes."
               />
               <Divider />
               <Toggle
