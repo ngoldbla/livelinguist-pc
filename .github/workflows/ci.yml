@@ -46,9 +46,9 @@ jobs:
           cargo clippy -p ll-eval -p ll-bridge --features sherpa,llama --all-targets -- -D warnings
           cargo test -p ll-llm --features llama
           cargo test -p ll-eval --features sherpa,llama
-      - name: Build napi addon
+      - name: Build napi addon (shipped features)
         if: matrix.os == 'windows-latest'
-        run: cargo build -p ll-bridge --release
+        run: cargo build -p ll-bridge --release --features capture,sherpa,llama
       - name: Eval mock scenario
         if: matrix.os == 'ubuntu-latest'
         run: cargo run -p ll-eval -- --scenario mock --language fr-FR --out target/eval-mock
