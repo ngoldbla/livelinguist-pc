@@ -84,6 +84,7 @@ export function App() {
   const [backTo, setBackTo] = useState<Screen>("console");
   const [settings, setSettings] = useState<UiSettings>(defaultSettings);
   const [toast, setToast] = useState<string | null>(null);
+  const [simplifyingId, setSimplifyingId] = useState<string | null>(null);
   const transportRef = useRef<Transport | null>(null);
   const started = useRef(false);
   const renderer = useGpuixRequired();
@@ -204,11 +205,14 @@ export function App() {
   };
 
   const onSimplify = async (id: string) => {
+    setSimplifyingId(id);
     try {
       const result = await ensureTransport().simplify(id);
       bootStore.applySimplified(result);
     } catch {
       setToast(t(locale, "Could not simplify that sentence."));
+    } finally {
+      setSimplifyingId((current) => (current === id ? null : current));
     }
   };
 
@@ -386,6 +390,7 @@ export function App() {
         onWindowMode={(mode) => void setWindowMode(mode)}
         onTypedSimplify={onTypedSimplify}
         compact={false}
+        simplifyingId={simplifyingId}
       />
     );
   })();

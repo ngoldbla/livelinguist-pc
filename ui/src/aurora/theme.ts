@@ -10,7 +10,8 @@ export const colors = {
   borderStrong: "#FFFFFF24",
   text: "#F5F3FF",
   muted: "#A8A3BD",
-  faint: "#6F6A85",
+  // Lightened from #6F6A85 to reach 4.5:1 on every surface (contrast test).
+  faint: "#87829D",
   accent: "#8B7CFF",
   accentSoft: "#8B7CFF24",
   mint: "#59E1C8",
