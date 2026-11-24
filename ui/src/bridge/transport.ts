@@ -5,6 +5,7 @@ import type {
   SimplificationMode,
   SimplifiedStatus,
 } from "../store/sessionStore";
+import { parseWorkArea, type WorkArea } from "../windowSize";
 import type { Envelope } from "./generated/Envelope";
 import type { HardwareReport } from "./generated/HardwareReport";
 import type { RuntimeStatus } from "./generated/RuntimeStatus";
@@ -61,6 +62,7 @@ export interface Transport {
   snapshot(): Promise<Snapshot>;
   runtimeStatus(): Promise<RuntimeStatus>;
   setWindowMode(mode: "console" | "overlay" | "expanded"): Promise<WindowPolicy>;
+  resizeWindow(width: number, height: number): Promise<boolean>;
   beginDrag(): Promise<boolean>;
   exportTranscript(format: "markdown" | "plain" | "csv", path: string): Promise<string>;
   listSources(): Promise<AudioSourceInfo[]>;
@@ -82,6 +84,8 @@ interface NativeClient {
   snapshot(): string;
   runtimeStatus(): string;
   setWindowMode(mode: string, nonce: string): string;
+  resizeWindow(nonce: string, width: number, height: number): boolean;
+  workArea(): string;
   beginDrag(): boolean;
   export(format: string, path: string): string;
   listAudioSources(): string;
@@ -110,6 +114,20 @@ function loadNative(): NativeAddon | null {
     nativeAddon = null;
   }
   return nativeAddon;
+}
+
+/**
+ * Monitor work area from the native addon, before any window or session
+ * exists. Demo transport (no addon) → null.
+ */
+export function readWorkArea(): WorkArea | null {
+  const addon = loadNative();
+  if (!addon) return null;
+  try {
+    return parseWorkArea(new addon.CoreClient().workArea());
+  } catch {
+    return null;
+  }
 }
 
 export function createTransport(onEvent: (envelope: Envelope) => void): Transport {
@@ -183,6 +201,10 @@ class NativeTransport implements Transport {
 
   async setWindowMode(mode: "console" | "overlay" | "expanded"): Promise<WindowPolicy> {
     return JSON.parse(this.client.setWindowMode(mode, windowNonce)) as WindowPolicy;
+  }
+
+  async resizeWindow(width: number, height: number): Promise<boolean> {
+    return this.client.resizeWindow(windowNonce, Math.round(width), Math.round(height));
   }
 
   async beginDrag(): Promise<boolean> {
@@ -408,6 +430,10 @@ class DemoTransport implements Transport {
 
   async setWindowMode(): Promise<WindowPolicy> {
     return { applied: false, backend: "demo", notes: ["native bridge unavailable"] };
+  }
+
+  async resizeWindow(): Promise<boolean> {
+    return false;
   }
 
   async beginDrag(): Promise<boolean> {
