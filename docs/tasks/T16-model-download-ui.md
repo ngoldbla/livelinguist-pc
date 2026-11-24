@@ -1,5 +1,7 @@
 # T16 — Onboarding download screen (first-run UX) (PR)
 
+Linux part done in PR #27; Windows pending: manual download/cancel/retry from the onboarding window on Windows and the screenshots `onboarding-download-progress.png`, `onboarding-models-ready.png`.
+
 **Needs:** T15 done.
 
 **Goal:** the "Download models" button really downloads, shows progress, can
