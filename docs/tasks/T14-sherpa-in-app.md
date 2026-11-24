@@ -1,5 +1,7 @@
 # T14 — Use real ASR in `ll-eval` and the app (S2)
 
+Linux part done in PR #29; Windows pending: bridge built with `--features capture,sherpa`, UI System audio + English video shows real captions, screenshot `console-live-asr.png`, segment count and RTF in `docs/qa/2026-11-23-asr-runtime.md` `## In app`.
+
 **Needs:** T13 done.
 
 **Goal:** real captions from system audio in the app when the models are

@@ -11,7 +11,15 @@ authors.workspace = true
 [dependencies]
 thiserror = { workspace = true }
 ll-core = { workspace = true }
+sherpa-onnx = { workspace = true, optional = true }
+
+[dev-dependencies]
+ll-audio = { workspace = true }
 
 [features]
 default = []
-sherpa = []
+sherpa = ["dep:sherpa-onnx"]
+
+[[example]]
+name = "sherpa_probe"
+required-features = ["sherpa"]

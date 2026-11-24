@@ -22,10 +22,10 @@ writing new cards. Agents work from cards.
 | [T08](T08-prompt-contract-source.md) | Copy the prompt contract from the model card | `stage-w4-prompt-contract` | done |
 | [T09](T09-prompt-contract-renderer.md) | `render_easylanguage_prompt` + 29 goldens | `stage-w4-prompt-contract` | done |
 | [T10](T10-drop-rolling-context.md) | No rolling context on the click path (PR) | `stage-w4-prompt-contract` | done |
-| [T11](T11-model-fetch-cli.md) | `fetch_models` example; download the pinned set | `stage-w3-asr-runtime` | todo |
-| [T12](T12-sherpa-probe.md) | sherpa-onnx probe on a TTS speech clip | `stage-w3-asr-runtime` | todo |
-| [T13](T13-sherpa-engine.md) | Real streaming `SherpaAsr` | `stage-w3-asr-runtime` | todo |
-| [T14](T14-sherpa-in-app.md) | Real ASR in `ll-eval` and the app (PR) | `stage-w3-asr-runtime` | todo |
+| [T11](T11-model-fetch-cli.md) | `fetch_models` example; download the pinned set | `stage-w3-asr-runtime` | done |
+| [T12](T12-sherpa-probe.md) | sherpa-onnx probe on a TTS speech clip | `stage-w3-asr-runtime` | done |
+| [T13](T13-sherpa-engine.md) | Real streaming `SherpaAsr` | `stage-w3-asr-runtime` | done |
+| [T14](T14-sherpa-in-app.md) | Real ASR in `ll-eval` and the app (PR) | `stage-w3-asr-runtime` | linux-done |
 | [T15](T15-model-download-bridge.md) | Bridge: model status, download, cancel | `stage-w3-model-download` | linux-done |
 | [T16](T16-model-download-ui.md) | Onboarding download screen (PR) | `stage-w3-model-download` | linux-done |
 | [T17](T17-llama-probe.md) | llama.cpp CPU probe | `stage-w4-llama-cpu` | todo |

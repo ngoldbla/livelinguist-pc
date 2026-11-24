@@ -250,8 +250,9 @@ impl Pipeline {
         }
 
         for chunk in self.chunker.append(samples) {
-            // VAD gates feeding ASR to save CPU during silence (plan §7.3).
-            if !status.is_speech_active {
+            // VAD gates feeding ASR to save CPU during silence (plan §7.3),
+            // except for streaming engines that endpoint on their own.
+            if !status.is_speech_active && !self.asr.needs_continuous_audio() {
                 continue;
             }
             match self.asr.process(&chunk, self.audio_time) {
@@ -266,8 +267,9 @@ impl Pipeline {
                         },
                     );
                     self.handle_segmenter_output(output);
+                    self.finalize_on_engine_endpoint();
                 }
-                Ok(None) => {}
+                Ok(None) => self.finalize_on_engine_endpoint(),
                 Err(error) => {
                     let (code, message, recoverable) = match &error {
                         AsrError::ModelMissing { language, size_mb } => (
@@ -291,11 +293,26 @@ impl Pipeline {
             }
         }
 
-        let output = self
-            .segmenter
-            .tick(status.trailing_silence, self.audio_time);
+        // Self-endpointing engines report pauses themselves (handled per
+        // chunk above); the energy VAD would see quiet speech as silence.
+        let trailing_silence = if self.asr.needs_continuous_audio() {
+            0.0
+        } else {
+            status.trailing_silence
+        };
+        let output = self.segmenter.tick(trailing_silence, self.audio_time);
         self.handle_segmenter_output(output);
         self.take_events_internal()
+    }
+
+    /// When the engine saw the end of an utterance, finalize it before the
+    /// engine's next (fresh) hypothesis arrives, so no text is dropped.
+    fn finalize_on_engine_endpoint(&mut self) {
+        if self.asr.take_endpoint() == Some(true) {
+            let pause = self.segmenter.config().pause_threshold;
+            let output = self.segmenter.tick(pause, self.audio_time);
+            self.handle_segmenter_output(output);
+        }
     }
 
     pub fn flush(&mut self) -> Vec<Envelope> {
@@ -1098,6 +1115,93 @@ mod tests {
             );
             assert_eq!(recorder.calls(), 0, "mode {mode:?} made backend calls");
         }
+    }
+
+    /// Streaming engine that endpoints on its own: rolling hypotheses, an
+    /// endpoint after the first utterance, then a fresh hypothesis.
+    struct EndpointingEngine {
+        script: Vec<(&'static str, bool)>,
+        calls: std::sync::Arc<std::sync::atomic::AtomicUsize>,
+        endpoint: bool,
+    }
+
+    impl ll_asr::AsrEngine for EndpointingEngine {
+        fn process(
+            &mut self,
+            _chunk: &[f32],
+            audio_time: f64,
+        ) -> Result<Option<ll_asr::AsrEvent>, ll_asr::AsrError> {
+            let index = self.calls.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+            let Some((text, endpoint)) = self.script.get(index).copied() else {
+                return Ok(None);
+            };
+            self.endpoint |= endpoint;
+            Ok(Some(ll_asr::AsrEvent {
+                hypothesis: text.to_string(),
+                audio_time,
+                detected_language: None,
+            }))
+        }
+        fn reset(&mut self) {}
+        fn name(&self) -> &'static str {
+            "endpointing"
+        }
+        fn needs_continuous_audio(&self) -> bool {
+            true
+        }
+        fn take_endpoint(&mut self) -> Option<bool> {
+            Some(std::mem::take(&mut self.endpoint))
+        }
+    }
+
+    #[test]
+    fn self_endpointing_engine_gets_quiet_audio_and_finalizes_on_its_endpoint() {
+        let pack = FrameworkPack::load_framework(Framework::Falc).unwrap();
+        let calls = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        let engine = EndpointingEngine {
+            script: vec![
+                ("nous avons", false),
+                ("nous avons voté hier", false),
+                ("nous avons voté hier soir", true),
+                ("la séance", false),
+                ("la séance est levée", false),
+            ],
+            calls: calls.clone(),
+            endpoint: false,
+        };
+        let config = PipelineConfig::new(SessionConfiguration::new(
+            Language::FrFr,
+            AudioSourceKind::Demo,
+        ));
+        let mut pipeline = Pipeline::new(
+            config,
+            pack.clone(),
+            CoverageMatrix::v1(),
+            RuntimeConfig::default(),
+            Box::new(engine),
+            Box::new(DemoBackend::from_pack(&pack)),
+        );
+        pipeline.start().unwrap();
+        // Quiet speech: far below the energy VAD threshold.
+        let quiet = vec![0.002_f32; 17_600];
+        for _ in 0..6 {
+            let _ = pipeline.feed_audio(&quiet);
+        }
+        let _ = pipeline.flush();
+        assert!(
+            calls.load(std::sync::atomic::Ordering::SeqCst) >= 5,
+            "VAD gated the engine"
+        );
+        let texts: Vec<&str> = pipeline
+            .store()
+            .segments
+            .iter()
+            .map(|entry| entry.segment.text.as_str())
+            .collect();
+        assert_eq!(
+            texts,
+            vec!["nous avons voté hier soir", "la séance est levée"]
+        );
     }
 
     #[test]

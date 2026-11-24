@@ -16,6 +16,7 @@ ll-audio = { workspace = true }
 ll-asr = { workspace = true }
 ll-llm = { workspace = true }
 ll-pipeline = { workspace = true }
+ll-models = { workspace = true, optional = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 
@@ -24,3 +25,4 @@ tempfile = { workspace = true }
 
 [features]
 capture = ["ll-audio/capture"]
+sherpa = ["ll-asr/sherpa", "dep:ll-models"]

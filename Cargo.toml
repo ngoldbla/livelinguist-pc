@@ -44,6 +44,7 @@ windows = { version = "0.62.2", features = [
   "Win32_UI_WindowsAndMessaging",
 ] }
 tempfile = "3.27.0"
+sherpa-onnx = "=2.0.1"
 
 [profile.release]
 lto = "thin"
