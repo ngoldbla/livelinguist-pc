@@ -1,5 +1,7 @@
 # T27 — Click-to-simplify from the keyboard + "Read latest" (S6 a11y)
 
+Linux part done in PR #26; Windows pending: keyboard-only live run (start session, move to caption, simplify, Read latest), `verify-windows.ps1 -A11y`, focus ring at 100/125/150%.
+
 **Needs:** T26 done.
 
 **Files:** `ui/src/screens/Live.tsx`, `ui/src/screens/Console.tsx`,

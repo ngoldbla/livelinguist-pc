@@ -38,8 +38,8 @@ writing new cards. Agents work from cards.
 | [T24](T24-window-size-clamp.md) | Fit windows to the work area | `stage-w5-layout` | done |
 | [T25](T25-layout-min-size.md) | Screens fit the minimum size + screenshots (PR) | `stage-w5-layout` | todo |
 | [T26](T26-a11y-checks.md) | Automated a11y checks on every screen | `stage-w5-a11y` | todo |
-| [T27](T27-keyboard-captions.md) | Keyboard simplify + Read latest | `stage-w5-a11y` | todo |
-| [T28](T28-a11y-checklist.md) | Contrast, reduced effects, a11y checklist (PR) | `stage-w5-a11y` | todo |
+| [T27](T27-keyboard-captions.md) | Keyboard simplify + Read latest | `stage-w5-a11y` | linux-done |
+| [T28](T28-a11y-checklist.md) | Contrast, reduced effects, a11y checklist (PR) | `stage-w5-a11y` | linux-done |
 | [T29](T29-fleurs-manifest.md) | FLEURS manifest + fetch script | `stage-w3-asr-coverage` | todo |
 | [T30](T30-wer-metrics.md) | Normalizer, WER, CER | `stage-w3-asr-coverage` | todo |
 | [T31](T31-asr-wer-scenario.md) | `ll-eval` asr-wer scenario | `stage-w3-asr-coverage` | todo |

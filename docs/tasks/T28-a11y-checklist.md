@@ -1,5 +1,7 @@
 # T28 — Contrast, reduced effects, a11y checklist (S6 a11y) (PR)
 
+Linux part done in PR #26; Windows pending: Narrator listening pass (human), Arabic screenshot `console-arabic-v1.png`, live checklist columns (names/roles, Tab order) after T26.
+
 **Needs:** T27 done.
 
 **Files:** `ui/src/aurora/theme.ts` (only if contrast fails),
