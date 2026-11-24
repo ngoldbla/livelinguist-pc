@@ -10,7 +10,7 @@ use ll_core::decoding::{
 use ll_core::export::{markdown, plain_text, session_csv};
 use ll_core::language::{Framework, Language};
 use ll_core::pack::{FewShot, FrameworkPack, Thresholds};
-use ll_core::prompt::PromptBuilder;
+use ll_core::prompt::{render_easylanguage_prompt, PromptBuilder, EMPTY_THINK_BLOCK};
 use ll_core::reversion::ReversionDetector;
 use ll_core::segmenter::Segmenter;
 use ll_core::session::{
@@ -286,4 +286,72 @@ fn export_goldens_match_the_mac_format() {
         reasons["off_target"].as_str().unwrap(),
         SkipReason::OffTargetLanguage.as_str()
     );
+}
+
+const EASYLANGUAGE_SENTENCE: &str = "This is a test sentence.";
+
+fn easylanguage_goldens() -> Vec<Value> {
+    Language::ALL
+        .iter()
+        .map(|language| {
+            let pack = FrameworkPack::for_language(*language).unwrap();
+            serde_json::json!({
+                "locale": language.locale(),
+                "prompt": render_easylanguage_prompt(&pack, EASYLANGUAGE_SENTENCE),
+            })
+        })
+        .collect()
+}
+
+/// Set `LL_WRITE_GOLDENS=1` once to (re)write the file; otherwise compare.
+#[test]
+fn easylanguage_prompt_matches_goldens() {
+    let rendered = easylanguage_goldens();
+    assert_eq!(rendered.len(), 29);
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../tests/golden/easylanguage_prompt_goldens.json");
+    if std::env::var_os("LL_WRITE_GOLDENS").is_some() {
+        let json = serde_json::to_string_pretty(&Value::Array(rendered.clone())).unwrap();
+        std::fs::write(&path, json + "\n").unwrap();
+    }
+    let expected = golden("easylanguage_prompt_goldens.json");
+    assert_eq!(Value::Array(rendered), expected);
+}
+
+#[test]
+fn easylanguage_prompt_has_no_context() {
+    for language in Language::ALL {
+        let pack = FrameworkPack::for_language(language).unwrap();
+        let sentence = "Le conseil municipal se réunit mardi à 18 heures.";
+        let prompt = render_easylanguage_prompt(&pack, sentence);
+        assert_eq!(prompt.matches(sentence).count(), 1, "{language:?}");
+        for shot in &pack.few_shots {
+            assert!(
+                !prompt.contains(&shot.source),
+                "{language:?} few-shot leaked"
+            );
+            assert!(
+                !prompt.contains(&shot.simplified),
+                "{language:?} few-shot leaked"
+            );
+        }
+        assert_eq!(prompt.matches("/no_think").count(), 1, "{language:?}");
+        assert_eq!(prompt.matches(EMPTY_THINK_BLOCK).count(), 1, "{language:?}");
+        assert!(prompt.ends_with("<|im_start|>assistant\n<think>\n\n</think>\n\n"));
+        assert!(prompt.contains(&format!("{} /no_think<|im_end|>", pack.system_prompt)));
+    }
+}
+
+#[test]
+fn easylanguage_prompt_matches_the_model_card_template_literally() {
+    // The template block from the model card, with the placeholders filled.
+    let pack = FrameworkPack::for_language(Language::FrFr).unwrap();
+    let template = "<|im_start|>system\n{SYSTEM_PROMPT}<|im_end|>\n<|im_start|>user\nOriginal: {SENTENCE}\nRewritten:<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n";
+    let expected = template
+        .replace(
+            "{SYSTEM_PROMPT}",
+            &format!("{} /no_think", pack.system_prompt),
+        )
+        .replace("{SENTENCE}", "Bonjour.");
+    assert_eq!(render_easylanguage_prompt(&pack, "Bonjour."), expected);
 }

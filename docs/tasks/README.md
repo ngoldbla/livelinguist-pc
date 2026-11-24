@@ -19,8 +19,8 @@ writing new cards. Agents work from cards.
 | [T05](T05-loopback-pr.md) | ADR 0003, evidence, PR for S1 | `stage-w2-loopback` | done |
 | [T06](T06-loopback-resampler.md) | Streaming `rubato` resampler for loopback | `stage-w2-loopback-fixes` | done |
 | [T07](T07-loopback-device-errors.md) | Report device loss / follow default output (PR) | `stage-w2-loopback-fixes` | done |
-| [T08](T08-prompt-contract-source.md) | Copy the prompt contract from the model card | `stage-w4-prompt-contract` | todo |
-| [T09](T09-prompt-contract-renderer.md) | `render_easylanguage_prompt` + 29 goldens | `stage-w4-prompt-contract` | todo |
+| [T08](T08-prompt-contract-source.md) | Copy the prompt contract from the model card | `stage-w4-prompt-contract` | done |
+| [T09](T09-prompt-contract-renderer.md) | `render_easylanguage_prompt` + 29 goldens | `stage-w4-prompt-contract` | done |
 | [T10](T10-drop-rolling-context.md) | No rolling context on the click path (PR) | `stage-w4-prompt-contract` | done |
 | [T11](T11-model-fetch-cli.md) | `fetch_models` example; download the pinned set | `stage-w3-asr-runtime` | todo |
 | [T12](T12-sherpa-probe.md) | sherpa-onnx probe on a TTS speech clip | `stage-w3-asr-runtime` | todo |
