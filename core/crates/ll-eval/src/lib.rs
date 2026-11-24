@@ -250,6 +250,8 @@ fn build_pipeline(
     };
     session.language_detection_enabled = runtime.reversion;
     let mut config = PipelineConfig::new(session);
+    // Automatic simplification exists only for the dev stress scenario.
+    config.dev_automatic = runtime.pipeline == ll_config::PipelineMode::Live;
     config.detection = runtime.reversion;
     config.audio_fault = runtime.fault_audio;
 
