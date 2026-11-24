@@ -18,6 +18,7 @@ import { Onboarding } from "./screens/Onboarding";
 import { OverlayScreen } from "./screens/Overlay";
 import { SettingsScreen, type UiSettings } from "./screens/Settings";
 import { SummaryScreen } from "./screens/Summary";
+import { createModelStore, useModels } from "./store/modelStore";
 import { createSessionStore, useSession } from "./store/sessionStore";
 import { sizeForMode } from "./windowSize";
 
@@ -85,6 +86,8 @@ export function App() {
   const [settings, setSettings] = useState<UiSettings>(defaultSettings);
   const [toast, setToast] = useState<string | null>(null);
   const [simplifyingId, setSimplifyingId] = useState<string | null>(null);
+  const [modelStore] = useState(createModelStore);
+  const models = useModels(modelStore);
   const transportRef = useRef<Transport | null>(null);
   const started = useRef(false);
   const renderer = useGpuixRequired();
@@ -196,6 +199,43 @@ export function App() {
     }
   };
 
+  const refreshModels = async () => {
+    try {
+      modelStore.setStatus(await ensureTransport().modelStatus());
+    } catch {
+      // Status stays as it was; the download button still works.
+    }
+  };
+
+  const onDownloadModels = async () => {
+    await refreshModels();
+    modelStore.begin();
+    try {
+      await ensureTransport().downloadModels((envelope) => {
+        modelStore.applyEnvelope(envelope);
+        if (envelope.event.type === "model_ready") void refreshModels();
+      });
+    } catch (error) {
+      modelStore.fail({
+        id: modelStore.getSnapshot().models[0]?.id ?? "",
+        code: "UNAVAILABLE",
+        reason: error instanceof Error ? error.message : "download unavailable",
+      });
+    }
+  };
+
+  const onCancelDownload = () => {
+    void ensureTransport()
+      .cancelDownload()
+      .catch(() => false);
+  };
+
+  useEffect(() => {
+    void refreshModels();
+    // Model status is read once at start; downloads refresh it themselves.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const onLanguage = (code: string) => {
     const option = languageByCode(code);
     bootStore.setLanguage(option.code, option.uiCode);
@@ -293,6 +333,9 @@ export function App() {
           onLanguage={onLanguage}
           onFinish={() => setScreen("console")}
           onOpenLicenses={openLicenses}
+          models={models}
+          onDownload={() => void onDownloadModels()}
+          onCancelDownload={onCancelDownload}
         />
       );
     }
@@ -330,6 +373,8 @@ export function App() {
             setToast("Diagnostics are content-free; use Export → Diagnostics CSV.")
           }
           onScenario={(scenario) => void onScenario(scenario)}
+          models={models}
+          onDownloadModels={() => void onDownloadModels()}
           onReset={() => {
             setSettings(defaultSettings);
             void onScenario("auto");

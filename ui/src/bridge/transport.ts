@@ -1,4 +1,5 @@
 import { createRequire } from "node:module";
+import type { ModelStatus } from "../store/modelStore";
 import type {
   AudioSource,
   SessionSummary,
@@ -63,6 +64,10 @@ export interface Transport {
   runtimeStatus(): Promise<RuntimeStatus>;
   setWindowMode(mode: "console" | "overlay" | "expanded"): Promise<WindowPolicy>;
   resizeWindow(width: number, height: number): Promise<boolean>;
+  modelStatus(): Promise<ModelStatus[]>;
+  /** Starts the first-run download; progress arrives through `onEvent`. */
+  downloadModels(onEvent: (envelope: Envelope) => void): Promise<void>;
+  cancelDownload(): Promise<boolean>;
   beginDrag(): Promise<boolean>;
   exportTranscript(format: "markdown" | "plain" | "csv", path: string): Promise<string>;
   listSources(): Promise<AudioSourceInfo[]>;
@@ -86,6 +91,9 @@ interface NativeClient {
   setWindowMode(mode: string, nonce: string): string;
   resizeWindow(nonce: string, width: number, height: number): boolean;
   workArea(): string;
+  modelStatus(): string;
+  downloadModels(onEvent: (error: Error | null, value: string) => void): void;
+  cancelDownload(): boolean;
   beginDrag(): boolean;
   export(format: string, path: string): string;
   listAudioSources(): string;
@@ -99,6 +107,24 @@ interface NativeClient {
 interface NativeAddon {
   CoreClient: new () => NativeClient;
 }
+
+/** The pinned 1.0 set as the demo transport reports it: never present. */
+const DEMO_MODELS: ModelStatus[] = [
+  {
+    id: "asr-nemotron-3.5-0.6b-560ms",
+    title: "Speech recognition",
+    bytes: 682_215_356,
+    present: false,
+    verified: false,
+  },
+  {
+    id: "llm-qwen3-0.6b-easylanguage",
+    title: "Simplifier",
+    bytes: 396_704_608,
+    present: false,
+    verified: false,
+  },
+];
 
 export const windowNonce = String(process.pid);
 export const windowTitle = `Live Linguist — ${windowNonce}`;
@@ -205,6 +231,25 @@ class NativeTransport implements Transport {
 
   async resizeWindow(width: number, height: number): Promise<boolean> {
     return this.client.resizeWindow(windowNonce, Math.round(width), Math.round(height));
+  }
+
+  async modelStatus(): Promise<ModelStatus[]> {
+    return JSON.parse(this.client.modelStatus()) as ModelStatus[];
+  }
+
+  async downloadModels(onEvent: (envelope: Envelope) => void): Promise<void> {
+    this.client.downloadModels((error, value) => {
+      if (error) return;
+      try {
+        onEvent(JSON.parse(value) as Envelope);
+      } catch {
+        // Malformed envelopes are dropped; the store only moves forward.
+      }
+    });
+  }
+
+  async cancelDownload(): Promise<boolean> {
+    return this.client.cancelDownload();
   }
 
   async beginDrag(): Promise<boolean> {
@@ -433,6 +478,18 @@ class DemoTransport implements Transport {
   }
 
   async resizeWindow(): Promise<boolean> {
+    return false;
+  }
+
+  async modelStatus(): Promise<ModelStatus[]> {
+    return DEMO_MODELS.map((model) => ({ ...model }));
+  }
+
+  async downloadModels(): Promise<void> {
+    throw new Error("not available in demo mode");
+  }
+
+  async cancelDownload(): Promise<boolean> {
     return false;
   }
 

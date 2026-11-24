@@ -115,6 +115,7 @@ impl Default for BridgeInner {
 #[napi]
 pub struct CoreClient {
     inner: Arc<Mutex<BridgeInner>>,
+    downloads: ll_models::DownloadSlot,
 }
 
 #[napi]
@@ -123,6 +124,7 @@ impl CoreClient {
     pub fn new() -> Self {
         Self {
             inner: Arc::new(Mutex::new(BridgeInner::default())),
+            downloads: ll_models::DownloadSlot::default(),
         }
     }
 
@@ -497,6 +499,60 @@ impl CoreClient {
     #[napi]
     pub fn resize_window(&self, title_nonce: String, width: u32, height: u32) -> bool {
         resize_current_window(&title_nonce, width, height)
+    }
+
+    /// Which pinned models are in the cache: JSON
+    /// `[{ id, title, bytes, present, verified }]` (sizes only, no hashing).
+    #[napi]
+    pub fn model_status(&self) -> String {
+        model_status_json(&ll_models::cache_root())
+    }
+
+    /// Download the pinned model set on a worker thread; returns at once.
+    /// Envelopes `model_progress` (≤ 4/s per file), `model_ready`, and
+    /// `model_error` reach `onEvent`. A second call while one runs is an error.
+    #[napi]
+    pub fn download_models(&self, on_event: ThreadsafeFunction<String>) -> Result<()> {
+        let ticket = begin_download(&self.downloads).map_err(Error::from_reason)?;
+        let callback = Arc::new(on_event);
+        std::thread::spawn(move || {
+            let mut emitter = ll_protocol::EventEmitter::new();
+            let mut send = |event: ll_models::DownloadEvent| {
+                emit(&callback, vec![emitter.emit(download_event(event))]);
+            };
+            let root = ll_models::cache_root();
+            let catalog = ll_models::ModelCatalog::plan_default();
+            match ll_models::http_client() {
+                Ok(client) => {
+                    let _ = ll_models::download_catalog(
+                        &client,
+                        &catalog,
+                        &root,
+                        Some(ticket.cancel_flag()),
+                        4,
+                        &mut send,
+                    );
+                }
+                Err(error) => send(ll_models::DownloadEvent::Error {
+                    id: catalog
+                        .artifacts
+                        .first()
+                        .map(|artifact| artifact.id.clone())
+                        .unwrap_or_default(),
+                    code: error.code().to_string(),
+                    reason: error.to_string(),
+                }),
+            }
+            drop(ticket);
+        });
+        Ok(())
+    }
+
+    /// Ask the running download to stop between chunks. Partial files stay
+    /// for resume. Returns false when nothing is downloading.
+    #[napi]
+    pub fn cancel_download(&self) -> bool {
+        self.downloads.cancel()
     }
 
     /// Start a native window move from the overlay drag grip.
@@ -881,6 +937,38 @@ fn emit_capture_event(inner: &Arc<Mutex<BridgeInner>>, code: &str, message: &str
     }
 }
 
+fn model_status_json(root: &std::path::Path) -> String {
+    serde_json::to_string(&ll_models::ModelCatalog::plan_default().status(root))
+        .unwrap_or_else(|_| "[]".to_string())
+}
+
+fn begin_download(
+    slot: &ll_models::DownloadSlot,
+) -> std::result::Result<ll_models::DownloadTicket, String> {
+    slot.try_begin()
+        .ok_or_else(|| "a model download is already running".to_string())
+}
+
+fn download_event(event: ll_models::DownloadEvent) -> ll_protocol::CoreEvent {
+    match event {
+        ll_models::DownloadEvent::Progress {
+            id,
+            file,
+            done_bytes,
+            total_bytes,
+        } => ll_protocol::CoreEvent::ModelProgress {
+            id,
+            file,
+            done_bytes,
+            total_bytes,
+        },
+        ll_models::DownloadEvent::Ready { id } => ll_protocol::CoreEvent::ModelReady { id },
+        ll_models::DownloadEvent::Error { id, code, reason } => {
+            ll_protocol::CoreEvent::ModelError { id, code, reason }
+        }
+    }
+}
+
 // Plain function so unit tests stay off the napi runtime symbols.
 fn work_area_json() -> String {
     serde_json::to_string(&work_area()).unwrap_or_else(|_| "null".to_string())
@@ -889,6 +977,57 @@ fn work_area_json() -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn model_status_on_empty_root_reports_both_missing() {
+        let root = tempfile::tempdir().unwrap();
+        let value: serde_json::Value =
+            serde_json::from_str(&model_status_json(root.path())).unwrap();
+        let models = value.as_array().unwrap();
+        assert_eq!(models.len(), 2);
+        for model in models {
+            assert_eq!(model["present"], serde_json::Value::Bool(false));
+            assert_eq!(model["verified"], serde_json::Value::Bool(false));
+            assert!(model["bytes"].as_u64().unwrap() > 0);
+            assert!(model["id"].as_str().is_some() && model["title"].as_str().is_some());
+        }
+    }
+
+    #[test]
+    fn second_download_while_running_is_rejected() {
+        let slot = ll_models::DownloadSlot::default();
+        let running = begin_download(&slot).expect("first starts");
+        assert_eq!(
+            begin_download(&slot).unwrap_err(),
+            "a model download is already running"
+        );
+        drop(running);
+        assert!(begin_download(&slot).is_ok());
+    }
+
+    #[test]
+    fn download_events_map_to_enveloped_protocol_events() {
+        let mut emitter = ll_protocol::EventEmitter::new();
+        let first = emitter.emit(download_event(ll_models::DownloadEvent::Progress {
+            id: "asr".into(),
+            file: "tokens.txt".into(),
+            done_bytes: 10,
+            total_bytes: 20,
+        }));
+        let second = emitter.emit(download_event(ll_models::DownloadEvent::Error {
+            id: "asr".into(),
+            code: "CANCELLED".into(),
+            reason: "download cancelled".into(),
+        }));
+        assert!(second.seq > first.seq);
+        let json = serde_json::to_value(&first).unwrap();
+        assert_eq!(json["event"]["type"], "model_progress");
+        assert_eq!(json["event"]["done_bytes"], 10);
+        assert!(json["v"].is_number() && json["ts"].is_number());
+        let json = serde_json::to_value(&second).unwrap();
+        assert_eq!(json["event"]["type"], "model_error");
+        assert_eq!(json["event"]["code"], "CANCELLED");
+    }
 
     #[test]
     fn work_area_json_is_null_or_an_area_without_a_session() {

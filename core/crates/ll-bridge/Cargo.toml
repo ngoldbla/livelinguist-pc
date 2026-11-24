@@ -17,6 +17,7 @@ serde = { workspace = true }
 ll-window = { workspace = true }
 ll-accel = { workspace = true }
 ll-llm = { workspace = true }
+ll-models = { workspace = true }
 ll-asr = { workspace = true }
 ll-audio = { workspace = true }
 ll-core = { workspace = true }
@@ -25,6 +26,9 @@ ll-pipeline = { workspace = true }
 ll-protocol = { workspace = true }
 napi = { workspace = true }
 napi-derive = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
 
 [build-dependencies]
 napi-build = "2.3.1"
