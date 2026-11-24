@@ -3,7 +3,12 @@ import { useGpuixRequired } from "@gpuix/react";
 import { useEffect, useRef, useState } from "react";
 import { AuroraField, Toast } from "./aurora/components";
 import { colors } from "./aurora/theme";
-import { createTransport, type SimplifyResult, type Transport } from "./bridge/transport";
+import {
+  createTransport,
+  readWorkArea,
+  type SimplifyResult,
+  type Transport,
+} from "./bridge/transport";
 import { languageByCode } from "./i18n/languages";
 import { t } from "./i18n/locales";
 import { ConsoleScreen } from "./screens/Console";
@@ -14,6 +19,9 @@ import { OverlayScreen } from "./screens/Overlay";
 import { SettingsScreen, type UiSettings } from "./screens/Settings";
 import { SummaryScreen } from "./screens/Summary";
 import { createSessionStore, useSession } from "./store/sessionStore";
+import { sizeForMode } from "./windowSize";
+
+const hasSizeOverride = () => Boolean(process.env.LL_WIDTH || process.env.LL_HEIGHT);
 
 type Screen = "onboarding" | "console" | "live" | "settings" | "summary" | "licenses";
 type WindowMode = "console" | "overlay" | "expanded";
@@ -178,6 +186,10 @@ export function App() {
     setWindowModeState(mode);
     try {
       await ensureTransport().setWindowMode(mode);
+      if (mode !== "overlay" && !hasSizeOverride()) {
+        const size = sizeForMode(mode, readWorkArea());
+        await ensureTransport().resizeWindow(size.width, size.height);
+      }
     } catch {
       setToast("Window policy unavailable; using a normal window.");
     }

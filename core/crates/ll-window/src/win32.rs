@@ -22,6 +22,7 @@ const MA_NOACTIVATE: isize = 3;
 const VK_LBUTTON: i32 = 0x01;
 const SWP_NOSIZE: u32 = 0x0001;
 const SWP_NOMOVE: u32 = 0x0002;
+const SWP_NOZORDER: u32 = 0x0004;
 const SWP_NOACTIVATE: u32 = 0x0010;
 const SWP_FRAMECHANGED: u32 = 0x0020;
 const GWL_EXSTYLE: i32 = -20;
@@ -82,6 +83,88 @@ struct Rect {
 #[link(name = "kernel32")]
 extern "system" {
     fn GetCurrentProcessId() -> u32;
+}
+
+#[repr(C)]
+struct MonitorInfo {
+    cb_size: u32,
+    rc_monitor: Rect,
+    rc_work: Rect,
+    flags: u32,
+}
+
+const MONITOR_DEFAULTTOPRIMARY: u32 = 0x0000_0001;
+const MDT_EFFECTIVE_DPI: i32 = 0;
+
+#[link(name = "user32")]
+extern "system" {
+    fn MonitorFromPoint(point: Point, flags: u32) -> isize;
+    fn GetDpiForWindow(hwnd: Hwnd) -> u32;
+    fn GetMonitorInfoW(monitor: isize, info: *mut MonitorInfo) -> i32;
+}
+
+#[link(name = "shcore")]
+extern "system" {
+    fn GetDpiForMonitor(monitor: isize, dpi_type: i32, dpi_x: *mut u32, dpi_y: *mut u32)
+        -> Hresult;
+}
+
+/// Work area (`rcWork`) of the monitor under the cursor, or the primary
+/// monitor. Coordinates follow the process DPI awareness: physical pixels in
+/// the per-monitor-aware app; in an unaware process Windows virtualizes both
+/// the rectangle and the DPI (96), so `width / scale` is the logical size
+/// either way.
+pub fn work_area() -> Option<crate::WorkArea> {
+    unsafe {
+        let mut cursor = Point { x: 0, y: 0 };
+        if GetCursorPos(&mut cursor) == 0 {
+            cursor = Point { x: 0, y: 0 };
+        }
+        let monitor = MonitorFromPoint(cursor, MONITOR_DEFAULTTOPRIMARY);
+        if monitor == 0 {
+            return None;
+        }
+        let mut info = MonitorInfo {
+            cb_size: std::mem::size_of::<MonitorInfo>() as u32,
+            rc_monitor: Rect {
+                left: 0,
+                top: 0,
+                right: 0,
+                bottom: 0,
+            },
+            rc_work: Rect {
+                left: 0,
+                top: 0,
+                right: 0,
+                bottom: 0,
+            },
+            flags: 0,
+        };
+        if GetMonitorInfoW(monitor, &mut info) == 0 {
+            return None;
+        }
+        let (mut dpi_x, mut dpi_y) = (0u32, 0u32);
+        let scale = if GetDpiForMonitor(monitor, MDT_EFFECTIVE_DPI, &mut dpi_x, &mut dpi_y) >= 0
+            && dpi_x > 0
+        {
+            dpi_x as f64 / 96.0
+        } else {
+            1.0
+        };
+        let work = &info.rc_work;
+        let width = (work.right - work.left).max(0) as u32;
+        let height = (work.bottom - work.top).max(0) as u32;
+        if width == 0 || height == 0 {
+            return None;
+        }
+        Some(crate::WorkArea {
+            x: work.left,
+            y: work.top,
+            width,
+            height,
+            scale,
+        })
+    }
 }
 
 #[link(name = "comctl32")]
@@ -170,6 +253,35 @@ unsafe extern "system" fn subclass_proc(
         return 42;
     }
     DefSubclassProc(hwnd, msg, wparam, lparam)
+}
+
+/// Resize `hwnd` to a logical size (96-DPI pixels), scaled by the window's
+/// DPI. Position and z-order are kept; the window is not activated.
+pub fn resize_hwnd_logical(hwnd: Hwnd, width: u32, height: u32) -> bool {
+    unsafe {
+        let dpi = match GetDpiForWindow(hwnd) {
+            0 => 96,
+            dpi => dpi,
+        };
+        let cx = (u64::from(width) * u64::from(dpi) / 96) as i32;
+        let cy = (u64::from(height) * u64::from(dpi) / 96) as i32;
+        SetWindowPos(
+            hwnd,
+            0,
+            0,
+            0,
+            cx,
+            cy,
+            SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE,
+        ) != 0
+    }
+}
+
+/// Resize this process's app window (found by title nonce) to a logical size.
+pub fn resize_current(title_nonce: &str, width: u32, height: u32) -> bool {
+    let pid = unsafe { GetCurrentProcessId() };
+    let hwnd = find_window(pid, title_nonce);
+    hwnd != 0 && resize_hwnd_logical(hwnd, width, height)
 }
 
 pub fn apply_for_current_process(
@@ -356,6 +468,13 @@ mod tests {
         text.encode_utf16().chain(std::iter::once(0)).collect()
     }
 
+    #[test]
+    fn work_area_reports_the_monitor() {
+        let area = work_area().expect("work area on a Windows desktop");
+        assert!(area.width > 0 && area.height > 0, "{area:?}");
+        assert!((1.0..=3.0).contains(&area.scale), "{area:?}");
+    }
+
     /// Same-process Win32 integration check: the overlay policy must set
     /// topmost/no-activate/toolwindow and intercept WM_MOUSEACTIVATE. A
     /// cross-process SendMessage is not a valid probe for this message.
@@ -428,6 +547,21 @@ mod tests {
                 "console toolwindow not cleared"
             );
             assert_eq!(ex_style & WS_EX_TOPMOST, 0, "console topmost not cleared");
+
+            assert!(resize_hwnd_logical(hwnd, 400, 300), "resize failed");
+            let dpi = match GetDpiForWindow(hwnd) {
+                0 => 96,
+                dpi => dpi,
+            } as i32;
+            let mut rect = Rect {
+                left: 0,
+                top: 0,
+                right: 0,
+                bottom: 0,
+            };
+            assert_ne!(GetWindowRect(hwnd, &mut rect), 0);
+            assert_eq!(rect.right - rect.left, 400 * dpi / 96, "resized width");
+            assert_eq!(rect.bottom - rect.top, 300 * dpi / 96, "resized height");
             let _ = DestroyWindow(hwnd);
         }
     }

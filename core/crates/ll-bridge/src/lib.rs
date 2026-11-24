@@ -17,7 +17,9 @@ use ll_core::pack::FrameworkPack;
 use ll_core::session::{AudioSourceKind, SessionConfiguration, SimplificationMode};
 use ll_llm::{DemoBackend, FaultyBackend};
 use ll_pipeline::{Pipeline, PipelineConfig};
-use ll_window::{apply_for_current_window, begin_drag, WindowPolicyResult};
+use ll_window::{
+    apply_for_current_window, begin_drag, resize_current_window, work_area, WindowPolicyResult,
+};
 use napi::bindgen_prelude::*;
 use napi::threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode};
 use napi_derive::napi;
@@ -482,6 +484,21 @@ impl CoreClient {
         serde_json::to_string(&result).map_err(|error| Error::from_reason(error.to_string()))
     }
 
+    /// Work area of the monitor the app opens on, as JSON
+    /// `{ x, y, width, height, scale }` (physical pixels) or `null`. Works
+    /// before a session starts.
+    #[napi]
+    pub fn work_area(&self) -> String {
+        work_area_json()
+    }
+
+    /// Resize the app window to a logical size (the UI fits it to the work
+    /// area first). Returns `false` when no native resize path applies.
+    #[napi]
+    pub fn resize_window(&self, title_nonce: String, width: u32, height: u32) -> bool {
+        resize_current_window(&title_nonce, width, height)
+    }
+
     /// Start a native window move from the overlay drag grip.
     #[napi]
     pub fn begin_drag(&self) -> bool {
@@ -864,9 +881,27 @@ fn emit_capture_event(inner: &Arc<Mutex<BridgeInner>>, code: &str, message: &str
     }
 }
 
+// Plain function so unit tests stay off the napi runtime symbols.
+fn work_area_json() -> String {
+    serde_json::to_string(&work_area()).unwrap_or_else(|_| "null".to_string())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn work_area_json_is_null_or_an_area_without_a_session() {
+        let json = work_area_json();
+        let value: serde_json::Value = serde_json::from_str(&json).unwrap();
+        if value.is_null() {
+            return;
+        }
+        assert!(value["width"].as_u64().unwrap() > 0);
+        assert!(value["height"].as_u64().unwrap() > 0);
+        let scale = value["scale"].as_f64().unwrap();
+        assert!((1.0..=3.0).contains(&scale));
+    }
 
     #[test]
     fn start_request_defaults_match_the_ui() {

@@ -319,3 +319,55 @@ fn intern(connection: &RustConnection, name: &str) -> Result<Atom, String> {
         .map(|reply| reply.atom)
         .map_err(|error| error.to_string())
 }
+
+/// Linux dev only: `_NET_WORKAREA` of the current desktop when the window
+/// manager publishes it, else the root window size. Scale is always 1.0.
+pub fn work_area() -> Option<crate::WorkArea> {
+    let (connection, screen) = x11rb::connect(None).ok()?;
+    let root_screen = &connection.setup().roots[screen];
+    let root = root_screen.root;
+    let fallback = crate::WorkArea {
+        x: 0,
+        y: 0,
+        width: u32::from(root_screen.width_in_pixels),
+        height: u32::from(root_screen.height_in_pixels),
+        scale: 1.0,
+    };
+    let Ok(atom) = intern(&connection, "_NET_WORKAREA") else {
+        return Some(fallback);
+    };
+    let values: Vec<u32> = connection
+        .get_property(false, root, atom, AtomEnum::CARDINAL, 0, 4)
+        .ok()
+        .and_then(|cookie| cookie.reply().ok())
+        .and_then(|reply| reply.value32().map(|values| values.collect()))
+        .unwrap_or_default();
+    match values.as_slice() {
+        [x, y, width, height, ..] if *width > 0 && *height > 0 => Some(crate::WorkArea {
+            x: *x as i32,
+            y: *y as i32,
+            width: *width,
+            height: *height,
+            scale: 1.0,
+        }),
+        _ => Some(fallback),
+    }
+}
+
+/// Linux dev only: resize this process's app window (scale 1.0).
+pub fn resize_current(title_nonce: &str, width: u32, height: u32) -> Result<(), String> {
+    use x11rb::protocol::xproto::ConfigureWindowAux;
+    let (connection, screen) =
+        x11rb::connect(None).map_err(|error| format!("X11 connect failed: {error}"))?;
+    let root = connection.setup().roots[screen].root;
+    let window = find_window(&connection, root, std::process::id(), title_nonce)?
+        .ok_or_else(|| "no X11 window for this process".to_string())?;
+    connection
+        .configure_window(
+            window,
+            &ConfigureWindowAux::new().width(width).height(height),
+        )
+        .map_err(|error| error.to_string())?;
+    connection.flush().map_err(|error| error.to_string())?;
+    Ok(())
+}

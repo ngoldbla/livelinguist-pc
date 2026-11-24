@@ -30,6 +30,56 @@ impl WindowPolicyResult {
     }
 }
 
+/// The usable area of the monitor the app opens on (taskbar excluded), in
+/// physical pixels, plus the display scale (1.0 = 96 DPI).
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkArea {
+    pub x: i32,
+    pub y: i32,
+    pub width: u32,
+    pub height: u32,
+    pub scale: f64,
+}
+
+/// Monitor work area: Windows uses the monitor under the cursor (primary as
+/// fallback) and its effective DPI; Linux dev uses `_NET_WORKAREA` or the X11
+/// root window at scale 1.0. `None` when the platform cannot tell.
+pub fn work_area() -> Option<WorkArea> {
+    #[cfg(target_os = "windows")]
+    {
+        win32::work_area()
+    }
+    #[cfg(target_os = "linux")]
+    {
+        std::env::var_os("DISPLAY")?;
+        x11::work_area()
+    }
+    #[cfg(not(any(target_os = "linux", target_os = "windows")))]
+    {
+        None
+    }
+}
+
+/// Resize the app window to a logical size (96-DPI pixels). Returns `false`
+/// when the window cannot be found or the platform has no resize path.
+pub fn resize_current_window(title_nonce: &str, width: u32, height: u32) -> bool {
+    #[cfg(target_os = "windows")]
+    {
+        win32::resize_current(title_nonce, width, height)
+    }
+    #[cfg(target_os = "linux")]
+    {
+        std::env::var_os("DISPLAY").is_some()
+            && x11::resize_current(title_nonce, width, height).is_ok()
+    }
+    #[cfg(not(any(target_os = "linux", target_os = "windows")))]
+    {
+        let _ = (title_nonce, width, height);
+        false
+    }
+}
+
 /// The policy table from plan §10.1.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Policy {
@@ -131,6 +181,30 @@ mod tests {
         assert!(overlay.topmost && overlay.no_activate && overlay.skip_taskbar && overlay.sticky);
         let expanded = policy_for(WindowMode::Expanded);
         assert!(expanded.topmost && !expanded.no_activate && expanded.skip_taskbar);
+    }
+
+    #[test]
+    fn work_area_serializes_camel_case() {
+        let area = WorkArea {
+            x: 0,
+            y: 0,
+            width: 1920,
+            height: 1032,
+            scale: 1.5,
+        };
+        let json = serde_json::to_string(&area).unwrap();
+        assert_eq!(
+            json,
+            r#"{"x":0,"y":0,"width":1920,"height":1032,"scale":1.5}"#
+        );
+    }
+
+    #[test]
+    fn work_area_is_sane_when_present() {
+        if let Some(area) = work_area() {
+            assert!(area.width > 0 && area.height > 0);
+            assert!((1.0..=3.0).contains(&area.scale));
+        }
     }
 
     #[test]
