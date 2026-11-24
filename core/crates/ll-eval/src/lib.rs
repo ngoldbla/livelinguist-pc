@@ -80,6 +80,9 @@ pub struct EvalOptions {
     pub loopback: bool,
     /// How long the loopback capture runs.
     pub seconds: u64,
+    /// `--asr sherpa`: the real streaming engine with the pinned model
+    /// (needs the `sherpa` feature and downloaded models).
+    pub sherpa: bool,
 }
 
 impl Default for EvalOptions {
@@ -92,6 +95,7 @@ impl Default for EvalOptions {
             text: None,
             loopback: false,
             seconds: 60,
+            sherpa: false,
         }
     }
 }
@@ -153,6 +157,29 @@ impl EvalOptions {
                     }
                     index += 2;
                 }
+                "--asr" => {
+                    let value = args
+                        .get(index + 1)
+                        .ok_or_else(|| EvalError::Argument("--asr needs a value".into()))?;
+                    match value.as_str() {
+                        "mock" => options.sherpa = false,
+                        "sherpa" => {
+                            if !cfg!(feature = "sherpa") {
+                                return Err(EvalError::Argument(
+                                    "--asr sherpa: not built with sherpa; rebuild with --features sherpa"
+                                        .into(),
+                                ));
+                            }
+                            options.sherpa = true;
+                        }
+                        other => {
+                            return Err(EvalError::Argument(format!(
+                                "unknown ASR engine: {other} (expected mock or sherpa)"
+                            )))
+                        }
+                    }
+                    index += 2;
+                }
                 "--out" => {
                     let value = args
                         .get(index + 1)
@@ -185,6 +212,7 @@ pub fn help_text() -> String {
         "  ll-eval [--scenario mock|cpu-strict|no-gpu|vulkan-strict|tier-c|simplify-only|asr-only|llm-only]",
         "          [--language de-DE] [--wav tests/fixtures/sample.wav] [--out DIR] [--text TEXT]",
         "          [--source loopback] [--seconds 60]  (loopback needs --features capture)",
+        "          [--asr mock|sherpa]  (sherpa needs --features sherpa + downloaded models)",
         "",
         "Outputs: segments.csv, latency.json, summary.json, diagnostics.json, transcript.md",
     ]
@@ -229,6 +257,37 @@ fn check_scenario(scenario: Scenario, runtime: &RuntimeConfig) -> Result<(), Eva
     Ok(())
 }
 
+/// The pinned ASR model directory in the model cache.
+#[cfg(feature = "sherpa")]
+pub fn asr_model_dir() -> PathBuf {
+    let catalog = ll_models::ModelCatalog::plan_default();
+    let asr = catalog
+        .artifacts
+        .iter()
+        .find(|artifact| artifact.role == ll_models::ModelRole::Asr)
+        .expect("catalog has an ASR model");
+    ll_models::model_dir(&ll_models::cache_root(), &asr.repo, &asr.revision)
+}
+
+#[cfg(feature = "sherpa")]
+fn sherpa_engine(language: Language) -> Result<Box<dyn AsrEngine>, EvalError> {
+    let engine = ll_asr::SherpaAsr::new(asr_model_dir(), language).map_err(|error| {
+        let code = match error {
+            ll_asr::AsrError::ModelMissing { .. } => "ASR_MODEL_MISSING",
+            _ => "ASR_INIT_FAILED",
+        };
+        EvalError::ScenarioUnavailable("asr sherpa".into(), format!("{code}: {error}"))
+    })?;
+    Ok(Box::new(engine))
+}
+
+#[cfg(not(feature = "sherpa"))]
+fn sherpa_engine(_language: Language) -> Result<Box<dyn AsrEngine>, EvalError> {
+    Err(EvalError::Argument(
+        "--asr sherpa: not built with sherpa; rebuild with --features sherpa".into(),
+    ))
+}
+
 fn build_pipeline(
     options: &EvalOptions,
     runtime: &RuntimeConfig,
@@ -255,9 +314,13 @@ fn build_pipeline(
     config.detection = runtime.reversion;
     config.audio_fault = runtime.fault_audio;
 
-    let asr: Box<dyn AsrEngine> = match runtime.asr {
-        ll_config::AsrMode::Off => Box::new(OffAsr),
-        _ => Box::new(ScriptedAsr::from_conversation(&conversation, 4)),
+    let asr: Box<dyn AsrEngine> = if options.sherpa {
+        sherpa_engine(options.language)?
+    } else {
+        match runtime.asr {
+            ll_config::AsrMode::Off => Box::new(OffAsr),
+            _ => Box::new(ScriptedAsr::from_conversation(&conversation, 4)),
+        }
     };
     let demo = DemoBackend::from_pack(&pack).with_latency(std::time::Duration::ZERO);
     let backend: Box<dyn SimplifierBackend> = if runtime.fault_llm == ll_config::LlmFault::None {
@@ -414,7 +477,7 @@ fn finish_run(
     let diagnostics = serde_json::json!({
         "scenario": options.scenario.as_str(),
         "effectiveBackend": status.effective_backend,
-        "asrEngine": "mock",
+        "asrEngine": if options.sherpa { "sherpa-onnx" } else { "mock" },
         "asrStatus": pipeline.snapshot().asr_status,
         "segments": store.segments.len(),
         "overrunCount": pipeline.snapshot().overrun_count,
@@ -426,7 +489,12 @@ fn finish_run(
         scenario: options.scenario.as_str().to_string(),
         language: options.language.locale().to_string(),
         effective_backend: status.effective_backend,
-        asr_engine: "mock".to_string(),
+        asr_engine: if options.sherpa {
+            "sherpa-onnx"
+        } else {
+            "mock"
+        }
+        .to_string(),
         asr_status: pipeline.snapshot().asr_status,
         segments: store.segments.len(),
         simplified: store
@@ -486,6 +554,22 @@ pub fn run(options: &EvalOptions) -> Result<EvalSummary, EvalError> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    #[cfg(not(feature = "sherpa"))]
+    fn asr_sherpa_is_rejected_without_the_feature() {
+        let error = EvalOptions::parse(&["--asr".into(), "sherpa".into()]).unwrap_err();
+        assert!(
+            error.to_string().contains("not built with sherpa"),
+            "{error}"
+        );
+        assert!(
+            !EvalOptions::parse(&["--asr".into(), "mock".into()])
+                .unwrap()
+                .sherpa
+        );
+        assert!(EvalOptions::parse(&["--asr".into(), "whisper".into()]).is_err());
+    }
 
     fn out_dir(name: &str) -> PathBuf {
         let dir = std::env::temp_dir().join(format!("ll-eval-{name}-{}", std::process::id()));

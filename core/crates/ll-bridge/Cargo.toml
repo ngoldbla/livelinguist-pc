@@ -35,3 +35,4 @@ napi-build = "2.3.1"
 
 [features]
 capture = ["ll-audio/capture"]
+sherpa = ["ll-asr/sherpa"]

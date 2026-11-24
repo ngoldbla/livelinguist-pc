@@ -30,7 +30,7 @@ node --version                         # v22.23.1
 | `napi` | crates.io | 3.16.x | 3.16.2 | 2026-11-21 | N-API ABI |
 | `napi-derive` | crates.io | 3.7.x | 3.7.1 | 2026-11-21 | Derive macros |
 | `llama-cpp-2` | crates.io | 0.1.161 | 0.1.161 | 2026-11-21 | Feature-gated `llama`; native build not in default CI |
-| `sherpa-onnx` | crates.io | 2.0.2 | 2.0.2 | 2026-11-21 | Feature-gated `sherpa`; CPU static libs |
+| `sherpa-onnx` | crates.io | =2.0.1 | 2.0.1 | 2026-11-24 | Feature-gated `sherpa` in `ll-asr`/`ll-eval`/`ll-bridge`; static CPU libs `sherpa-onnx-v2.0.1-<os>-static-lib` downloaded by the `-sys` build script from k2-fsa GitHub releases (Linux archive sha256 `55cfadf6…70871`). Pinned per T12 (was listed as 2.0.2 before it was wired) |
 | `cpal` | crates.io | 0.18.x | 0.18.2 | 2026-11-21 | `pipewire` feature exists |
 | `rubato` | crates.io | 5.1.x | 5.1.0 | 2026-11-21 | Resampling |
 | `ringbuf` | crates.io | 0.6.x | 0.6.0 | 2026-11-21 | Lock-free ring buffer |
@@ -55,7 +55,7 @@ node --version                         # v22.23.1
   `docs/qa/2026-11-21-ui-visual-checks.md` when the UI lands.
 - `cpal` 0.18.2 exposes the `pipewire` feature.
 - `llama-cpp-2` 0.1.161 exposes `dynamic-backends`, `vulkan`, and `cuda`.
-- `sherpa-onnx` 2.0.2 exposes `OnlineRecognizer`; CPU static libs are fetched at
+- `sherpa-onnx` 2.0.1 exposes `OnlineRecognizer`; CPU static libs are fetched at
   build time (vendoring is X-011).
 - `rfd` 0.18.0 exposes the `xdg-portal` backend.
 

@@ -154,6 +154,24 @@ impl CoreClient {
             "monitor" => AudioSourceKind::SystemAudio,
             _other => AudioSourceKind::Demo,
         };
+        // Real ASR for real audio: with the `sherpa` feature, system audio
+        // (or any non-mock scenario) uses the pinned model. A missing model is
+        // an ASR_MODEL_MISSING error; it never falls back to scripted text.
+        let real_asr = use_real_asr(&request.source, scenario);
+        #[cfg(feature = "sherpa")]
+        let sherpa_asr: Option<Box<dyn AsrEngine>> = if real_asr {
+            match sherpa_engine(language) {
+                Ok(engine) => Some(engine),
+                Err((code, message)) => {
+                    emit_error_code(&callback, code, &message, code == "ASR_MODEL_MISSING");
+                    return Err(Error::from_reason(format!("{code}: {message}")));
+                }
+            }
+        } else {
+            None
+        };
+        #[cfg(not(feature = "sherpa"))]
+        let sherpa_asr: Option<Box<dyn AsrEngine>> = None;
         #[cfg(feature = "capture")]
         let capture = if matches!(source_kind, AudioSourceKind::SystemAudio) {
             match ll_audio::capture::LoopbackCapture::start_default() {
@@ -181,9 +199,14 @@ impl CoreClient {
             request.mode == "live" && matches!(std::env::var("LL_MODE").as_deref(), Ok("live"));
         pipeline_config.detection = request.detection;
         pipeline_config.audio_fault = runtime.fault_audio;
-        let asr: Box<dyn AsrEngine> = match runtime.asr {
-            ll_config::AsrMode::Off => Box::new(OffAsr),
-            _ => Box::new(ScriptedAsr::from_conversation(&conversation, 4)),
+        let asr: Box<dyn AsrEngine> = match (sherpa_asr, runtime.asr) {
+            (Some(engine), _) => engine,
+            (None, ll_config::AsrMode::Off) => Box::new(OffAsr),
+            (None, _) if real_asr => {
+                // Built without sherpa: real audio gets no fake captions.
+                Box::new(OffAsr)
+            }
+            (None, _) => Box::new(ScriptedAsr::from_conversation(&conversation, 4)),
         };
         let demo = DemoBackend::from_pack(&pack);
         let backend: Box<dyn SimplifierBackend> = if runtime.fault_llm == LlmFault::None {
@@ -969,6 +992,50 @@ fn download_event(event: ll_models::DownloadEvent) -> ll_protocol::CoreEvent {
     }
 }
 
+/// Real ASR applies to system audio and to every non-mock scenario. Demo
+/// and silence sources under the mock scenario keep the scripted engine.
+fn use_real_asr(source: &str, scenario: Scenario) -> bool {
+    source == "monitor" || (scenario != Scenario::Mock && source != "demo" && source != "silence")
+}
+
+#[cfg(feature = "sherpa")]
+fn sherpa_engine(
+    language: Language,
+) -> std::result::Result<Box<dyn AsrEngine>, (&'static str, String)> {
+    let catalog = ll_models::ModelCatalog::plan_default();
+    let Some(asr) = catalog
+        .artifacts
+        .iter()
+        .find(|artifact| artifact.role == ll_models::ModelRole::Asr)
+    else {
+        return Err(("ASR_INIT_FAILED", "no ASR model in the catalog".to_string()));
+    };
+    let dir = ll_models::model_dir(&ll_models::cache_root(), &asr.repo, &asr.revision);
+    match ll_asr::SherpaAsr::new(dir, language) {
+        Ok(engine) => Ok(Box::new(engine)),
+        Err(error @ ll_asr::AsrError::ModelMissing { .. }) => {
+            Err(("ASR_MODEL_MISSING", error.to_string()))
+        }
+        Err(error) => Err(("ASR_INIT_FAILED", error.to_string())),
+    }
+}
+
+#[cfg(feature = "sherpa")]
+fn emit_error_code(
+    callback: &ThreadsafeFunction<String>,
+    code: &str,
+    message: &str,
+    recoverable: bool,
+) {
+    let mut emitter = ll_protocol::EventEmitter::new();
+    let envelope = emitter.emit(ll_protocol::CoreEvent::Error {
+        code: code.to_string(),
+        message: message.to_string(),
+        recoverable,
+    });
+    emit(callback, vec![envelope]);
+}
+
 // Plain function so unit tests stay off the napi runtime symbols.
 fn work_area_json() -> String {
     serde_json::to_string(&work_area()).unwrap_or_else(|_| "null".to_string())
@@ -977,6 +1044,15 @@ fn work_area_json() -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn real_asr_only_for_real_audio_or_non_mock_scenarios() {
+        assert!(use_real_asr("monitor", Scenario::Mock));
+        assert!(!use_real_asr("demo", Scenario::Mock));
+        assert!(!use_real_asr("silence", Scenario::Mock));
+        assert!(!use_real_asr("demo", Scenario::TierC));
+        assert!(use_real_asr("file", Scenario::TierC));
+    }
 
     #[test]
     fn model_status_on_empty_root_reports_both_missing() {
