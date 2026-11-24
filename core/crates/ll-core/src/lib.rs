@@ -41,7 +41,7 @@ pub use language::{Framework, Language};
 pub use metrics::{LatencyMetrics, LatencyReport, Stage};
 pub use pack::{FrameworkPack, PackError, Thresholds};
 pub use profile::{uses_fine_tuned, SimplifierProfile};
-pub use prompt::{PromptBuilder, SimplificationRequest};
+pub use prompt::{render_easylanguage_prompt, PromptBuilder, SimplificationRequest};
 pub use reversion::ReversionDetector;
 pub use segmenter::{Segmenter, SegmenterConfig, SegmenterOutput};
 pub use session::{

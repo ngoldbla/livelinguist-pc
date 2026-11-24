@@ -7,6 +7,30 @@
 use crate::pack::FrameworkPack;
 use crate::validation::Violation;
 
+/// Qwen3's soft switch that the model card puts at the end of the system
+/// prompt (`docs/qa/2026-11-23-easylanguage-prompt-contract.md`).
+pub const NO_THINK_SWITCH: &str = " /no_think";
+
+/// The pre-filled empty think block that opens the assistant turn.
+pub const EMPTY_THINK_BLOCK: &str = "<think>\n\n</think>\n\n";
+
+/// Renders the exact prompt contract of the Qwen3 EasyLanguage GGUF.
+/// No few-shot examples, no previous segments.
+///
+/// Template copied from the model card at revision
+/// `658db5ad6a05e3f549990b10e8d8c59a78866695`; `{SYSTEM_PROMPT}` is the
+/// pack's `systemPrompt` unchanged plus [`NO_THINK_SWITCH`].
+pub fn render_easylanguage_prompt(pack: &FrameworkPack, sentence: &str) -> String {
+    format!(
+        "<|im_start|>system\n{system}{switch}<|im_end|>\n\
+         <|im_start|>user\nOriginal: {sentence}\nRewritten:<|im_end|>\n\
+         <|im_start|>assistant\n{think}",
+        system = pack.system_prompt,
+        switch = NO_THINK_SWITCH,
+        think = EMPTY_THINK_BLOCK,
+    )
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SimplificationRequest {
     pub system_prompt: String,

@@ -75,7 +75,7 @@ decision entry and an ADR update. **For 1.0, D-055/D-056 and
 | S1 | W-2 WASAPI loopback + 30-min soak | `stage-w2-loopback` | merged (#19) |
 | S2 | W-3a sherpa-onnx runtime + first-run model UX | `stage-w3-asr-runtime` | ready |
 | S3 | W-3b per-locale WER/RTF, 29-row matrix | `stage-w3-asr-coverage` | needs S2 |
-| S4 | W-4a EasyLanguage prompt contract (drop rolling context, 29 goldens) | `stage-w4-prompt-contract` | ready (no model needed) |
+| S4 | W-4a EasyLanguage prompt contract (drop rolling context, 29 goldens) | `stage-w4-prompt-contract` | merged (#24, #28) |
 | S5 | W-4b CPU llama.cpp click-only simplify, p95/RSS | `stage-w4-llama-cpu` | needs S4 |
 | S6 | W-5a 150%/1280x720 layout, W-5b keyboard + Narrator | `stage-w5-layout`, `stage-w5-a11y` | ready |
 | S7 | W-5c end-to-end real session + privacy checks (**MVP**; then human pass) | `stage-w5-integration` | needs S1, S2, S5, en live |

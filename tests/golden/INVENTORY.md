@@ -48,6 +48,7 @@ framework string to `easyToRead` and uses the language-agnostic validators.
 | `tests/golden/validator_cases.json` | Framework/output/source → expected rule + severity |
 | `tests/golden/reversion_cases.json` | LID language sequences → expected reversion spans |
 | `tests/golden/export_goldens.json` | Exact CSV header, Markdown/plain required lines, reason strings |
+| `tests/golden/easylanguage_prompt_goldens.json` | `render_easylanguage_prompt` output for all 29 locales with the sentence "This is a test sentence." Template from the Qwen3 EasyLanguage GGUF model card (`docs/qa/2026-11-23-easylanguage-prompt-contract.md`); regenerate with `LL_WRITE_GOLDENS=1 cargo test -p ll-core --test golden easylanguage` |
 
 ## Mac-generated samples
 
