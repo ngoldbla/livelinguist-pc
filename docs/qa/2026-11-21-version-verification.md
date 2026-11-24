@@ -42,6 +42,7 @@ node --version                         # v22.23.1
 | `rfd` | crates.io | 0.18.x | 0.18.0 | 2026-11-21 | Portal backend on Linux |
 | `x11rb` | crates.io | 0.14.x | 0.14.0 | 2026-11-21 | X11/XWayland dev policy |
 | `windows` | crates.io | 0.62.x | 0.62.2 | 2026-11-21 | Win32 overlay policy |
+| `unicode-general-category` | crates.io | =1.1.0 | 1.1.0 | 2026-11-24 | `ll-eval` WER/CER normalizer: Unicode `P*` punctuation (T30) |
 | Bun | runtime | pinned | 1.4.5 | 2026-11-21 | Linux dev; Windows install recorded in T-005 |
 | Rust | toolchain | stable | 1.98.0 | 2026-11-21 | `rust-toolchain.toml` pins the channel |
 

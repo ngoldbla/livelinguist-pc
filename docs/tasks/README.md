@@ -41,8 +41,8 @@ writing new cards. Agents work from cards.
 | [T27](T27-keyboard-captions.md) | Keyboard simplify + Read latest | `stage-w5-a11y` | linux-done |
 | [T28](T28-a11y-checklist.md) | Contrast, reduced effects, a11y checklist (PR) | `stage-w5-a11y` | linux-done |
 | [T29](T29-fleurs-manifest.md) | FLEURS manifest + fetch script | `stage-w3-asr-coverage` | todo |
-| [T30](T30-wer-metrics.md) | Normalizer, WER, CER | `stage-w3-asr-coverage` | todo |
-| [T31](T31-asr-wer-scenario.md) | `ll-eval` asr-wer scenario | `stage-w3-asr-coverage` | todo |
+| [T30](T30-wer-metrics.md) | Normalizer, WER, CER | `stage-w3-asr-coverage` | done |
+| [T31](T31-asr-wer-scenario.md) | `ll-eval` asr-wer scenario | `stage-w3-asr-coverage` | done |
 | [T32](T32-asr-minimum-set.md) | Measure en/fr/de/es/ar | `stage-w3-asr-coverage` | todo |
 | [T33](T33-asr-coverage-matrix.md) | All 29 locales + coverage statuses (PR) | `stage-w3-asr-coverage` | todo |
 | [T34](T34-release-build-integration.md) | Real-backend build, measured health | `stage-w5-integration` | todo |
