@@ -1,0 +1,13 @@
+# Windows MSVC: one C runtime for every native library.
+# sherpa-onnx-sys ships only static-MT prebuilt libs on Windows, so Rust and
+# llama.cpp must use the static CRT (/MT) as well; mixing /MT and /MD fails to
+# link (LNK2038 RuntimeLibrary mismatch) once sherpa and llama share a binary.
+[target.x86_64-pc-windows-msvc]
+rustflags = ["-C", "target-feature=+crt-static"]
+
+[target.aarch64-pc-windows-msvc]
+rustflags = ["-C", "target-feature=+crt-static"]
+
+[env]
+# Read by llama-cpp-sys-2's build script; only affects MSVC targets.
+LLAMA_STATIC_CRT = "1"
