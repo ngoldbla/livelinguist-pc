@@ -45,6 +45,7 @@ windows = { version = "0.62.2", features = [
 ] }
 tempfile = "3.27.0"
 sherpa-onnx = "=2.0.1"
+unicode-general-category = "=1.1.0"
 
 [profile.release]
 lto = "thin"

@@ -4,6 +4,8 @@
 //! a summary, a content-free diagnostics JSON, and an explicit transcript.
 //! Demo/mock audio is used for CI; `--wav` replays a non-PII fixture.
 
+pub mod wer;
+
 use ll_asr::{AsrEngine, OffAsr, ScriptedAsr};
 use ll_audio::{AudioSource, FileSource, SyntheticSource};
 use ll_config::{RuntimeConfig, RuntimeStatus, Scenario};
