@@ -87,6 +87,11 @@ decision entry and an ADR update. **For 1.0, D-055/D-056 and
 Checkpoint 2026-11-24 (Linux cloud session; PRs #24–#31). Card statuses are in
 `docs/tasks/README.md` (`linux-done` = only the Windows part remains).
 
+**Owner Windows run 2026-11-24:** see `docs/qa/2026-11-24-windows-feedback.md`.
+Fix first: UI swaps System audio for demo (`ui/src/App.tsx:130`), so the GGUF
+never loads; UI export writes to a hard-coded `/tmp` path (`ui/src/App.tsx:269`);
+single-exe packaging cannot bundle the GPUIX addon (packaging ADR needed).
+
 **Linux work still open (resume here):**
 1. T33: set `CoverageMatrix::v1()` from `docs/qa/2026-11-23-asr-coverage-v1.md`
    (13 locales pass on Linux), update tests, mark the 2026-11-21 doc historical.

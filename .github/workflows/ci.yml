@@ -33,6 +33,9 @@ jobs:
         run: cargo clippy --workspace --all-targets -- -D warnings
       - name: Test
         run: cargo test --workspace
+      - name: Re-run the sherpa-onnx-sys build script (its libs live outside the cached dirs)
+        shell: bash
+        run: rm -rf target/debug/build/sherpa-onnx-sys-* target/debug/.fingerprint/sherpa-onnx-sys-* target/sherpa-onnx-prebuilt
       - name: Clippy and test with sherpa-onnx (static libs from k2-fsa releases)
         run: |
           cargo clippy -p ll-asr -p ll-eval -p ll-bridge --features sherpa --all-targets -- -D warnings
