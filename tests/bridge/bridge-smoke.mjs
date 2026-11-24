@@ -29,4 +29,15 @@ if (!simplified.text) throw new Error('on-demand simplification returned no text
 const summary = JSON.parse(client.stop())
 if (summary.segments !== 9) throw new Error('summary segment count')
 if (summary.simplified !== 1) throw new Error('summary simplified count')
+
+// Export after stop: the Summary screen exports the session that just ended.
+import { mkdtempSync, statSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+const dir = mkdtempSync(join(tmpdir(), 'll-bridge-export-'))
+for (const [format, extension] of [['markdown', 'md'], ['plain', 'txt'], ['csv', 'csv']]) {
+  const path = join(dir, `summary.${extension}`)
+  client.export(format, path)
+  if (statSync(path).size === 0) throw new Error(`empty ${format} export after stop`)
+}
 console.log(JSON.stringify({ ok: true, envelopes: envelopes.length, segments: summary.segments, simplified: summary.simplified }))
