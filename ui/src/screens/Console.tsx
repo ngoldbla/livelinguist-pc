@@ -4,6 +4,8 @@ import { LanguagePicker } from "../aurora/LanguagePicker";
 import { colors, gradient, textStyle } from "../aurora/theme";
 import { languageByCode, statusLabel } from "../i18n/languages";
 import { t } from "../i18n/locales";
+import { planSession } from "../sessionPlan";
+import type { ModelEntry, ModelView } from "../store/modelStore";
 import type { AudioSource, SimplificationMode } from "../store/sessionStore";
 
 export function ConsoleScreen({
@@ -11,10 +13,12 @@ export function ConsoleScreen({
   locale,
   source,
   mode,
+  models,
   onLanguage,
   onSource,
   onMode,
   onStart,
+  onBlocked,
   onSettings,
   onLicenses,
   onSummary,
@@ -23,16 +27,22 @@ export function ConsoleScreen({
   locale: string;
   source: AudioSource;
   mode: SimplificationMode;
+  models: ModelView;
   onLanguage: (code: string) => void;
   onSource: (source: AudioSource) => void;
   onMode: (mode: SimplificationMode) => void;
   onStart: () => void;
+  onBlocked: (message: string) => void;
   onSettings: () => void;
   onLicenses: () => void;
   onSummary: () => void;
 }) {
   const selected = languageByCode(language);
   const [showLanguages, setShowLanguages] = useState(false);
+  const llm = models.models.find((model) => model.id.startsWith("llm-"));
+  const asr = models.models.find((model) => model.id.startsWith("asr-"));
+  const micPlan = planSession("mic");
+  const micMessage = micPlan.ok ? "" : micPlan.error;
 
   return (
     <div
@@ -168,6 +178,7 @@ export function ConsoleScreen({
               badge="pending"
               disabled
               onClick={() => onSource("mic")}
+              onBlocked={() => onBlocked(micMessage)}
             />
             <SourceTile
               title={t(locale, "System audio")}
@@ -262,14 +273,14 @@ export function ConsoleScreen({
           <ModelStatus
             name="Qwen3 0.6B EasyLanguage"
             detail="Q4_K_M · 397 MB"
-            status={t(locale, "Not downloaded")}
-            tone="accent"
+            status={modelLabel(locale, llm)}
+            tone={modelTone(llm)}
           />
           <ModelStatus
             name="Nemotron 3.5 ASR"
             detail="560 ms · int8 · 682 MB"
-            status={t(locale, "Not downloaded")}
-            tone="amber"
+            status={modelLabel(locale, asr)}
+            tone={modelTone(asr)}
           />
           <text style={textStyle(11, colors.faint)}>
             {t(locale, "No models are bundled. Downloads are public and tokenless.")}
@@ -312,6 +323,7 @@ function SourceTile({
   badge,
   disabled = false,
   onClick,
+  onBlocked,
 }: {
   title: string;
   detail: string;
@@ -319,15 +331,18 @@ function SourceTile({
   badge: string;
   disabled?: boolean;
   onClick: () => void;
+  onBlocked?: () => void;
 }) {
   return (
     <div
       role="button"
-      tabIndex={disabled ? -1 : 0}
+      tabIndex={0}
       aria-label={title}
       aria-selected={active}
+      aria-disabled={disabled || undefined}
       onClick={() => {
-        if (!disabled) onClick();
+        if (disabled) onBlocked?.();
+        else onClick();
       }}
       style={{
         display: "flex",
@@ -359,6 +374,24 @@ function SourceTile({
       <Badge label={badge} tone={disabled ? "neutral" : "mint"} />
     </div>
   );
+}
+
+function modelLabel(locale: string, model: ModelEntry | undefined): string {
+  if (!model) return t(locale, "Model download pending");
+  if (model.phase === "ready") return t(locale, "Ready");
+  if (model.phase === "downloading") {
+    const value = model.bytes > 0 ? Math.floor((model.doneBytes / model.bytes) * 100) : 0;
+    return `${value}%`;
+  }
+  if (model.phase === "error") return t(locale, "Download failed: %@", "retry");
+  return t(locale, "Not downloaded");
+}
+
+function modelTone(model: ModelEntry | undefined): "accent" | "amber" | "mint" {
+  if (!model) return "amber";
+  if (model.phase === "ready") return "mint";
+  if (model.phase === "error") return "amber";
+  return "accent";
 }
 
 function ModelStatus({

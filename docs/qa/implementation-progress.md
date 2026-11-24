@@ -87,29 +87,35 @@ decision entry and an ADR update. **For 1.0, D-055/D-056 and
 Checkpoint 2026-11-24 (Linux cloud session; PRs #24–#31). Card statuses are in
 `docs/tasks/README.md` (`linux-done` = only the Windows part remains).
 
-**Owner Windows run 2026-11-24:** see `docs/qa/2026-11-24-windows-feedback.md`. System audio through the UI, export path and the addon features are fixed on `main`; the retest runbook and results table are `docs/qa/2026-11-24-windows-retest.md`. Packaging waits on ADR 0021 (proposed).
-Fix first: UI swaps System audio for demo (`ui/src/App.tsx:130`), so the GGUF
-never loads; UI export writes to a hard-coded `/tmp` path (`ui/src/App.tsx:269`);
-single-exe packaging cannot bundle the GPUIX addon (packaging ADR needed).
+**Owner Windows retest 2026-11-24: steps 0–5 pass** —
+`docs/qa/2026-11-24-windows-retest.md` (results table, machine, evidence). The
+run found and the branch `windows-retest-2026-11-24` fixes: Summary exports
+(`stop()` dropped the pipeline), model cards hard-coded "Not downloaded", the
+microphone tile swallowed clicks, onboarding rendered twice, and
+`tier-c-profile.ps1` mis-parsed `--scenario`. Measured: captions start 1.15 s
+after playback, click 1.98 s then 1.31 s (RSS 1,011 → 1,639 MB), Tier C p50
+1,802 / p95 2,013 ms / 886 MB (pass), `privacy: PASS`. ADR 0021 is **accepted:
+option 1** (compiled exe + both `.node` addons beside it), so T37 is unblocked.
 
 **Linux work still open (resume here):**
 1. T33: set `CoverageMatrix::v1()` from `docs/qa/2026-11-23-asr-coverage-v1.md`
    (13 locales pass on Linux), update tests, mark the 2026-11-21 doc historical.
+   This is the only thing that still makes the app say "live listening is not
+   available" for en-US while it captions.
 2. T35: run `scripts/privacy-check.sh` and record `## Privacy` in
-   `docs/qa/2026-11-23-v1-integration.md`.
+   `docs/qa/2026-11-23-v1-integration.md` (the Windows half passed on 2026-11-24).
 3. Owner decisions: es-ES matrix guard false negative (T22); confirm the
    ` /no_think` soft switch in the training renderer (T08).
 
 **Windows-only work left:**
-- T16: onboarding download/cancel/retry on Windows + 2 screenshots.
-- T14/T20: bridge `capture,sherpa,llama`, System audio captions, click to
-  simplify, screenshots `console-live-asr.png`, `console-click-simplified.png`.
-- T21/T32: `scripts\tier-c-profile.ps1` timing runs on the reference PC.
+- T16: onboarding download/cancel/retry on Windows + 2 screenshots (the
+  downloads UI now reads real status; the duplicate stub is gone).
+- T14/T20: screenshots `console-live-asr.png`, `console-click-simplified.png`
+  (the behaviour itself is verified by the retest).
 - T23: `workArea()` numbers at 100% and 150%.
 - T25, T26 (not started), T27 keyboard-only live run, T28 Narrator pass
   (human) + Arabic screenshot, T33 language-picker screenshot.
-- T35: `scripts\privacy-check.ps1` with real loopback.
-- T34, T36–T40 not started (Windows window, audio hardware, clean profile, human).
+- T34, T36–T40 (T37 has its ADR now; T38 needs admin once).
 
 ## Known environment limitations
 

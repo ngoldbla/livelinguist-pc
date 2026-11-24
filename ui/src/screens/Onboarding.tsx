@@ -27,7 +27,6 @@ export function Onboarding({
 }) {
   const ready = allReady(models);
   const [beat, setBeat] = useState(Number(process.env.LL_ONBOARDING_BEAT ?? 0));
-  const [toast, setToast] = useState<string | null>(null);
   const selected = languageByCode(language);
 
   const steps = [
@@ -253,7 +252,6 @@ export function Onboarding({
                 {t(locale, "The app contacts Hugging Face only when you start a model download.")}
               </text>
             </Surface>
-            {toast ? <Toast message={toast} tone="amber" /> : null}
             <div style={{ flexGrow: 1 }} />
             <div style={{ display: "flex", flexDirection: "row", gap: 10 }}>
               <Button label={t(locale, "Back")} kind="secondary" onClick={() => setBeat(1)} />
@@ -273,100 +271,6 @@ export function Onboarding({
                 label={t(locale, "Continue in demo mode")}
                 kind="ghost"
                 onClick={() => onFinish()}
-              />
-            </div>
-          </Surface>
-        ) : null}
-
-        {beat === 1 ? (
-          <Surface
-            style={{ padding: 26, display: "flex", flexDirection: "column", gap: 16, flexGrow: 1 }}
-          >
-            <LanguagePicker
-              selected={language}
-              onSelect={onLanguage}
-              locale={locale}
-              height={330}
-            />
-            <div style={{ display: "flex", flexDirection: "row", gap: 10 }}>
-              <Button label={t(locale, "Back")} kind="secondary" onClick={() => setBeat(0)} />
-              <Button label={t(locale, "Continue")} onClick={() => setBeat(2)} />
-            </div>
-          </Surface>
-        ) : null}
-
-        {beat === 2 ? (
-          <Surface
-            style={{ padding: 26, display: "flex", flexDirection: "column", gap: 16, flexGrow: 1 }}
-          >
-            <SectionHeader
-              eyebrow={t(locale, "MODELS")}
-              title={t(locale, "On-device models")}
-              subtitle={t(
-                locale,
-                "Live captions need a one-time model download (about %@). Everything runs offline afterward.",
-                "1.08 GB",
-              )}
-            />
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {models.models.map((model) => (
-                <ModelProgress key={model.id} model={model} />
-              ))}
-            </div>
-            {ready ? <Badge label="Models ready" tone="mint" /> : null}
-            {models.error ? (
-              <Toast
-                message={
-                  models.error.code === "CANCELLED"
-                    ? "Download cancelled. Retry resumes where it stopped."
-                    : `Download failed (${models.error.code}): ${models.error.reason}`
-                }
-                tone={models.error.code === "CANCELLED" ? "amber" : "rose"}
-              />
-            ) : null}
-            <Surface
-              style={{
-                padding: 14,
-                backgroundColor: "#00000033",
-                display: "flex",
-                flexDirection: "column",
-                gap: 8,
-              }}
-            >
-              <text style={textStyle(12, colors.text, 600)}>
-                {selected.name} ·{" "}
-                {selected.asrStatus === "simplify_only"
-                  ? "simplify-only preview"
-                  : "live captioning"}
-              </text>
-              <text style={textStyle(12, colors.muted)}>
-                {selected.asrStatus === "simplify_only"
-                  ? t(
-                      locale,
-                      "Live listening is not available for this language yet. Paste or type text to simplify it.",
-                    )
-                  : t(locale, "Ready to caption")}
-              </text>
-              <text style={textStyle(11, colors.faint)}>
-                {t(locale, "The app contacts Hugging Face only when you start a model download.")}
-              </text>
-            </Surface>
-            {toast ? <Toast message={toast} tone="amber" /> : null}
-            <div style={{ flexGrow: 1 }} />
-            <div style={{ display: "flex", flexDirection: "row", gap: 10 }}>
-              <Button label={t(locale, "Back")} kind="secondary" onClick={() => setBeat(1)} />
-              <Button
-                label={t(locale, "Download models (~%@)", "1.08 GB")}
-                onClick={() =>
-                  setToast(
-                    "Model downloads arrive with the ASR/LLM integration in this preview build. Both model hashes are already pinned.",
-                  )
-                }
-              />
-              <Button
-                label={t(locale, "Continue in demo mode")}
-                kind="secondary"
-                onClick={onFinish}
               />
             </div>
           </Surface>

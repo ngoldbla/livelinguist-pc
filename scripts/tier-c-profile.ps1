@@ -9,11 +9,11 @@
 # priority to BelowNormal, samples PeakWorkingSet64 every second, and prints
 # `peak_rss_mb=<n>` and `exit_code=<n>` at the end. Content-free: it never
 # reads the process output.
-param(
-    [Parameter(ValueFromRemainingArguments = $true)]
-    [string[]]$Command
-)
 $ErrorActionPreference = 'Stop'
+# No param() block on purpose: `--`-prefixed eval flags would otherwise bind as
+# script parameters when the documented `pwsh scripts\tier-c-profile.ps1 -- ...`
+# form is used (pwsh consumes the first `--`, the script still gets `--foo`).
+$Command = @($args)
 if ($Command.Count -gt 0 -and $Command[0] -eq '--') { $Command = $Command[1..($Command.Count - 1)] }
 if ($Command.Count -lt 1) { throw 'usage: tier-c-profile.ps1 -- <exe> <args...>' }
 $exe = $Command[0]

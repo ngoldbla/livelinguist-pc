@@ -32,7 +32,7 @@ writing new cards. Agents work from cards.
 | [T18](T18-llama-backend.md) | `LlamaBackend` | `stage-w4-llama-cpu` | done |
 | [T19](T19-click-queue.md) | Click-only queue rules | `stage-w4-llama-cpu` | done |
 | [T20](T20-llama-in-app.md) | Real simplifier in `ll-eval` and the app | `stage-w4-llama-cpu` | linux-done |
-| [T21](T21-tier-c-latency.md) | Tier C profile, click p95, RSS | `stage-w4-llama-cpu` | linux-done |
+| [T21](T21-tier-c-latency.md) | Tier C profile, click p95, RSS | `stage-w4-llama-cpu` | done |
 | [T22](T22-simplify-matrix.md) | 29-pack simplifier matrix (PR) | `stage-w4-llama-cpu` | linux-done |
 | [T23](T23-work-area.md) | Bridge `workArea()` | `stage-w5-layout` | linux-done |
 | [T24](T24-window-size-clamp.md) | Fit windows to the work area | `stage-w5-layout` | done |

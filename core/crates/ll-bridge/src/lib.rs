@@ -88,6 +88,9 @@ struct SimplifyResult {
 
 struct BridgeInner {
     pipeline: Option<Pipeline>,
+    /// The session that just stopped. Kept so the Summary screen can still
+    /// export (and read a final snapshot) after `stop` takes the live pipeline.
+    finished: Option<Pipeline>,
     llm_status: Option<ll_llm::LoadStatus>,
     pack: Option<FrameworkPack>,
     callback: Option<Arc<ThreadsafeFunction<String>>>,
@@ -102,6 +105,7 @@ impl Default for BridgeInner {
     fn default() -> Self {
         Self {
             pipeline: None,
+            finished: None,
             llm_status: None,
             pack: None,
             callback: None,
@@ -245,6 +249,7 @@ impl CoreClient {
                 .lock()
                 .map_err(|_| Error::from_reason("bridge lock poisoned"))?;
             inner.pipeline = Some(pipeline);
+            inner.finished = None;
             inner.llm_status = llm_status;
             inner.pack = Some(pack);
             inner.callback = Some(callback.clone());
@@ -315,7 +320,11 @@ impl CoreClient {
                 overrun_count: pipeline.snapshot().overrun_count,
                 last_seq: pipeline.snapshot().last_seq,
             };
-            (summary, inner.callback.take(), pipeline.take_events())
+            let events = pipeline.take_events();
+            // Keep the stopped pipeline: Summary-screen exports and snapshots
+            // read it. `start` replaces it with the next session.
+            inner.finished = Some(pipeline);
+            (summary, inner.callback.take(), events)
         };
         if let Some(callback) = callback {
             emit(&callback, events);
@@ -470,7 +479,7 @@ impl CoreClient {
             .inner
             .lock()
             .map_err(|_| Error::from_reason("bridge lock poisoned"))?;
-        let snapshot = match inner.pipeline.as_ref() {
+        let snapshot = match inner.pipeline.as_ref().or(inner.finished.as_ref()) {
             Some(pipeline) => pipeline.snapshot(),
             None => ll_protocol::Snapshot {
                 state: ll_protocol::SessionState::Setup,
@@ -531,6 +540,7 @@ impl CoreClient {
         let pipeline = inner
             .pipeline
             .as_ref()
+            .or(inner.finished.as_ref())
             .ok_or_else(|| Error::from_reason("session not started"))?;
         let contents = match format.as_str() {
             "markdown" | "md" => pipeline.export_markdown(),

@@ -357,10 +357,12 @@ export function App() {
           locale={locale}
           source={state.source}
           mode={state.mode}
+          models={models}
           onLanguage={onLanguage}
           onSource={(source) => bootStore.setSource(source)}
           onMode={(mode) => bootStore.setMode(mode)}
           onStart={() => void startSession()}
+          onBlocked={(message) => setToast(message)}
           onSettings={openSettings}
           onLicenses={openLicenses}
           onSummary={() => setScreen(state.segments.length > 0 ? "summary" : "console")}
