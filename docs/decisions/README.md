@@ -30,7 +30,8 @@ Status labels: `proposed`, `accepted`, `baseline` (working default), `superseded
 | [0018](0018.md) | v1.0 is single-screen, system-audio, CPU-first, click-to-simplify | D-055 | accepted |
 | [0019](0019.md) | 1.0 model set: Nemotron 3.5 ASR 560 ms + Qwen3 0.6B EasyLanguage | D-056 | accepted |
 | [0020](0020.md) | Code signing: unsigned v1.0.0 + SHA-256, SignPath Foundation next | D-057 | accepted |
-| [0021](0021.md) | Packaging the GPUIX addon: compiled exe + addons beside it | D-058 | proposed |
+| [0021](0021.md) | Packaging the GPUIX addon: compiled exe + addons beside it | D-058 | accepted |
+| [0022](0022.md) | Link sherpa-onnx as a shared library on Linux | D-059 | accepted |
 
 ## Superseded
 

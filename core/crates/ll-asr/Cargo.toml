@@ -11,7 +11,18 @@ authors.workspace = true
 [dependencies]
 thiserror = { workspace = true }
 ll-core = { workspace = true }
-sherpa-onnx = { workspace = true, optional = true }
+
+# sherpa-onnx links statically everywhere except Linux. On Linux the static
+# onnxruntime and llama.cpp each carry their own `std::regex` template
+# instances; the linker keeps one, and onnxruntime then aborts in
+# `CreateEnv` (`munmap_chunk(): invalid pointer`) when both models share a
+# binary. The shared build keeps onnxruntime's instances inside its own .so.
+# Windows (MSVC, static /MT) is unaffected; see ADR 0022.
+[target.'cfg(not(target_os = "linux"))'.dependencies]
+sherpa-onnx = { workspace = true, optional = true, features = ["static"] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+sherpa-onnx = { workspace = true, optional = true, features = ["shared"] }
 
 [dev-dependencies]
 ll-audio = { workspace = true }
