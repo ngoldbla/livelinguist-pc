@@ -1,5 +1,7 @@
 # T21 — Tier C profile, click latency, and RSS (S5)
 
+Linux part done in PR #31; Windows pending: run `scripts\tier-c-profile.ps1` click-bench (threads 3) on the reference PC and add the row.
+
 **Needs:** T20 done.
 
 **Goal:** measure click-to-simplified p50/p95 and memory under a low-end CPU

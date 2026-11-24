@@ -84,26 +84,27 @@ decision entry and an ADR update. **For 1.0, D-055/D-056 and
 
 ## Next run
 
-Agents: work from `docs/tasks/README.md` — cards T06–T40 cover everything to
-`v1.0.0`. T01–T05 (S1) are done.
+Checkpoint 2026-11-24 (Linux cloud session; PRs #24–#31). Card statuses are in
+`docs/tasks/README.md` (`linux-done` = only the Windows part remains).
 
-| Cards | Stage |
-|---|---|
-| T06–T07 | S1 follow-ups (stateful resampling, device loss) |
-| T08–T10 | S4 prompt contract |
-| T11–T14 | S2 real ASR |
-| T15–T16 | first-run model download |
-| T17–T22 | S5 llama.cpp click-to-simplify |
-| T23–T28 | S6 layout + a11y |
-| T29–T33 | S3 coverage matrix (FLEURS) |
-| T34–T36 | S7 integration → **MVP, human pass** |
-| T37–T39 | S8 packaging |
-| T40 | S9 release `v1.0.0` |
+**Linux work still open (resume here):**
+1. T33: set `CoverageMatrix::v1()` from `docs/qa/2026-11-23-asr-coverage-v1.md`
+   (13 locales pass on Linux), update tests, mark the 2026-11-21 doc historical.
+2. T35: run `scripts/privacy-check.sh` and record `## Privacy` in
+   `docs/qa/2026-11-23-v1-integration.md`.
+3. Owner decisions: es-ES matrix guard false negative (T22); confirm the
+   ` /no_think` soft switch in the training renderer (T08).
 
-Owner inputs resolved 2026-11-23: FLEURS approved; native Windows 11 boot (no
-VM, clean install = fresh standard user); `v1.0.0` tag approved; unsigned
-v1.0.0 + SignPath application (ADR 0020). Pending: the MVP human pass (real
-call + Narrator) after S7 (plan §14).
+**Windows-only work left:**
+- T16: onboarding download/cancel/retry on Windows + 2 screenshots.
+- T14/T20: bridge `capture,sherpa,llama`, System audio captions, click to
+  simplify, screenshots `console-live-asr.png`, `console-click-simplified.png`.
+- T21/T32: `scripts\tier-c-profile.ps1` timing runs on the reference PC.
+- T23: `workArea()` numbers at 100% and 150%.
+- T25, T26 (not started), T27 keyboard-only live run, T28 Narrator pass
+  (human) + Arabic screenshot, T33 language-picker screenshot.
+- T35: `scripts\privacy-check.ps1` with real loopback.
+- T34, T36–T40 not started (Windows window, audio hardware, clean profile, human).
 
 ## Known environment limitations
 

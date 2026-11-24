@@ -28,22 +28,22 @@ writing new cards. Agents work from cards.
 | [T14](T14-sherpa-in-app.md) | Real ASR in `ll-eval` and the app (PR) | `stage-w3-asr-runtime` | linux-done |
 | [T15](T15-model-download-bridge.md) | Bridge: model status, download, cancel | `stage-w3-model-download` | linux-done |
 | [T16](T16-model-download-ui.md) | Onboarding download screen (PR) | `stage-w3-model-download` | linux-done |
-| [T17](T17-llama-probe.md) | llama.cpp CPU probe | `stage-w4-llama-cpu` | todo |
-| [T18](T18-llama-backend.md) | `LlamaBackend` | `stage-w4-llama-cpu` | todo |
+| [T17](T17-llama-probe.md) | llama.cpp CPU probe | `stage-w4-llama-cpu` | done |
+| [T18](T18-llama-backend.md) | `LlamaBackend` | `stage-w4-llama-cpu` | done |
 | [T19](T19-click-queue.md) | Click-only queue rules | `stage-w4-llama-cpu` | done |
-| [T20](T20-llama-in-app.md) | Real simplifier in `ll-eval` and the app | `stage-w4-llama-cpu` | todo |
-| [T21](T21-tier-c-latency.md) | Tier C profile, click p95, RSS | `stage-w4-llama-cpu` | todo |
-| [T22](T22-simplify-matrix.md) | 29-pack simplifier matrix (PR) | `stage-w4-llama-cpu` | todo |
+| [T20](T20-llama-in-app.md) | Real simplifier in `ll-eval` and the app | `stage-w4-llama-cpu` | linux-done |
+| [T21](T21-tier-c-latency.md) | Tier C profile, click p95, RSS | `stage-w4-llama-cpu` | linux-done |
+| [T22](T22-simplify-matrix.md) | 29-pack simplifier matrix (PR) | `stage-w4-llama-cpu` | linux-done |
 | [T23](T23-work-area.md) | Bridge `workArea()` | `stage-w5-layout` | linux-done |
 | [T24](T24-window-size-clamp.md) | Fit windows to the work area | `stage-w5-layout` | done |
 | [T25](T25-layout-min-size.md) | Screens fit the minimum size + screenshots (PR) | `stage-w5-layout` | todo |
 | [T26](T26-a11y-checks.md) | Automated a11y checks on every screen | `stage-w5-a11y` | todo |
 | [T27](T27-keyboard-captions.md) | Keyboard simplify + Read latest | `stage-w5-a11y` | linux-done |
 | [T28](T28-a11y-checklist.md) | Contrast, reduced effects, a11y checklist (PR) | `stage-w5-a11y` | linux-done |
-| [T29](T29-fleurs-manifest.md) | FLEURS manifest + fetch script | `stage-w3-asr-coverage` | todo |
+| [T29](T29-fleurs-manifest.md) | FLEURS manifest + fetch script | `stage-w3-asr-coverage` | done |
 | [T30](T30-wer-metrics.md) | Normalizer, WER, CER | `stage-w3-asr-coverage` | done |
 | [T31](T31-asr-wer-scenario.md) | `ll-eval` asr-wer scenario | `stage-w3-asr-coverage` | done |
-| [T32](T32-asr-minimum-set.md) | Measure en/fr/de/es/ar | `stage-w3-asr-coverage` | todo |
+| [T32](T32-asr-minimum-set.md) | Measure en/fr/de/es/ar | `stage-w3-asr-coverage` | linux-done |
 | [T33](T33-asr-coverage-matrix.md) | All 29 locales + coverage statuses (PR) | `stage-w3-asr-coverage` | todo |
 | [T34](T34-release-build-integration.md) | Real-backend build, measured health | `stage-w5-integration` | todo |
 | [T35](T35-privacy-checks.md) | Privacy check script | `stage-w5-integration` | todo |

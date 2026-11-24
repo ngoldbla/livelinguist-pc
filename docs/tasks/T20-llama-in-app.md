@@ -1,5 +1,7 @@
 # T20 — Real simplifier in `ll-eval` and the app (S5)
 
+Linux part done in PR #31; Windows pending: bridge with `--features capture,sherpa,llama`, click a live caption, screenshot `console-click-simplified.png`.
+
 **Needs:** T19 done.
 
 **Files:** `core/crates/ll-eval/{Cargo.toml,src/lib.rs}`,
