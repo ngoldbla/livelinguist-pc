@@ -95,6 +95,8 @@ pub struct EvalOptions {
     pub threads: i32,
     /// Eval-only benchmark (`--scenario click-bench|simplify-matrix`).
     pub bench: Option<bench::Bench>,
+    /// `--click-all`: after the audio run, click every finalized segment.
+    pub click_all: bool,
 }
 
 impl Default for EvalOptions {
@@ -112,6 +114,7 @@ impl Default for EvalOptions {
             llama: false,
             threads: DEFAULT_LLM_THREADS,
             bench: None,
+            click_all: false,
         }
     }
 }
@@ -272,6 +275,10 @@ impl EvalOptions {
                         .all = true;
                     index += 1;
                 }
+                "--click-all" => {
+                    options.click_all = true;
+                    index += 1;
+                }
                 "--clicks" => {
                     let value = args
                         .get(index + 1)
@@ -344,6 +351,7 @@ pub fn help_text() -> String {
         "          [--source loopback] [--seconds 60]  (loopback needs --features capture)",
         "          [--asr mock|sherpa]  (sherpa needs --features sherpa + downloaded models)",
         "          --scenario asr-wer --asr sherpa --cache DIR [--locale xx-XX|--all] [--manifest tests/asr-eval/manifest.json] [--asr-threads 2]",
+        "          [--click-all]  (click every segment after an audio run)",
         "          [--llm demo|llama] [--threads 3]  (llama needs --features llama + downloaded models)",
         "",
         "Outputs: segments.csv, latency.json, summary.json, diagnostics.json, transcript.md",
@@ -753,6 +761,19 @@ fn finish_run(
     capture: Option<(f64, u64, u32)>,
 ) -> Result<EvalSummary, EvalError> {
     event_count += pipeline.flush().len();
+    if options.click_all {
+        // Click every finalized segment through the UI path (privacy check).
+        let ids: Vec<String> = pipeline
+            .store()
+            .segments
+            .iter()
+            .map(|entry| entry.id().to_string())
+            .collect();
+        for id in ids {
+            let _ = pipeline.simplify_now(&id);
+            event_count += pipeline.take_events().len();
+        }
+    }
     let store = pipeline.stop();
     event_count += pipeline.take_events().len();
     let report = pipeline.metrics().report();
