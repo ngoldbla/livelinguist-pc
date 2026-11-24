@@ -1,4 +1,5 @@
-import { readFileSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
+import { homedir } from "node:os";
 import { useGpuixRequired } from "@gpuix/react";
 import { useEffect, useRef, useState } from "react";
 import { AuroraField, Toast } from "./aurora/components";
@@ -18,6 +19,7 @@ import { Onboarding } from "./screens/Onboarding";
 import { OverlayScreen } from "./screens/Overlay";
 import { SettingsScreen, type UiSettings } from "./screens/Settings";
 import { SummaryScreen } from "./screens/Summary";
+import { exportDir, exportPath, planSession } from "./sessionPlan";
 import { createModelStore, useModels } from "./store/modelStore";
 import { createSessionStore, useSession } from "./store/sessionStore";
 import { sizeForMode } from "./windowSize";
@@ -127,7 +129,12 @@ export function App() {
 
   const startSession = async () => {
     const mode = process.env.LL_MODE === "live" ? "live" : state.mode;
-    const source = state.source === "mic" || state.source === "monitor" ? "demo" : state.source;
+    const plan = planSession(state.source);
+    if (!plan.ok) {
+      setToast(plan.error);
+      return;
+    }
+    const source = plan.source;
     const language = state.language;
     const uiLocale = process.env.LL_UI_LOCALE ?? languageByCode(language).uiCode;
     bootStore.reset();
@@ -135,7 +142,7 @@ export function App() {
     bootStore.setSource(source);
     bootStore.setMode(mode);
     bootStore.setPhase("listening");
-    bootStore.setAsrStatus("simplify_only");
+    bootStore.setAsrStatus(plan.asrStatus);
     const transport = createTransport((envelope) => bootStore.applyEnvelope(envelope));
     transportRef.current = transport;
     setScreen("live");
@@ -147,7 +154,7 @@ export function App() {
         detection: settings.detection,
         scenario: settings.scenario,
       });
-      await transport.feedDemo();
+      if (plan.feedDemo) await transport.feedDemo();
       if (windowMode !== "console") {
         const policy = await transport.setWindowMode(windowMode);
         if (!policy.applied) setToast("Window policy unavailable; using a normal window.");
@@ -265,10 +272,14 @@ export function App() {
   };
 
   const onExport = async (format: "markdown" | "plain" | "csv") => {
-    const extension = format === "markdown" ? "md" : format === "plain" ? "txt" : "csv";
-    const path = `/tmp/livelinguist-export-${Date.now()}.${extension}`;
-    await ensureTransport().exportTranscript(format, path);
-    setToast(`${t(locale, "Export transcript")} · ${path}`);
+    const path = exportPath(format, new Date(), homedir());
+    try {
+      mkdirSync(exportDir(homedir()), { recursive: true });
+      await ensureTransport().exportTranscript(format, path);
+      setToast(`${t(locale, "Export transcript")} · ${path}`);
+    } catch {
+      setToast(`${t(locale, "Export transcript")} · failed: ${exportDir(homedir())}`);
+    }
   };
 
   const onScenario = async (scenario: string) => {
