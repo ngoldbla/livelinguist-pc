@@ -33,6 +33,15 @@ const scenarios: Scenario[] = [
     waitMs: 1200,
   },
   {
+    // T33: the picker's coverage badges come from the measured matrix
+    // (`ui/src/i18n/languages.ts`). The first screenful shows both statuses:
+    // de/fr/es/en/ar ok, then da/et simplify-only.
+    name: "language-picker-coverage",
+    screen: "onboarding",
+    env: { LL_ONBOARDING_BEAT: "1" },
+    waitMs: 1200,
+  },
+  {
     name: "onboarding-models",
     screen: "onboarding",
     env: { LL_ONBOARDING_BEAT: "2" },
@@ -171,6 +180,26 @@ for (const scenario of scenarios) {
         stops.add(focused);
       }
       keyboardStops = stops.size;
+    }
+    if (scenario.name === "language-picker-coverage") {
+      // Scroll past the five `ok` locales so one screenful shows both badge
+      // kinds: es/en/ar "Live ASR" and da/et/fi "Simplify only".
+      const scroller = root.renderer
+        .findByType("div")
+        .find((element) => element.style.overflow === "scroll");
+      if (!scroller) {
+        failures += 1;
+        console.error("  language-picker-coverage: no scrollable language list");
+      } else {
+        root.renderer.scrollTo(scroller.id, 0, -120);
+        root.renderer.flush();
+      }
+      const text = root.renderer.getAllText().join(" ");
+      const showsBoth = text.includes("Live ASR") && text.includes("Simplify only");
+      console.log(
+        `  language-picker-coverage: badges ${showsBoth ? "show both live and simplify-only" : "do not show both statuses"}`,
+      );
+      if (!showsBoth) failures += 1;
     }
     const target = join(OUT, `${scenario.name}.png`);
     root.renderer.captureScreenshot(target);
