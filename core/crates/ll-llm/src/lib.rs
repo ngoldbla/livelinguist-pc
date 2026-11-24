@@ -59,20 +59,63 @@ impl SimplifierBackend for DemoBackend {
 }
 
 /// A queue-backed mock backend for tests and fault scenarios.
+///
+/// Every request it receives is recorded; tests keep a [`MockRecorder`]
+/// (from [`MockBackend::recorder`]) to inspect calls after the backend has
+/// been boxed into an engine.
 #[derive(Debug, Clone, Default)]
 pub struct MockBackend {
     responses: VecDeque<Result<String, BackendError>>,
+    recorder: MockRecorder,
+}
+
+/// Shared view of the requests a [`MockBackend`] received.
+#[derive(Debug, Clone, Default)]
+pub struct MockRecorder {
+    requests: std::sync::Arc<std::sync::Mutex<Vec<SimplificationRequest>>>,
+}
+
+impl MockRecorder {
+    /// Number of backend calls so far.
+    pub fn calls(&self) -> usize {
+        self.requests
+            .lock()
+            .map(|requests| requests.len())
+            .unwrap_or(0)
+    }
+
+    /// The most recent request, if any.
+    pub fn last_request(&self) -> Option<SimplificationRequest> {
+        self.requests
+            .lock()
+            .ok()
+            .and_then(|requests| requests.last().cloned())
+    }
+
+    /// All requests in call order.
+    pub fn requests(&self) -> Vec<SimplificationRequest> {
+        self.requests
+            .lock()
+            .map(|requests| requests.clone())
+            .unwrap_or_default()
+    }
 }
 
 impl MockBackend {
     pub fn new(responses: impl IntoIterator<Item = Result<String, BackendError>>) -> Self {
         Self {
             responses: responses.into_iter().collect(),
+            recorder: MockRecorder::default(),
         }
     }
 
     pub fn from_strings(responses: impl IntoIterator<Item = impl Into<String>>) -> Self {
         Self::new(responses.into_iter().map(|text| Ok(text.into())))
+    }
+
+    /// A handle that sees every request this backend (or its clones) receives.
+    pub fn recorder(&self) -> MockRecorder {
+        self.recorder.clone()
     }
 }
 
@@ -81,7 +124,10 @@ impl SimplifierBackend for MockBackend {
         "mock"
     }
 
-    fn simplify(&mut self, _request: &SimplificationRequest) -> Result<String, BackendError> {
+    fn simplify(&mut self, request: &SimplificationRequest) -> Result<String, BackendError> {
+        if let Ok(mut requests) = self.recorder.requests.lock() {
+            requests.push(request.clone());
+        }
         self.responses
             .pop_front()
             .unwrap_or_else(|| Ok(String::new()))

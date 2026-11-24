@@ -20,7 +20,7 @@ use ll_core::session::{
     SimplificationMode, SimplificationOutcome, SimplifiedSegment,
 };
 use ll_core::validation::Severity;
-use ll_llm::SimplifyQueue;
+use ll_llm::{QueueAction, SimplifyQueue};
 use ll_protocol::{
     CoreEvent, Envelope, EventEmitter, SessionState, SimplifiedStatus, Snapshot, SnapshotPartial,
     SnapshotSegment,
@@ -39,6 +39,53 @@ pub enum PipelineError {
     Other(String),
 }
 
+/// What a click on a segment did.
+#[derive(Debug, Clone, PartialEq)]
+pub enum ClickOutcome {
+    /// Already simplified; no backend call.
+    Cached(SimplifiedSegment),
+    /// Became the active request.
+    Started { id: String },
+    /// Waits in the single queued slot. `superseded` is the waiting request
+    /// it replaced: that one is dropped quietly (not an error).
+    Queued {
+        id: String,
+        superseded: Option<String>,
+    },
+}
+
+/// What running the active request did.
+#[derive(Debug, Clone, PartialEq)]
+pub enum RunOutcome {
+    Done(SimplifiedSegment),
+    Cancelled { id: String },
+}
+
+/// Shared cancel flags for running requests (usable from another thread).
+#[derive(Debug, Clone, Default)]
+pub struct SimplifyCancel {
+    ids: std::sync::Arc<std::sync::Mutex<std::collections::HashSet<String>>>,
+}
+
+impl SimplifyCancel {
+    pub fn cancel(&self, id: &str) {
+        if let Ok(mut ids) = self.ids.lock() {
+            ids.insert(id.to_string());
+        }
+    }
+
+    fn take(&self, id: &str) -> bool {
+        self.ids
+            .lock()
+            .map(|mut ids| ids.remove(id))
+            .unwrap_or(false)
+    }
+
+    fn clear(&self, id: &str) {
+        let _ = self.take(id);
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct PipelineConfig {
     pub session: SessionConfiguration,
@@ -47,6 +94,10 @@ pub struct PipelineConfig {
     pub max_caption_lag: Option<f64>,
     pub audio_fault: AudioFault,
     pub batch_threshold: usize,
+    /// Dev-only: lets `SimplificationMode::Automatic` simplify every finalized
+    /// segment (stress scenario / `LL_PIPELINE=live`). Off in 1.0 builds of
+    /// the app: without it, Automatic behaves like OnDemand (click-only).
+    pub dev_automatic: bool,
 }
 
 impl PipelineConfig {
@@ -58,6 +109,7 @@ impl PipelineConfig {
             max_caption_lag: None,
             audio_fault: AudioFault::None,
             batch_threshold: 3,
+            dev_automatic: false,
         }
     }
 }
@@ -68,7 +120,7 @@ pub struct Pipeline {
     asr: Box<dyn AsrEngine>,
     engine: SimplificationEngine,
     queue: SimplifyQueue,
-    cancelled: std::collections::HashSet<String>,
+    cancel_handle: SimplifyCancel,
     segmenter: Segmenter,
     vad: VoiceActivityDetector,
     chunker: AudioChunker,
@@ -82,7 +134,6 @@ pub struct Pipeline {
     audio_time: f64,
     utterance: u64,
     active_partial: Option<PartialHypothesis>,
-    context: Vec<String>,
     overrun_count: u64,
     overrun_simulated: bool,
     first_partial_audio: Option<f64>,
@@ -114,7 +165,7 @@ impl Pipeline {
             asr,
             engine,
             queue: SimplifyQueue::default(),
-            cancelled: std::collections::HashSet::new(),
+            cancel_handle: SimplifyCancel::default(),
             segmenter: Segmenter::default(),
             vad: VoiceActivityDetector::default(),
             chunker: AudioChunker::new(),
@@ -127,7 +178,6 @@ impl Pipeline {
             audio_time: 0.0,
             utterance: 0,
             active_partial: None,
-            context: Vec::new(),
             overrun_count: 0,
             overrun_simulated: false,
             first_partial_audio: None,
@@ -269,60 +319,118 @@ impl Pipeline {
         self.store.clone()
     }
 
-    /// On-demand simplification of one finalized segment. Returns the updated
-    /// segment; emits a `simplified` event when there is displayable text.
-    pub fn simplify_now(&mut self, id: &str) -> Result<SimplifiedSegment, PipelineError> {
-        if self.cancelled.remove(id) {
-            return Err(PipelineError::Other("simplification cancelled".into()));
-        }
+    /// Click on a segment: the only way simplification starts in 1.0.
+    ///
+    /// Rules (D-041, T19): a cached result returns at once without a backend
+    /// call; a click starts at once when nothing runs; otherwise it waits in
+    /// the single queued slot, and a newer click supersedes the waiting one.
+    pub fn request_simplify(&mut self, id: &str) -> Result<ClickOutcome, PipelineError> {
         let entry = self
             .store
             .find(id)
-            .cloned()
             .ok_or_else(|| PipelineError::UnknownSegment(id.to_string()))?;
         if entry.outcome.display_text().is_some() {
-            return Ok(entry);
+            return Ok(ClickOutcome::Cached(entry.clone()));
         }
-        let previous = match self
-            .store
-            .segments
-            .iter()
-            .position(|candidate| candidate.id() == id)
-        {
-            Some(position) => self.store.segments[..position]
-                .iter()
-                .rev()
-                .take(2)
-                .map(|candidate| candidate.segment.text.clone())
-                .collect::<Vec<_>>(),
-            None => Vec::new(),
+        if self.queue.active() == Some(id) {
+            return Ok(ClickOutcome::Started { id: id.to_string() });
+        }
+        if self.queue.queued() == Some(id) {
+            return Ok(ClickOutcome::Queued {
+                id: id.to_string(),
+                superseded: None,
+            });
+        }
+        self.cancel_handle.clear(id);
+        Ok(match self.queue.request(id) {
+            QueueAction::Started(id) => ClickOutcome::Started { id },
+            QueueAction::Queued(id) => ClickOutcome::Queued {
+                id,
+                superseded: None,
+            },
+            QueueAction::Replaced { replaced, .. } => ClickOutcome::Queued {
+                id: id.to_string(),
+                superseded: replaced,
+            },
+            QueueAction::Idle => ClickOutcome::Started { id: id.to_string() },
+        })
+    }
+
+    /// Run the active item, then advance the queue. Returns `None` when
+    /// nothing is active. A cancel that arrives while the backend runs (via
+    /// [`SimplifyCancel`]) discards the result.
+    pub fn run_active(&mut self) -> Option<RunOutcome> {
+        let id = self.queue.active()?.to_string();
+        if self.cancel_handle.take(&id) {
+            let _ = self.queue.complete();
+            return Some(RunOutcome::Cancelled { id });
+        }
+        let Some(entry) = self.store.find(&id).cloned() else {
+            let _ = self.queue.complete();
+            return Some(RunOutcome::Cancelled { id });
         };
+        if entry.outcome.display_text().is_some() {
+            let _ = self.queue.complete();
+            return Some(RunOutcome::Done(entry));
+        }
+        // Click path: only the clicked sentence reaches the simplifier. No
+        // rolling context from earlier segments (S4 prompt contract).
+        let previous: Vec<String> = Vec::new();
         let started = self.wall_ms();
-        self.metrics.record(id, Stage::SimplifyStart, started);
+        self.metrics.record(&id, Stage::SimplifyStart, started);
         let result = self.engine.simplify(&entry.segment, &previous, false);
+        if self.cancel_handle.take(&id) {
+            let _ = self.queue.complete();
+            return Some(RunOutcome::Cancelled { id });
+        }
         let finished = self.wall_ms();
-        self.metrics.record(id, Stage::SimplifiedVisible, finished);
+        self.metrics.record(&id, Stage::SimplifiedVisible, finished);
         self.store.update_outcome(
-            id,
+            &id,
             result.outcome.clone(),
             result.soft_violations.clone(),
             result.confidence.clone(),
         );
         self.emit_simplified(&result, (finished - started) as u64);
-        Ok(result)
+        let _ = self.queue.complete();
+        Some(RunOutcome::Done(result))
+    }
+
+    /// On-demand simplification of one finalized segment: a click followed by
+    /// running the queue until that segment finishes. Returns the updated
+    /// segment; emits a `simplified` event when there is displayable text.
+    pub fn simplify_now(&mut self, id: &str) -> Result<SimplifiedSegment, PipelineError> {
+        if let ClickOutcome::Cached(entry) = self.request_simplify(id)? {
+            return Ok(entry);
+        }
+        while let Some(outcome) = self.run_active() {
+            match outcome {
+                RunOutcome::Done(result) if result.id() == id => return Ok(result),
+                RunOutcome::Cancelled { id: cancelled } if cancelled == id => {
+                    return Err(PipelineError::Other("simplification cancelled".into()));
+                }
+                _ => {}
+            }
+        }
+        Err(PipelineError::Other("simplification superseded".into()))
     }
 
     pub fn simplify_now_queued(&mut self, id: &str) -> Result<SimplifiedSegment, PipelineError> {
         self.simplify_now(id)
     }
 
-    /// Cancel a queued or pending on-demand request.
+    /// Cancel a queued or active on-demand request. A queued item is removed;
+    /// an active item that has not started yet is dropped and the queued item
+    /// moves up. To stop an item while the backend runs, use
+    /// [`Pipeline::cancel_handle`] from another thread.
     pub fn cancel_simplify(&mut self, id: &str) -> bool {
-        let removed = self.queue.cancel(id);
-        if removed {
-            self.cancelled.insert(id.to_string());
-        }
-        removed
+        self.queue.cancel(id)
+    }
+
+    /// Thread-safe handle that cancels a running request; its result is
+    /// discarded when the backend returns.
+    pub fn cancel_handle(&self) -> SimplifyCancel {
+        self.cancel_handle.clone()
     }
 
     pub fn queue(&self) -> &SimplifyQueue {
@@ -463,8 +571,10 @@ impl Pipeline {
             start_ms: (segment.audio_start * 1000.0) as u64,
             end_ms: (segment.audio_end * 1000.0) as u64,
         });
-        match self.config.session.simplification_mode {
-            SimplificationMode::OnDemand => {
+        let automatic = self.config.dev_automatic
+            && self.config.session.simplification_mode == SimplificationMode::Automatic;
+        match automatic {
+            false => {
                 self.store.append(SimplifiedSegment::new(
                     segment,
                     SimplificationOutcome::Skipped {
@@ -472,8 +582,8 @@ impl Pipeline {
                     },
                 ));
             }
-            SimplificationMode::Automatic => {
-                let previous = self.context.clone();
+            true => {
+                let previous: Vec<String> = Vec::new();
                 let started = self.wall_ms();
                 self.metrics
                     .record(&segment.id, Stage::SimplifyStart, started);
@@ -481,10 +591,6 @@ impl Pipeline {
                 let finished = self.wall_ms();
                 self.metrics
                     .record(&segment.id, Stage::SimplifiedVisible, finished);
-                self.context.push(segment.text.clone());
-                if self.context.len() > 2 {
-                    self.context.remove(0);
-                }
                 self.emit_simplified(&result, (finished - started) as u64);
                 self.store.append(result);
             }
@@ -642,8 +748,9 @@ mod tests {
     }
 
     #[test]
-    fn auto_session_emits_simplified_events() {
+    fn auto_session_emits_simplified_events_only_in_dev_scenario() {
         let mut pipeline = demo_pipeline(SimplificationMode::Automatic);
+        pipeline.config.dev_automatic = true;
         pipeline.start().unwrap();
         let pack = FrameworkPack::load_framework(Framework::Falc).unwrap();
         let conversation = DemoConversation::from_pack(&pack, 4);
@@ -740,6 +847,256 @@ mod tests {
         for envelope in all {
             assert!(envelope.seq > last);
             last = envelope.seq;
+        }
+    }
+
+    /// Pipeline with a recording `MockBackend` and `count` finalized segments
+    /// pushed straight into the store.
+    fn mock_pipeline(
+        mode: SimplificationMode,
+        texts: &[&str],
+    ) -> (Pipeline, ll_llm::MockRecorder, Vec<String>) {
+        let language = Language::FrFr;
+        let pack = FrameworkPack::load_framework(Framework::Falc).unwrap();
+        let conversation = DemoConversation::from_pack(&pack, 4);
+        let asr = ll_asr::ScriptedAsr::from_conversation(&conversation, 4);
+        let mut config =
+            PipelineConfig::new(SessionConfiguration::new(language, AudioSourceKind::Demo));
+        config.session.simplification_mode = mode;
+        let backend = ll_llm::MockBackend::from_strings(
+            (0..64).map(|index| format!("Phrase simple numéro {index}.")),
+        );
+        let recorder = backend.recorder();
+        let mut pipeline = Pipeline::new(
+            config,
+            pack,
+            CoverageMatrix::v1(),
+            RuntimeConfig::default(),
+            Box::new(asr),
+            Box::new(backend),
+        );
+        pipeline.start().unwrap();
+        let mut ids = Vec::new();
+        for (index, text) in texts.iter().enumerate() {
+            let segment = FinalizedSegment::new(
+                text.to_string(),
+                index as f64 * 2.0,
+                index as f64 * 2.0 + 1.5,
+            );
+            ids.push(segment.id.clone());
+            pipeline.accept_segment(segment);
+        }
+        (pipeline, recorder, ids)
+    }
+
+    const THREE: [&str; 3] = [
+        "Le premier orateur parle du budget annuel.",
+        "La deuxième personne répond sur les impôts locaux.",
+        "Nous voterons la proposition jeudi prochain.",
+    ];
+
+    #[test]
+    fn click_sends_only_the_clicked_sentence_without_rolling_context() {
+        let (mut pipeline, recorder, ids) = mock_pipeline(SimplificationMode::OnDemand, &THREE);
+        let _ = pipeline.simplify_now(&ids[2]);
+        // The engine may retry after a validator rejection; every attempt
+        // must carry only the clicked sentence.
+        assert!(recorder.calls() >= 1);
+        for request in recorder.requests() {
+            assert_eq!(request.sentence, THREE[2]);
+            assert!(!request.user_prompt.contains(THREE[0]));
+            assert!(!request.user_prompt.contains(THREE[1]));
+        }
+        let request = recorder.last_request().unwrap();
+        assert!(request.user_prompt.contains(THREE[2]));
+        assert!(!request.user_prompt.contains(THREE[0]));
+        assert!(!request.user_prompt.contains(THREE[1]));
+        assert!(!request.system_prompt.contains(THREE[0]));
+        assert!(!request.system_prompt.contains(THREE[1]));
+    }
+
+    #[test]
+    fn click_starts_at_once_when_idle() {
+        let (mut pipeline, recorder, ids) = mock_pipeline(SimplificationMode::OnDemand, &THREE);
+        assert_eq!(
+            pipeline.request_simplify(&ids[0]).unwrap(),
+            ClickOutcome::Started { id: ids[0].clone() }
+        );
+        assert_eq!(pipeline.queue().active(), Some(ids[0].as_str()));
+        assert!(matches!(pipeline.run_active(), Some(RunOutcome::Done(_))));
+        assert!(recorder.calls() >= 1);
+        assert_eq!(pipeline.queue().active(), None);
+    }
+
+    #[test]
+    fn click_while_running_queues_and_newer_click_supersedes_queued() {
+        let (mut pipeline, recorder, ids) = mock_pipeline(SimplificationMode::OnDemand, &THREE);
+        let (a, b, c) = (&ids[0], &ids[1], &ids[2]);
+        let _ = pipeline.request_simplify(a).unwrap();
+        assert_eq!(
+            pipeline.request_simplify(b).unwrap(),
+            ClickOutcome::Queued {
+                id: b.clone(),
+                superseded: None
+            }
+        );
+        assert_eq!(
+            pipeline.request_simplify(c).unwrap(),
+            ClickOutcome::Queued {
+                id: c.clone(),
+                superseded: Some(b.clone())
+            }
+        );
+        assert_eq!(pipeline.queue().queued(), Some(c.as_str()));
+        // Superseded is quiet: no error event.
+        assert!(!pipeline
+            .take_events()
+            .iter()
+            .any(|envelope| matches!(envelope.event, CoreEvent::Error { .. })));
+        let mut done = Vec::new();
+        while let Some(outcome) = pipeline.run_active() {
+            if let RunOutcome::Done(result) = outcome {
+                done.push(result.id().to_string());
+            }
+        }
+        assert_eq!(done, vec![a.clone(), c.clone()]);
+        let sentences: std::collections::BTreeSet<String> = recorder
+            .requests()
+            .into_iter()
+            .map(|request| request.sentence)
+            .collect();
+        assert!(sentences.contains(THREE[0]) && sentences.contains(THREE[2]));
+        assert!(
+            !sentences.contains(THREE[1]),
+            "superseded item reached the backend"
+        );
+        assert!(pipeline
+            .store()
+            .find(b)
+            .unwrap()
+            .outcome
+            .display_text()
+            .is_none());
+    }
+
+    /// Backend that cancels its own request mid-run, standing in for a cancel
+    /// from the UI thread while the model generates.
+    struct CancellingBackend {
+        cancel: Option<(SimplifyCancel, String)>,
+        calls: std::sync::Arc<std::sync::atomic::AtomicUsize>,
+    }
+
+    impl ll_core::engine::SimplifierBackend for CancellingBackend {
+        fn name(&self) -> &'static str {
+            "cancelling"
+        }
+
+        fn simplify(
+            &mut self,
+            _request: &ll_core::prompt::SimplificationRequest,
+        ) -> Result<String, ll_core::engine::BackendError> {
+            self.calls.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+            if let Some((cancel, id)) = self.cancel.take() {
+                cancel.cancel(&id);
+            }
+            Ok("Phrase simple.".to_string())
+        }
+    }
+
+    #[test]
+    fn cancel_while_running_discards_result_and_starts_queued() {
+        let (mut pipeline, _recorder, ids) = mock_pipeline(SimplificationMode::OnDemand, &THREE);
+        let calls = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        let pack = FrameworkPack::load_framework(Framework::Falc).unwrap();
+        pipeline.engine = SimplificationEngine::with_config(
+            Box::new(CancellingBackend {
+                cancel: Some((pipeline.cancel_handle(), ids[0].clone())),
+                calls: calls.clone(),
+            }),
+            &pack,
+            pipeline.config.engine,
+        );
+        let _ = pipeline.request_simplify(&ids[0]).unwrap();
+        let _ = pipeline.request_simplify(&ids[1]).unwrap();
+        let _ = pipeline.take_events();
+        assert_eq!(
+            pipeline.run_active(),
+            Some(RunOutcome::Cancelled { id: ids[0].clone() })
+        );
+        assert!(pipeline
+            .store()
+            .find(&ids[0])
+            .unwrap()
+            .outcome
+            .display_text()
+            .is_none());
+        assert!(!pipeline.take_events().iter().any(|envelope| matches!(
+            &envelope.event,
+            CoreEvent::Simplified { id, .. } if id == &ids[0]
+        )));
+        // The queued item moved up and runs next.
+        assert_eq!(pipeline.queue().active(), Some(ids[1].as_str()));
+        assert!(matches!(pipeline.run_active(), Some(RunOutcome::Done(_))));
+        assert!(calls.load(std::sync::atomic::Ordering::SeqCst) >= 2);
+    }
+
+    #[test]
+    fn cancel_removes_queued_and_unstarted_active() {
+        let (mut pipeline, recorder, ids) = mock_pipeline(SimplificationMode::OnDemand, &THREE);
+        let _ = pipeline.request_simplify(&ids[0]).unwrap();
+        let _ = pipeline.request_simplify(&ids[1]).unwrap();
+        assert!(pipeline.cancel_simplify(&ids[1]));
+        assert_eq!(pipeline.queue().queued(), None);
+        assert!(pipeline.cancel_simplify(&ids[0]));
+        assert_eq!(pipeline.queue().active(), None);
+        assert!(pipeline.run_active().is_none());
+        assert_eq!(recorder.calls(), 0);
+        assert!(!pipeline.cancel_simplify("nope"));
+    }
+
+    #[test]
+    fn click_on_simplified_segment_returns_cache_without_backend_call() {
+        let (mut pipeline, recorder, ids) = mock_pipeline(SimplificationMode::OnDemand, &THREE);
+        let first = pipeline.simplify_now(&ids[0]).unwrap();
+        assert!(first.outcome.display_text().is_some());
+        let calls = recorder.calls();
+        assert!(calls >= 1);
+        match pipeline.request_simplify(&ids[0]).unwrap() {
+            ClickOutcome::Cached(entry) => assert_eq!(entry, first),
+            other => panic!("expected cached result, got {other:?}"),
+        }
+        let again = pipeline.simplify_now(&ids[0]).unwrap();
+        assert_eq!(again, first);
+        assert_eq!(recorder.calls(), calls);
+    }
+
+    fn feed_seconds(pipeline: &mut Pipeline, seconds: f64) {
+        let pack = FrameworkPack::load_framework(Framework::Falc).unwrap();
+        let conversation = DemoConversation::from_pack(&pack, 4);
+        while pipeline.audio_time() < seconds {
+            let mut source = ll_audio::SyntheticSource::from_conversation(&conversation, 1, false)
+                .with_amplitude(0.3);
+            while let Some(buffer) = source.next_buffer() {
+                let _ = pipeline.feed_audio(&buffer);
+                if pipeline.audio_time() >= seconds {
+                    break;
+                }
+            }
+        }
+        let _ = pipeline.flush();
+    }
+
+    #[test]
+    fn no_background_work_60s_without_clicks_even_in_automatic_mode_outside_dev_scenario() {
+        for mode in [SimplificationMode::OnDemand, SimplificationMode::Automatic] {
+            let (mut pipeline, recorder, _ids) = mock_pipeline(mode, &[]);
+            feed_seconds(&mut pipeline, 60.0);
+            assert!(pipeline.audio_time() >= 60.0);
+            assert!(
+                !pipeline.store().segments.is_empty(),
+                "demo audio must produce finalized segments"
+            );
+            assert_eq!(recorder.calls(), 0, "mode {mode:?} made backend calls");
         }
     }
 

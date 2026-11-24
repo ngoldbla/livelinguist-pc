@@ -21,7 +21,7 @@ writing new cards. Agents work from cards.
 | [T07](T07-loopback-device-errors.md) | Report device loss / follow default output (PR) | `stage-w2-loopback-fixes` | done |
 | [T08](T08-prompt-contract-source.md) | Copy the prompt contract from the model card | `stage-w4-prompt-contract` | todo |
 | [T09](T09-prompt-contract-renderer.md) | `render_easylanguage_prompt` + 29 goldens | `stage-w4-prompt-contract` | todo |
-| [T10](T10-drop-rolling-context.md) | No rolling context on the click path (PR) | `stage-w4-prompt-contract` | todo |
+| [T10](T10-drop-rolling-context.md) | No rolling context on the click path (PR) | `stage-w4-prompt-contract` | done |
 | [T11](T11-model-fetch-cli.md) | `fetch_models` example; download the pinned set | `stage-w3-asr-runtime` | todo |
 | [T12](T12-sherpa-probe.md) | sherpa-onnx probe on a TTS speech clip | `stage-w3-asr-runtime` | todo |
 | [T13](T13-sherpa-engine.md) | Real streaming `SherpaAsr` | `stage-w3-asr-runtime` | todo |
@@ -30,7 +30,7 @@ writing new cards. Agents work from cards.
 | [T16](T16-model-download-ui.md) | Onboarding download screen (PR) | `stage-w3-model-download` | todo |
 | [T17](T17-llama-probe.md) | llama.cpp CPU probe | `stage-w4-llama-cpu` | todo |
 | [T18](T18-llama-backend.md) | `LlamaBackend` | `stage-w4-llama-cpu` | todo |
-| [T19](T19-click-queue.md) | Click-only queue rules | `stage-w4-llama-cpu` | todo |
+| [T19](T19-click-queue.md) | Click-only queue rules | `stage-w4-llama-cpu` | done |
 | [T20](T20-llama-in-app.md) | Real simplifier in `ll-eval` and the app | `stage-w4-llama-cpu` | todo |
 | [T21](T21-tier-c-latency.md) | Tier C profile, click p95, RSS | `stage-w4-llama-cpu` | todo |
 | [T22](T22-simplify-matrix.md) | 29-pack simplifier matrix (PR) | `stage-w4-llama-cpu` | todo |

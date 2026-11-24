@@ -171,6 +171,10 @@ impl CoreClient {
         };
         session.language_detection_enabled = request.detection;
         let mut pipeline_config = PipelineConfig::new(session);
+        // 1.0 is click-only. Automatic simplification is a dev-only mode,
+        // enabled only when the developer sets LL_MODE=live.
+        pipeline_config.dev_automatic =
+            request.mode == "live" && matches!(std::env::var("LL_MODE").as_deref(), Ok("live"));
         pipeline_config.detection = request.detection;
         pipeline_config.audio_fault = runtime.fault_audio;
         let asr: Box<dyn AsrEngine> = match runtime.asr {
