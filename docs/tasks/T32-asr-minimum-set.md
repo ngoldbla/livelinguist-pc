@@ -1,5 +1,7 @@
 # T32 — Measure the minimum live set en/fr/de/es/ar (S3)
 
+Linux part done in PR #31 (en/fr/de/es/ar pass score + Linux timing); Windows pending: tier C profile timing re-check on the reference PC.
+
 **Needs:** T31 done.
 
 **Gate (per locale):** score ≤ 0.15, RTF ≤ 0.5, p95 chunk ≤ 500 ms on the

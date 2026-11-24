@@ -28,6 +28,22 @@ fn main() {
             }
         }
     }
+    if let Some(bench) = options.bench {
+        match ll_eval::bench::run(&options, bench) {
+            Ok(summary) => {
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&summary).unwrap_or_default()
+                );
+                println!("wrote {}", options.out.display());
+                return;
+            }
+            Err(error) => {
+                eprintln!("ll-eval failed: {error}");
+                std::process::exit(1);
+            }
+        }
+    }
     match ll_eval::run(&options) {
         Ok(summary) => {
             println!(

@@ -1,7 +1,7 @@
 # LLM backends, calibration, and degradation ladder
 
 - Date: 2026-11-21
-- Status: **partial** — mock/demo backend, calibration policy, queue, ladder,
+- Status: **historical** — GPU ladder is post-1.0; see 2026-11-23-llm-cpu.md. Was: **partial** — mock/demo backend, calibration policy, queue, ladder,
   and prefix-cache bookkeeping implemented and tested; real llama.cpp
   CPU/Vulkan/CUDA numbers are pending a pinned GGUF and the Windows GPU host.
 - Decisions: D-011, D-013/014/015, D-040/041/042

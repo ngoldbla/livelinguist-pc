@@ -29,7 +29,7 @@ node --version                         # v22.23.1
 | `@napi-rs/cli` | npm | 3.10.x | 3.10.12 | 2026-11-21 | Build tool for `ll-bridge` |
 | `napi` | crates.io | 3.16.x | 3.16.2 | 2026-11-21 | N-API ABI |
 | `napi-derive` | crates.io | 3.7.x | 3.7.1 | 2026-11-21 | Derive macros |
-| `llama-cpp-2` | crates.io | 0.1.161 | 0.1.161 | 2026-11-21 | Feature-gated `llama`; native build not in default CI |
+| `llama-cpp-2` | crates.io | =0.1.161 | 0.1.161 | 2026-11-24 | Feature-gated `llama` in `ll-llm`/`ll-eval`/`ll-bridge`; CPU only, `default-features = false, features = ["openmp"]` (no `common`, `cuda`, `vulkan`, `dynamic-backends`; `common` clashed with sherpa-onnx static libs); llama.cpp built from the crate sources with cmake; CI clippy+tests on Linux and Windows (T17) |
 | `sherpa-onnx` | crates.io | =2.0.1 | 2.0.1 | 2026-11-24 | Feature-gated `sherpa` in `ll-asr`/`ll-eval`/`ll-bridge`; static CPU libs `sherpa-onnx-v2.0.1-<os>-static-lib` downloaded by the `-sys` build script from k2-fsa GitHub releases (Linux archive sha256 `55cfadf6…70871`). Pinned per T12 (was listed as 2.0.2 before it was wired) |
 | `cpal` | crates.io | 0.18.x | 0.18.2 | 2026-11-21 | `pipewire` feature exists |
 | `rubato` | crates.io | 5.1.x | 5.1.0 | 2026-11-21 | Resampling |

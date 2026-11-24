@@ -28,3 +28,4 @@ tempfile = { workspace = true }
 [features]
 capture = ["ll-audio/capture"]
 sherpa = ["ll-asr/sherpa", "dep:ll-models"]
+llama = ["ll-llm/llama", "dep:ll-models"]

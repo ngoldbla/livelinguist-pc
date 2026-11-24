@@ -5,6 +5,11 @@
 //! is reserved for the pinned `llama-cpp-2` backend once a model is installed;
 //! this crate never silently falls back in strict mode.
 
+#[cfg(feature = "llama")]
+pub mod llama;
+#[cfg(feature = "llama")]
+pub use llama::LlamaBackend;
+
 use ll_config::{GpuLayers, LlmFault, LlmModel};
 use ll_core::demo::DemoSimplifier;
 use ll_core::engine::{BackendError, SimplifierBackend};
@@ -131,6 +136,107 @@ impl SimplifierBackend for MockBackend {
         self.responses
             .pop_front()
             .unwrap_or_else(|| Ok(String::new()))
+    }
+}
+
+/// Loads a backend on first use (first click), not at session start.
+pub type BackendLoader =
+    Box<dyn FnMut() -> Result<Box<dyn SimplifierBackend>, BackendError> + Send>;
+
+/// Shared view of the last load failure of a [`LazyBackend`].
+#[derive(Debug, Clone, Default)]
+pub struct LoadStatus(std::sync::Arc<std::sync::Mutex<Option<BackendError>>>);
+
+impl LoadStatus {
+    /// Take the load error from the most recent attempt, if it failed.
+    pub fn take_error(&self) -> Option<BackendError> {
+        self.0.lock().ok().and_then(|mut error| error.take())
+    }
+
+    fn set(&self, error: Option<BackendError>) {
+        if let Ok(mut slot) = self.0.lock() {
+            *slot = error;
+        }
+    }
+}
+
+/// A backend that is created by its loader on the first `simplify` call. A
+/// failed load is reported through [`LoadStatus`] and retried on the next
+/// click (the model may have been downloaded meanwhile).
+pub struct LazyBackend {
+    loader: BackendLoader,
+    inner: Option<Box<dyn SimplifierBackend>>,
+    status: LoadStatus,
+}
+
+impl LazyBackend {
+    pub fn new(loader: BackendLoader) -> Self {
+        Self {
+            loader,
+            inner: None,
+            status: LoadStatus::default(),
+        }
+    }
+
+    pub fn status(&self) -> LoadStatus {
+        self.status.clone()
+    }
+
+    pub fn is_loaded(&self) -> bool {
+        self.inner.is_some()
+    }
+}
+
+impl SimplifierBackend for LazyBackend {
+    fn name(&self) -> &'static str {
+        self.inner
+            .as_ref()
+            .map(|inner| inner.name())
+            .unwrap_or("lazy")
+    }
+
+    fn simplify(&mut self, request: &SimplificationRequest) -> Result<String, BackendError> {
+        if self.inner.is_none() {
+            match (self.loader)() {
+                Ok(backend) => {
+                    self.status.set(None);
+                    self.inner = Some(backend);
+                }
+                Err(error) => {
+                    self.status.set(Some(error.clone()));
+                    return Err(error);
+                }
+            }
+        }
+        match self.inner.as_mut() {
+            Some(inner) => inner.simplify(request),
+            None => Err(BackendError::backend("backend not loaded")),
+        }
+    }
+}
+
+/// What the app does after a click whose backend failed to load.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ClickFailure {
+    /// Normal scenario: the caption stays verbatim (≡) and an error event
+    /// with this code tells the UI to show a banner.
+    Verbatim { code: &'static str },
+    /// Strict dev scenario: the session stops with this code (rule 7).
+    StopSession { code: &'static str },
+}
+
+/// Policy for a backend load failure on click. `missing` says whether the
+/// model file was absent (`LLM_MODEL_MISSING`) or failed to load.
+pub fn click_failure(strict: bool, missing: bool) -> ClickFailure {
+    let code = if missing {
+        "LLM_MODEL_MISSING"
+    } else {
+        "LLM_INIT_FAILED"
+    };
+    if strict {
+        ClickFailure::StopSession { code }
+    } else {
+        ClickFailure::Verbatim { code }
     }
 }
 
@@ -540,6 +646,57 @@ mod tests {
     }
 
     use ll_core::engine::BackendErrorKind;
+
+    #[test]
+    fn lazy_backend_loads_on_first_call_and_retries_after_failure() {
+        let attempts = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        let counter = attempts.clone();
+        let mut lazy = LazyBackend::new(Box::new(move || {
+            let n = counter.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+            if n == 0 {
+                Err(BackendError::backend("LLM model missing: x.gguf"))
+            } else {
+                Ok(Box::new(MockBackend::from_strings(["Phrase simple."]))
+                    as Box<dyn SimplifierBackend>)
+            }
+        }));
+        assert!(!lazy.is_loaded());
+        assert_eq!(attempts.load(std::sync::atomic::Ordering::SeqCst), 0);
+        let status = lazy.status();
+        let request = SimplificationRequest {
+            system_prompt: String::new(),
+            user_prompt: String::new(),
+            sentence: "Une phrase.".into(),
+        };
+        assert!(lazy.simplify(&request).is_err());
+        assert!(status.take_error().is_some());
+        assert_eq!(lazy.simplify(&request).unwrap(), "Phrase simple.");
+        assert!(lazy.is_loaded());
+        assert!(status.take_error().is_none());
+        assert_eq!(attempts.load(std::sync::atomic::Ordering::SeqCst), 2);
+    }
+
+    #[test]
+    fn click_failure_policy_strict_stops_normal_stays_verbatim() {
+        assert_eq!(
+            click_failure(true, true),
+            ClickFailure::StopSession {
+                code: "LLM_MODEL_MISSING"
+            }
+        );
+        assert_eq!(
+            click_failure(false, true),
+            ClickFailure::Verbatim {
+                code: "LLM_MODEL_MISSING"
+            }
+        );
+        assert_eq!(
+            click_failure(false, false),
+            ClickFailure::Verbatim {
+                code: "LLM_INIT_FAILED"
+            }
+        );
+    }
 
     #[test]
     fn queue_has_one_active_and_one_queued_with_newest_wins() {

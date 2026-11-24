@@ -88,6 +88,7 @@ struct SimplifyResult {
 
 struct BridgeInner {
     pipeline: Option<Pipeline>,
+    llm_status: Option<ll_llm::LoadStatus>,
     pack: Option<FrameworkPack>,
     callback: Option<Arc<ThreadsafeFunction<String>>>,
     coverage: CoverageMatrix,
@@ -101,6 +102,7 @@ impl Default for BridgeInner {
     fn default() -> Self {
         Self {
             pipeline: None,
+            llm_status: None,
             pack: None,
             callback: None,
             coverage: CoverageMatrix::v1(),
@@ -208,11 +210,22 @@ impl CoreClient {
             }
             (None, _) => Box::new(ScriptedAsr::from_conversation(&conversation, 4)),
         };
-        let demo = DemoBackend::from_pack(&pack);
+        // Real simplifier for real sessions: with the `llama` feature the
+        // pinned GGUF loads lazily on the first click, never at start.
+        let (inner_backend, llm_status): (Box<dyn SimplifierBackend>, Option<ll_llm::LoadStatus>) =
+            match lazy_llama(real_asr, &pack, runtime.threads) {
+                Some(lazy) => {
+                    pipeline_config.engine =
+                        ll_core::engine::SimplifyConfig::on_demand_fine_tuned();
+                    let status = lazy.status();
+                    (Box::new(lazy), Some(status))
+                }
+                None => (Box::new(DemoBackend::from_pack(&pack)), None),
+            };
         let backend: Box<dyn SimplifierBackend> = if runtime.fault_llm == LlmFault::None {
-            Box::new(demo)
+            inner_backend
         } else {
-            Box::new(FaultyBackend::new(Box::new(demo), runtime.fault_llm))
+            Box::new(FaultyBackend::new(inner_backend, runtime.fault_llm))
         };
         let mut pipeline = Pipeline::new(
             pipeline_config,
@@ -232,6 +245,7 @@ impl CoreClient {
                 .lock()
                 .map_err(|_| Error::from_reason("bridge lock poisoned"))?;
             inner.pipeline = Some(pipeline);
+            inner.llm_status = llm_status;
             inner.pack = Some(pack);
             inner.callback = Some(callback.clone());
             inner.runtime = runtime;
@@ -347,6 +361,42 @@ impl CoreClient {
             let result = pipeline
                 .simplify_now(&segment_id)
                 .map_err(|error| Error::from_reason(error.to_string()))?;
+            let load_error = inner
+                .llm_status
+                .as_ref()
+                .and_then(ll_llm::LoadStatus::take_error);
+            let strict = inner.runtime.strict;
+            let Some(pipeline) = inner.pipeline.as_mut() else {
+                return Err(Error::from_reason("session not started"));
+            };
+            if let Some(error) = load_error {
+                match ll_llm::click_failure(strict, llm_load_missing(&error)) {
+                    ll_llm::ClickFailure::Verbatim { code } => {
+                        pipeline.emit_event(ll_protocol::CoreEvent::Error {
+                            code: code.to_string(),
+                            message: error.message.clone(),
+                            recoverable: true,
+                        });
+                    }
+                    ll_llm::ClickFailure::StopSession { code } => {
+                        let envelope = pipeline.emit_event(ll_protocol::CoreEvent::Error {
+                            code: code.to_string(),
+                            message: error.message.clone(),
+                            recoverable: false,
+                        });
+                        let _ = pipeline.stop();
+                        let mut events = pipeline.take_events();
+                        events.insert(0, envelope);
+                        if let Some(callback) = &callback {
+                            emit(callback, events);
+                        }
+                        inner.pipeline = None;
+                        return Err(Error::from_reason(format!(
+                            "{code}: strict scenario stops on simplifier failure"
+                        )));
+                    }
+                }
+            }
             let simplified = SimplifyResult {
                 id: result.segment.id.clone(),
                 text: result.outcome.display_text().map(ToString::to_string),
@@ -1034,6 +1084,43 @@ fn emit_error_code(
         recoverable,
     });
     emit(callback, vec![envelope]);
+}
+
+#[cfg(feature = "llama")]
+fn llm_load_missing(error: &ll_core::engine::BackendError) -> bool {
+    ll_llm::llama::is_model_missing(error)
+}
+
+#[cfg(not(feature = "llama"))]
+fn llm_load_missing(_error: &ll_core::engine::BackendError) -> bool {
+    false
+}
+
+/// With `llama`, real sessions get the GGUF on CPU, loaded on first click.
+#[cfg(feature = "llama")]
+fn lazy_llama(real: bool, pack: &FrameworkPack, threads: usize) -> Option<ll_llm::LazyBackend> {
+    if !real {
+        return None;
+    }
+    let catalog = ll_models::ModelCatalog::plan_default();
+    let llm = catalog
+        .artifacts
+        .iter()
+        .find(|artifact| artifact.role == ll_models::ModelRole::Llm)?
+        .clone();
+    let path = ll_models::model_dir(&ll_models::cache_root(), &llm.repo, &llm.revision)
+        .join(&llm.files[0].path);
+    let pack = pack.clone();
+    let threads = threads.clamp(1, 64) as i32;
+    Some(ll_llm::LazyBackend::new(Box::new(move || {
+        ll_llm::LlamaBackend::load(&path, threads)
+            .map(|backend| Box::new(backend.with_pack(&pack)) as Box<dyn SimplifierBackend>)
+    })))
+}
+
+#[cfg(not(feature = "llama"))]
+fn lazy_llama(_real: bool, _pack: &FrameworkPack, _threads: usize) -> Option<ll_llm::LazyBackend> {
+    None
 }
 
 // Plain function so unit tests stay off the napi runtime symbols.

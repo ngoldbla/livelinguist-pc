@@ -1,5 +1,7 @@
 # T22 — 29-pack simplifier matrix (S5) (PR)
 
+Linux part done in PR #31 (28/29; es-ES language-guard false negative, human decision); Windows pending: none beyond re-run if wanted.
+
 **Needs:** T21 done.
 
 **Goal:** prove the real model rewrites in the same language for all 29 packs,

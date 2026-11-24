@@ -1,5 +1,7 @@
 # T35 — Privacy checks (S7 integration)
 
+Scripts written in PR #31 (`scripts/privacy-check.sh`, `.ps1`); still todo: run the Linux script and record `## Privacy`; Windows pending: run the `.ps1` with real loopback.
+
 **Needs:** T34 done.
 
 **Goal:** prove no transcript text reaches logs/diagnostics/exports-meant-to-be-content-free,

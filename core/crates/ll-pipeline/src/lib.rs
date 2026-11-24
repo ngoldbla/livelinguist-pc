@@ -336,6 +336,12 @@ impl Pipeline {
         self.store.clone()
     }
 
+    /// Add an already finalized segment (benchmarks and replay tools): it
+    /// takes the same path as a segment from the segmenter.
+    pub fn push_finalized(&mut self, segment: FinalizedSegment) {
+        self.accept_segment(segment);
+    }
+
     /// Click on a segment: the only way simplification starts in 1.0.
     ///
     /// Rules (D-041, T19): a cached result returns at once without a backend

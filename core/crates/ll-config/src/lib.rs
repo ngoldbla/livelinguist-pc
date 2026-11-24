@@ -230,11 +230,20 @@ impl Default for RuntimeConfig {
     }
 }
 
+/// Default llama.cpp CPU threads: 3, measured on the tier C approximation
+/// (T21: p95 1.9 s with 3 threads vs 2.6 s with 2, same RSS). Machines with
+/// fewer than 4 logical CPUs use `cores - 1` (at least 1).
+pub const DEFAULT_LLM_THREADS: usize = 3;
+
 fn default_threads() -> usize {
     let cores = std::thread::available_parallelism()
         .map(|value| value.get())
         .unwrap_or(4);
-    (cores / 2).max(2)
+    default_threads_for(cores)
+}
+
+fn default_threads_for(cores: usize) -> usize {
+    DEFAULT_LLM_THREADS.min(cores.saturating_sub(1)).max(1)
 }
 
 /// A sparse layer: only `Some` fields override. Used by env, dev, and user.
@@ -826,7 +835,10 @@ mod tests {
         assert_eq!(config.llm_model, LlmModel::Qwen06b);
         assert_eq!(config.pipeline, PipelineMode::OnDemand);
         assert!(!config.strict);
-        assert!(config.threads >= 2);
+        assert!(config.threads >= 1 && config.threads <= DEFAULT_LLM_THREADS);
+        assert_eq!(default_threads_for(4), 3);
+        assert_eq!(default_threads_for(16), 3);
+        assert_eq!(default_threads_for(2), 1);
     }
 
     #[test]
