@@ -120,6 +120,19 @@ impl SimplifyConfig {
     }
 }
 
+impl SimplifyConfig {
+    /// Click-to-simplify with the fine-tuned GGUF: one prompt contract and
+    /// greedy decoding make a retry return the same text, so there are no
+    /// retries; the validators and the verbatim fallback still apply.
+    pub fn on_demand_fine_tuned() -> Self {
+        Self {
+            generation_budget: Duration::from_secs(15),
+            max_retries: 0,
+            no_output_retries: 0,
+        }
+    }
+}
+
 #[derive(Debug)]
 struct Attempt {
     output: String,

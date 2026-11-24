@@ -37,6 +37,12 @@ jobs:
         run: |
           cargo clippy -p ll-asr -p ll-eval -p ll-bridge --features sherpa --all-targets -- -D warnings
           cargo test -p ll-asr --features sherpa
+      - name: Clippy and test with llama.cpp (CPU, built from llama-cpp-sys-2 sources)
+        run: |
+          cargo clippy -p ll-llm --features llama --all-targets -- -D warnings
+          cargo clippy -p ll-eval -p ll-bridge --features sherpa,llama --all-targets -- -D warnings
+          cargo test -p ll-llm --features llama
+          cargo test -p ll-eval --features sherpa,llama
       - name: Build napi addon
         if: matrix.os == 'windows-latest'
         run: cargo build -p ll-bridge --release

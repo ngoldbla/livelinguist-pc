@@ -5,6 +5,7 @@
 //! Demo/mock audio is used for CI; `--wav` replays a non-PII fixture.
 
 pub mod asr_wer;
+pub mod bench;
 pub mod wer;
 
 use ll_asr::{AsrEngine, OffAsr, ScriptedAsr};
@@ -88,6 +89,12 @@ pub struct EvalOptions {
     pub sherpa: bool,
     /// `--scenario asr-wer`: FLEURS WER/CER scoring (needs `--asr sherpa`).
     pub asr_wer: Option<asr_wer::AsrWerArgs>,
+    /// `--llm llama`: the pinned GGUF on CPU (needs the `llama` feature).
+    pub llama: bool,
+    /// `--threads`: llama.cpp CPU threads.
+    pub threads: i32,
+    /// Eval-only benchmark (`--scenario click-bench|simplify-matrix`).
+    pub bench: Option<bench::Bench>,
 }
 
 impl Default for EvalOptions {
@@ -102,6 +109,9 @@ impl Default for EvalOptions {
             seconds: 60,
             sherpa: false,
             asr_wer: None,
+            llama: false,
+            threads: DEFAULT_LLM_THREADS,
+            bench: None,
         }
     }
 }
@@ -121,6 +131,9 @@ impl EvalOptions {
                             asr_threads: 2,
                             ..Default::default()
                         });
+                        options.scenario = Scenario::Mock;
+                    } else if let Some(bench) = bench::Bench::parse(value) {
+                        options.bench = Some(bench);
                         options.scenario = Scenario::Mock;
                     } else {
                         options.scenario = Scenario::parse(value).ok_or_else(|| {
@@ -226,6 +239,29 @@ impl EvalOptions {
                     }
                     index += 2;
                 }
+                "--llm" => {
+                    let value = args
+                        .get(index + 1)
+                        .ok_or_else(|| EvalError::Argument("--llm needs a value".into()))?;
+                    match value.as_str() {
+                        "demo" => options.llama = false,
+                        "llama" => {
+                            if !cfg!(feature = "llama") {
+                                return Err(EvalError::Argument(
+                                    "--llm llama: not built with llama; rebuild with --features llama"
+                                        .into(),
+                                ));
+                            }
+                            options.llama = true;
+                        }
+                        other => {
+                            return Err(EvalError::Argument(format!(
+                                "unknown simplifier: {other} (expected demo or llama)"
+                            )))
+                        }
+                    }
+                    index += 2;
+                }
                 "--all" => {
                     options
                         .asr_wer
@@ -235,6 +271,44 @@ impl EvalOptions {
                         })?
                         .all = true;
                     index += 1;
+                }
+                "--clicks" => {
+                    let value = args
+                        .get(index + 1)
+                        .ok_or_else(|| EvalError::Argument("--clicks needs a value".into()))?;
+                    let clicks = value
+                        .parse::<usize>()
+                        .ok()
+                        .filter(|clicks| *clicks > 0)
+                        .ok_or_else(|| {
+                            EvalError::Argument(format!(
+                                "--clicks needs a positive number, got {value}"
+                            ))
+                        })?;
+                    match options.bench {
+                        Some(bench::Bench::ClickBench { .. }) => {
+                            options.bench = Some(bench::Bench::ClickBench { clicks })
+                        }
+                        _ => {
+                            return Err(EvalError::Argument(
+                                "--clicks needs --scenario click-bench first".into(),
+                            ))
+                        }
+                    }
+                    index += 2;
+                }
+                "--threads" => {
+                    let value = args
+                        .get(index + 1)
+                        .ok_or_else(|| EvalError::Argument("--threads needs a value".into()))?;
+                    options.threads = value
+                        .parse::<i32>()
+                        .ok()
+                        .filter(|threads| (1..=64).contains(threads))
+                        .ok_or_else(|| {
+                            EvalError::Argument(format!("--threads needs 1..=64, got {value}"))
+                        })?;
+                    index += 2;
                 }
                 "--out" => {
                     let value = args
@@ -270,6 +344,7 @@ pub fn help_text() -> String {
         "          [--source loopback] [--seconds 60]  (loopback needs --features capture)",
         "          [--asr mock|sherpa]  (sherpa needs --features sherpa + downloaded models)",
         "          --scenario asr-wer --asr sherpa --cache DIR [--locale xx-XX|--all] [--manifest tests/asr-eval/manifest.json] [--asr-threads 2]",
+        "          [--llm demo|llama] [--threads 3]  (llama needs --features llama + downloaded models)",
         "",
         "Outputs: segments.csv, latency.json, summary.json, diagnostics.json, transcript.md",
     ]
@@ -382,6 +457,92 @@ fn run_asr_wer_sherpa(
     ))
 }
 
+/// Pipeline for benchmarks: no ASR, the run's simplifier and engine config.
+pub(crate) fn bench_pipeline(
+    options: &EvalOptions,
+    pack: &FrameworkPack,
+) -> Result<Pipeline, EvalError> {
+    let mut session = SessionConfiguration::new(options.language, AudioSourceKind::Demo);
+    session.simplification_mode = SimplificationMode::OnDemand;
+    let mut config = PipelineConfig::new(session);
+    config.engine = engine_config(options);
+    let mut runtime = RuntimeConfig::default();
+    options.scenario.apply(&mut runtime);
+    Ok(Pipeline::new(
+        config,
+        pack.clone(),
+        CoverageMatrix::v1(),
+        runtime,
+        Box::new(OffAsr),
+        simplifier(options, pack)?,
+    ))
+}
+
+/// Default llama.cpp CPU threads (T21 decides; see ll-config).
+pub const DEFAULT_LLM_THREADS: i32 = ll_config::DEFAULT_LLM_THREADS as i32;
+
+/// The simplifier for this run: the demo backend, or the pinned GGUF.
+fn simplifier(
+    options: &EvalOptions,
+    pack: &FrameworkPack,
+) -> Result<Box<dyn SimplifierBackend>, EvalError> {
+    if options.llama {
+        return llama_backend(pack, options.threads);
+    }
+    Ok(Box::new(
+        DemoBackend::from_pack(pack).with_latency(std::time::Duration::ZERO),
+    ))
+}
+
+/// Engine settings: the fine-tuned GGUF gets no retries (greedy + fixed
+/// prompt would repeat the same text).
+fn engine_config(options: &EvalOptions) -> ll_core::engine::SimplifyConfig {
+    if options.llama {
+        ll_core::engine::SimplifyConfig::on_demand_fine_tuned()
+    } else {
+        ll_core::engine::SimplifyConfig::on_demand()
+    }
+}
+
+/// The pinned GGUF path in the model cache.
+#[cfg(feature = "llama")]
+pub fn llm_model_path() -> PathBuf {
+    let catalog = ll_models::ModelCatalog::plan_default();
+    let llm = catalog
+        .artifacts
+        .iter()
+        .find(|artifact| artifact.role == ll_models::ModelRole::Llm)
+        .expect("catalog has an LLM");
+    ll_models::model_dir(&ll_models::cache_root(), &llm.repo, &llm.revision)
+        .join(&llm.files[0].path)
+}
+
+#[cfg(feature = "llama")]
+fn llama_backend(
+    pack: &FrameworkPack,
+    threads: i32,
+) -> Result<Box<dyn SimplifierBackend>, EvalError> {
+    let backend = ll_llm::LlamaBackend::load(&llm_model_path(), threads).map_err(|error| {
+        let code = if ll_llm::llama::is_model_missing(&error) {
+            "LLM_MODEL_MISSING"
+        } else {
+            "LLM_INIT_FAILED"
+        };
+        EvalError::ScenarioUnavailable("llm llama".into(), format!("{code}: {}", error.message))
+    })?;
+    Ok(Box::new(backend.with_pack(pack)))
+}
+
+#[cfg(not(feature = "llama"))]
+fn llama_backend(
+    _pack: &FrameworkPack,
+    _threads: i32,
+) -> Result<Box<dyn SimplifierBackend>, EvalError> {
+    Err(EvalError::Argument(
+        "--llm llama: not built with llama; rebuild with --features llama".into(),
+    ))
+}
+
 /// The pinned ASR model directory in the model cache.
 #[cfg(feature = "sherpa")]
 pub fn asr_model_dir() -> PathBuf {
@@ -447,11 +608,12 @@ fn build_pipeline(
             _ => Box::new(ScriptedAsr::from_conversation(&conversation, 4)),
         }
     };
-    let demo = DemoBackend::from_pack(&pack).with_latency(std::time::Duration::ZERO);
+    config.engine = engine_config(options);
+    let inner = simplifier(options, &pack)?;
     let backend: Box<dyn SimplifierBackend> = if runtime.fault_llm == ll_config::LlmFault::None {
-        Box::new(demo)
+        inner
     } else {
-        Box::new(FaultyBackend::new(Box::new(demo), runtime.fault_llm))
+        Box::new(FaultyBackend::new(inner, runtime.fault_llm))
     };
     Ok(Pipeline::new(
         config,
@@ -472,9 +634,9 @@ fn run_text(
     let pack = FrameworkPack::for_language(options.language)
         .map_err(|error| EvalError::Argument(error.to_string()))?;
     let mut engine = ll_core::engine::SimplificationEngine::with_config(
-        Box::new(DemoBackend::from_pack(&pack).with_latency(std::time::Duration::ZERO)),
+        simplifier(options, &pack)?,
         &pack,
-        ll_core::engine::SimplifyConfig::on_demand(),
+        engine_config(options),
     );
     let segment = FinalizedSegment::new(text.clone(), 0.0, 2.0);
     let result = engine.simplify(&segment, &[], false);
@@ -712,6 +874,26 @@ mod tests {
         .is_err());
         // Scoring the mock engine would be meaningless.
         assert!(run_asr_wer(&options).is_err());
+    }
+
+    #[test]
+    #[cfg(not(feature = "llama"))]
+    fn llm_llama_is_rejected_without_the_feature() {
+        let error = EvalOptions::parse(&["--llm".into(), "llama".into()]).unwrap_err();
+        assert!(
+            error.to_string().contains("not built with llama"),
+            "{error}"
+        );
+        let options = EvalOptions::parse(&[
+            "--llm".into(),
+            "demo".into(),
+            "--threads".into(),
+            "2".into(),
+        ])
+        .unwrap();
+        assert!(!options.llama);
+        assert_eq!(options.threads, 2);
+        assert!(EvalOptions::parse(&["--threads".into(), "0".into()]).is_err());
     }
 
     #[test]
