@@ -1,7 +1,8 @@
 # ASR coverage and demo evidence (S-3A partial)
 
 - Date: 2026-11-21
-- Status: **partial** - mock/demo path implemented and exercised. The model is
+- Status: **historical** - superseded by `2026-11-23-asr-coverage-v1.md`
+  (measured matrix, T33). Kept for the record: mock/demo path implemented and exercised. The model is
   now pinned (Nemotron 3.5 560 ms int8) and the WER gate is pending the mirror
   and the `sherpa` runtime; see `docs/qa/2026-11-22-model-pins.md` and ADR 0019.
   The "candidate" column below is historical.

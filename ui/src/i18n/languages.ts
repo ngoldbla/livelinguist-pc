@@ -6,7 +6,8 @@ export interface LanguageOption {
   name: string;
   shortName: string;
   rtl?: boolean;
-  /// v1 default is simplify_only for every row until S-3A records WER.
+  /// Mirrors `CoverageMatrix::v1()` in `core/crates/ll-core/src/coverage.rs`
+  /// (measured in docs/qa/2026-11-23-asr-coverage-v1.md); a test keeps them equal.
   asrStatus: AsrStatus;
   pack: string;
 }
@@ -17,7 +18,7 @@ export const LANGUAGES: LanguageOption[] = [
     uiCode: "de",
     name: "Deutsch (Deutschland)",
     shortName: "Deutsch",
-    asrStatus: "simplify_only",
+    asrStatus: "ok",
     pack: "leichte_sprache",
   },
   {
@@ -25,7 +26,7 @@ export const LANGUAGES: LanguageOption[] = [
     uiCode: "fr",
     name: "Français (France)",
     shortName: "Français",
-    asrStatus: "simplify_only",
+    asrStatus: "ok",
     pack: "falc",
   },
   {
@@ -33,7 +34,7 @@ export const LANGUAGES: LanguageOption[] = [
     uiCode: "es",
     name: "Español (España)",
     shortName: "Español",
-    asrStatus: "simplify_only",
+    asrStatus: "ok",
     pack: "lectura_facil",
   },
   {
@@ -41,7 +42,7 @@ export const LANGUAGES: LanguageOption[] = [
     uiCode: "en",
     name: "English (US)",
     shortName: "English",
-    asrStatus: "simplify_only",
+    asrStatus: "ok",
     pack: "easy_english",
   },
   {
@@ -50,7 +51,7 @@ export const LANGUAGES: LanguageOption[] = [
     name: "العربية (Arabic)",
     shortName: "العربية",
     rtl: true,
-    asrStatus: "simplify_only",
+    asrStatus: "ok",
     pack: "ar",
   },
   {
@@ -82,7 +83,7 @@ export const LANGUAGES: LanguageOption[] = [
     uiCode: "hi",
     name: "हिन्दी (Hindi)",
     shortName: "हिन्दी",
-    asrStatus: "simplify_only",
+    asrStatus: "ok",
     pack: "hi",
   },
   {
@@ -90,7 +91,7 @@ export const LANGUAGES: LanguageOption[] = [
     uiCode: "it",
     name: "Italiano (Italian)",
     shortName: "Italiano",
-    asrStatus: "simplify_only",
+    asrStatus: "ok",
     pack: "it",
   },
   {
@@ -106,7 +107,7 @@ export const LANGUAGES: LanguageOption[] = [
     uiCode: "ko",
     name: "한국어 (Korean)",
     shortName: "한국어",
-    asrStatus: "simplify_only",
+    asrStatus: "ok",
     pack: "ko",
   },
   {
@@ -122,7 +123,7 @@ export const LANGUAGES: LanguageOption[] = [
     uiCode: "pt-BR",
     name: "Português (Brasil)",
     shortName: "Português (BR)",
-    asrStatus: "simplify_only",
+    asrStatus: "ok",
     pack: "pt-BR",
   },
   {
@@ -130,7 +131,7 @@ export const LANGUAGES: LanguageOption[] = [
     uiCode: "pt-PT",
     name: "Português (Portugal)",
     shortName: "Português (PT)",
-    asrStatus: "simplify_only",
+    asrStatus: "ok",
     pack: "pt-PT",
   },
   {
@@ -138,7 +139,7 @@ export const LANGUAGES: LanguageOption[] = [
     uiCode: "ru",
     name: "Русский (Russian)",
     shortName: "Русский",
-    asrStatus: "simplify_only",
+    asrStatus: "ok",
     pack: "ru",
   },
   {
@@ -170,7 +171,7 @@ export const LANGUAGES: LanguageOption[] = [
     uiCode: "vi",
     name: "Tiếng Việt (Vietnamese)",
     shortName: "Tiếng Việt",
-    asrStatus: "simplify_only",
+    asrStatus: "ok",
     pack: "vi",
   },
   {

@@ -1,6 +1,6 @@
 # T35 — Privacy checks (S7 integration)
 
-Scripts written in PR #31 (`scripts/privacy-check.sh`, `.ps1`); still todo: run the Linux script and record `## Privacy`; Windows pending: run the `.ps1` with real loopback.
+Scripts written in PR #31 (`scripts/privacy-check.sh`, `.ps1`); **done 2026-11-24**: Windows `.ps1` (owner retest) and Linux `.sh` both print `privacy: PASS`; recorded in `docs/qa/2026-11-23-v1-integration.md` `## Privacy`. The Linux run needed ADR 0022.
 
 **Needs:** T34 done.
 

@@ -44,9 +44,9 @@ writing new cards. Agents work from cards.
 | [T30](T30-wer-metrics.md) | Normalizer, WER, CER | `stage-w3-asr-coverage` | done |
 | [T31](T31-asr-wer-scenario.md) | `ll-eval` asr-wer scenario | `stage-w3-asr-coverage` | done |
 | [T32](T32-asr-minimum-set.md) | Measure en/fr/de/es/ar | `stage-w3-asr-coverage` | linux-done |
-| [T33](T33-asr-coverage-matrix.md) | All 29 locales + coverage statuses (PR) | `stage-w3-asr-coverage` | todo |
+| [T33](T33-asr-coverage-matrix.md) | All 29 locales + coverage statuses (PR) | `stage-w3-asr-coverage` | linux-done |
 | [T34](T34-release-build-integration.md) | Real-backend build, measured health | `stage-w5-integration` | todo |
-| [T35](T35-privacy-checks.md) | Privacy check script | `stage-w5-integration` | todo |
+| [T35](T35-privacy-checks.md) | Privacy check script | `stage-w5-integration` | done |
 | [T36](T36-mvp-journey.md) | Journey + soak, then STOP for human pass (PR) | `stage-w5-integration` | todo |
 | [T37](T37-packaging-build.md) | Installer + portable ZIP build | `stage-w6-packaging` | todo |
 | [T38](T38-clean-profile-install.md) | Clean-profile install test (needs admin once) | `stage-w6-packaging` | todo |

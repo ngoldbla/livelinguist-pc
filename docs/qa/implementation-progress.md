@@ -97,14 +97,18 @@ after playback, click 1.98 s then 1.31 s (RSS 1,011 → 1,639 MB), Tier C p50
 1,802 / p95 2,013 ms / 886 MB (pass), `privacy: PASS`. ADR 0021 is **accepted:
 option 1** (compiled exe + both `.node` addons beside it), so T37 is unblocked.
 
+**Done since (Linux, 2026-11-24):**
+- T33 (Linux part): `CoverageMatrix::v1()` and `ui/src/i18n/languages.ts` follow
+  the measured table, with 12 `ok` and 17 `simplify_only` (none `tbd`). A UI test keeps
+  the two equal. System-audio sessions report the language's status, so en-US
+  no longer says "live listening is not available".
+- T35: Linux `scripts/privacy-check.sh` prints `privacy: PASS` (0 `connect()`
+  calls); recorded in `docs/qa/2026-11-23-v1-integration.md`. It first exposed
+  a Linux-only crash when sherpa and llama share a binary; fixed by linking
+  sherpa-onnx shared on Linux (ADR 0022). Windows is unchanged.
+
 **Linux work still open (resume here):**
-1. T33: set `CoverageMatrix::v1()` from `docs/qa/2026-11-23-asr-coverage-v1.md`
-   (13 locales pass on Linux), update tests, mark the 2026-11-21 doc historical.
-   This is the only thing that still makes the app say "live listening is not
-   available" for en-US while it captions.
-2. T35: run `scripts/privacy-check.sh` and record `## Privacy` in
-   `docs/qa/2026-11-23-v1-integration.md` (the Windows half passed on 2026-11-24).
-3. Owner decisions: es-ES matrix guard false negative (T22); confirm the
+1. Owner decisions: es-ES matrix guard false negative (T22); confirm the
    ` /no_think` soft switch in the training renderer (T08).
 
 **Windows-only work left:**
