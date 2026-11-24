@@ -8,7 +8,9 @@ if (Test-Path $Dist) { Remove-Item -Recurse -Force $Dist }
 New-Item -ItemType Directory -Force -Path $Dist | Out-Null
 
 Write-Host "==> Rust core"
-cargo build -p ll-bridge --release
+# The shipped addon needs real capture, ASR and the simplifier; without these
+# features system audio has no captions and clicks never load the GGUF.
+cargo build -p ll-bridge --release --features capture,sherpa,llama
 Copy-Item (Join-Path $Root "target\release\livelinguist_core.dll") (Join-Path $Dist "livelinguist-core.node")
 
 Write-Host "==> Bun UI binary"

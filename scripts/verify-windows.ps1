@@ -99,7 +99,7 @@ if (-not $SkipUi) {
 
 if (-not $SkipBridge) {
     Write-Host "==> bridge build + smoke + 10 s delivery"
-    Invoke-Native $cargo @('build', '-p', 'll-bridge', '--release')
+    Invoke-Native $cargo @('build', '-p', 'll-bridge', '--release', '--features', 'capture,sherpa,llama')
     Copy-Item target\release\livelinguist_core.dll tests\bridge\livelinguist-core.node -Force
     Copy-Item target\release\livelinguist_core.dll ui\livelinguist-core.node -Force
     Invoke-Native $node @('tests\bridge\bridge-smoke.mjs')
