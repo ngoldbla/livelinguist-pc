@@ -12,6 +12,22 @@ fn main() {
             std::process::exit(2);
         }
     };
+    if options.asr_wer.is_some() {
+        match ll_eval::run_asr_wer(&options) {
+            Ok(summary) => {
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&summary).unwrap_or_default()
+                );
+                println!("wrote {}", options.out.display());
+                return;
+            }
+            Err(error) => {
+                eprintln!("ll-eval failed: {error}");
+                std::process::exit(1);
+            }
+        }
+    }
     match ll_eval::run(&options) {
         Ok(summary) => {
             println!(

@@ -4,6 +4,7 @@
 //! a summary, a content-free diagnostics JSON, and an explicit transcript.
 //! Demo/mock audio is used for CI; `--wav` replays a non-PII fixture.
 
+pub mod asr_wer;
 pub mod wer;
 
 use ll_asr::{AsrEngine, OffAsr, ScriptedAsr};
@@ -85,6 +86,8 @@ pub struct EvalOptions {
     /// `--asr sherpa`: the real streaming engine with the pinned model
     /// (needs the `sherpa` feature and downloaded models).
     pub sherpa: bool,
+    /// `--scenario asr-wer`: FLEURS WER/CER scoring (needs `--asr sherpa`).
+    pub asr_wer: Option<asr_wer::AsrWerArgs>,
 }
 
 impl Default for EvalOptions {
@@ -98,6 +101,7 @@ impl Default for EvalOptions {
             loopback: false,
             seconds: 60,
             sherpa: false,
+            asr_wer: None,
         }
     }
 }
@@ -112,8 +116,17 @@ impl EvalOptions {
                     let value = args
                         .get(index + 1)
                         .ok_or_else(|| EvalError::Argument("--scenario needs a value".into()))?;
-                    options.scenario = Scenario::parse(value)
-                        .ok_or_else(|| EvalError::Argument(format!("unknown scenario: {value}")))?;
+                    if value == "asr-wer" {
+                        options.asr_wer = Some(asr_wer::AsrWerArgs {
+                            asr_threads: 2,
+                            ..Default::default()
+                        });
+                        options.scenario = Scenario::Mock;
+                    } else {
+                        options.scenario = Scenario::parse(value).ok_or_else(|| {
+                            EvalError::Argument(format!("unknown scenario: {value}"))
+                        })?;
+                    }
                     index += 2;
                 }
                 "--language" => {
@@ -182,6 +195,47 @@ impl EvalOptions {
                     }
                     index += 2;
                 }
+                "--locale" | "--manifest" | "--cache" | "--asr-threads" => {
+                    let flag = args[index].clone();
+                    let value = args
+                        .get(index + 1)
+                        .ok_or_else(|| EvalError::Argument(format!("{flag} needs a value")))?;
+                    let wer = options.asr_wer.as_mut().ok_or_else(|| {
+                        EvalError::Argument(format!("{flag} needs --scenario asr-wer first"))
+                    })?;
+                    match flag.as_str() {
+                        "--locale" => {
+                            Language::from_locale(value).ok_or_else(|| {
+                                EvalError::Argument(format!("unknown locale: {value}"))
+                            })?;
+                            wer.locale = Some(value.clone());
+                        }
+                        "--manifest" => wer.manifest = Some(PathBuf::from(value)),
+                        "--cache" => wer.cache = Some(PathBuf::from(value)),
+                        _ => {
+                            wer.asr_threads = value
+                                .parse::<i32>()
+                                .ok()
+                                .filter(|threads| (1..=16).contains(threads))
+                                .ok_or_else(|| {
+                                    EvalError::Argument(format!(
+                                        "--asr-threads needs 1..=16, got {value}"
+                                    ))
+                                })?;
+                        }
+                    }
+                    index += 2;
+                }
+                "--all" => {
+                    options
+                        .asr_wer
+                        .as_mut()
+                        .ok_or_else(|| {
+                            EvalError::Argument("--all needs --scenario asr-wer first".into())
+                        })?
+                        .all = true;
+                    index += 1;
+                }
                 "--out" => {
                     let value = args
                         .get(index + 1)
@@ -215,6 +269,7 @@ pub fn help_text() -> String {
         "          [--language de-DE] [--wav tests/fixtures/sample.wav] [--out DIR] [--text TEXT]",
         "          [--source loopback] [--seconds 60]  (loopback needs --features capture)",
         "          [--asr mock|sherpa]  (sherpa needs --features sherpa + downloaded models)",
+        "          --scenario asr-wer --asr sherpa --cache DIR [--locale xx-XX|--all] [--manifest tests/asr-eval/manifest.json] [--asr-threads 2]",
         "",
         "Outputs: segments.csv, latency.json, summary.json, diagnostics.json, transcript.md",
     ]
@@ -257,6 +312,74 @@ fn check_scenario(scenario: Scenario, runtime: &RuntimeConfig) -> Result<(), Eva
         _ => {}
     }
     Ok(())
+}
+
+/// Nearest-rank percentile in ms (None when empty).
+pub fn wer_percentile(values: &[f64], p: f64) -> Option<f64> {
+    if values.is_empty() {
+        return None;
+    }
+    let mut sorted = values.to_vec();
+    sorted.sort_by(f64::total_cmp);
+    let rank = ((p / 100.0) * sorted.len() as f64).ceil().max(1.0) as usize;
+    Some((sorted[rank.min(sorted.len()) - 1] * 10.0).round() / 10.0)
+}
+
+/// Pinned SHA-256 of the ASR encoder (from the catalog, not re-hashed).
+#[cfg(feature = "sherpa")]
+pub fn asr_encoder_sha256() -> Option<String> {
+    ll_models::ModelCatalog::plan_default()
+        .artifacts
+        .iter()
+        .find(|artifact| artifact.role == ll_models::ModelRole::Asr)
+        .and_then(|artifact| artifact.files.first())
+        .and_then(|file| file.sha256.clone())
+}
+
+#[cfg(not(feature = "sherpa"))]
+pub fn asr_encoder_sha256() -> Option<String> {
+    None
+}
+
+/// `--scenario asr-wer`: needs `--asr sherpa` (feature `sherpa`).
+pub fn run_asr_wer(options: &EvalOptions) -> Result<serde_json::Value, EvalError> {
+    let args = options
+        .asr_wer
+        .clone()
+        .ok_or_else(|| EvalError::Argument("not an asr-wer run".into()))?;
+    if !options.sherpa {
+        return Err(EvalError::Argument(
+            "asr-wer scores the real engine: pass --asr sherpa".into(),
+        ));
+    }
+    run_asr_wer_sherpa(options, &args)
+}
+
+#[cfg(feature = "sherpa")]
+fn run_asr_wer_sherpa(
+    options: &EvalOptions,
+    args: &asr_wer::AsrWerArgs,
+) -> Result<serde_json::Value, EvalError> {
+    let threads = args.asr_threads;
+    asr_wer::run(&options.out, options.language.locale(), args, || {
+        let mut engine =
+            ll_asr::SherpaAsr::with_threads(asr_model_dir(), options.language, threads).map_err(
+                |error| EvalError::ScenarioUnavailable("asr-wer".into(), error.to_string()),
+            )?;
+        Ok(Box::new(move |samples: &[f32]| {
+            asr_wer::sherpa_transcribe(&mut engine, samples)
+        }))
+    })
+}
+
+#[cfg(not(feature = "sherpa"))]
+fn run_asr_wer_sherpa(
+    _options: &EvalOptions,
+    _args: &asr_wer::AsrWerArgs,
+) -> Result<serde_json::Value, EvalError> {
+    Err(EvalError::Argument(
+        "--asr sherpa: not built with sherpa; rebuild with --features sherpa".into(),
+    ))
 }
 
 /// The pinned ASR model directory in the model cache.
@@ -556,6 +679,40 @@ pub fn run(options: &EvalOptions) -> Result<EvalSummary, EvalError> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn asr_wer_arguments_parse() {
+        let options = EvalOptions::parse(&[
+            "--scenario".into(),
+            "asr-wer".into(),
+            "--locale".into(),
+            "fr-FR".into(),
+            "--manifest".into(),
+            "m.json".into(),
+            "--cache".into(),
+            "target/fleurs".into(),
+            "--asr-threads".into(),
+            "3".into(),
+            "--all".into(),
+        ])
+        .unwrap();
+        let args = options.asr_wer.clone().unwrap();
+        assert_eq!(args.locale.as_deref(), Some("fr-FR"));
+        assert_eq!(args.manifest, Some(PathBuf::from("m.json")));
+        assert_eq!(args.cache, Some(PathBuf::from("target/fleurs")));
+        assert_eq!(args.asr_threads, 3);
+        assert!(args.all);
+        assert!(EvalOptions::parse(&["--cache".into(), "x".into()]).is_err());
+        assert!(EvalOptions::parse(&[
+            "--scenario".into(),
+            "asr-wer".into(),
+            "--locale".into(),
+            "xx-YY".into()
+        ])
+        .is_err());
+        // Scoring the mock engine would be meaningless.
+        assert!(run_asr_wer(&options).is_err());
+    }
 
     #[test]
     #[cfg(not(feature = "sherpa"))]
