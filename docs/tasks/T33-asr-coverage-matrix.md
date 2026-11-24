@@ -1,6 +1,6 @@
 # T33 — Measure all 29 locales and set coverage statuses (S3) (PR)
 
-Measurements for all 29 locales are in PR #31 (`docs/qa/2026-11-23-asr-coverage-v1.md`); still todo: `coverage.rs` statuses + tests, historical marker on the old doc, Windows timing re-check, language-picker screenshot.
+Measurements for all 29 locales are in PR #31 (`docs/qa/2026-11-23-asr-coverage-v1.md`); `coverage.rs` + UI statuses, tests and the historical marker are done (2026-11-24, 12 `ok` / 17 `simplify_only`); Windows pending: timing re-check, language-picker screenshot.
 
 **Needs:** T32 passed.
 

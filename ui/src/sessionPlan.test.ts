@@ -12,6 +12,13 @@ describe("planSession", () => {
     });
   });
 
+  test("system audio reports the language's measured status", () => {
+    const live = planSession("monitor", "ok");
+    expect(live.ok && live.asrStatus).toBe("ok");
+    const typed = planSession("monitor", "simplify_only");
+    expect(typed.ok && typed.asrStatus).toBe("simplify_only");
+  });
+
   test("only the demo source is fed the scripted conversation", () => {
     for (const source of ["monitor", "silence", "file"]) {
       const plan = planSession(source);

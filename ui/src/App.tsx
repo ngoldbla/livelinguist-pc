@@ -129,7 +129,7 @@ export function App() {
 
   const startSession = async () => {
     const mode = process.env.LL_MODE === "live" ? "live" : state.mode;
-    const plan = planSession(state.source);
+    const plan = planSession(state.source, languageByCode(state.language).asrStatus);
     if (!plan.ok) {
       setToast(plan.error);
       return;

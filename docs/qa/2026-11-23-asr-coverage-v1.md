@@ -10,8 +10,11 @@ Measured 2026-11-24 on the Linux dev container with
   tier C gate.**
 
 Gate: score ≤ 0.15, RTF ≤ 0.5, p95 chunk ≤ 500 ms. A row is `ok (Linux)`
-only when all three pass here. The Windows re-check is **pending** for every
-row, so `coverage.rs` is not changed yet: T33 step 2 is open.
+only when all three pass here. `CoverageMatrix::v1()` (`coverage.rs`) and the
+UI table (`ui/src/i18n/languages.ts`) now follow this table: 12 locales `ok`,
+17 `simplify_only`, none `tbd` (T33, 2026-11-24). The Windows timing re-check
+is still **pending** for every row; en-US captions on Windows were confirmed
+by the owner retest (`docs/qa/2026-11-24-windows-retest.md`).
 
 | Locale | FLEURS | Metric | Score | RTF | p95 chunk ms | Clips | Status | Note |
 |---|---|---|---|---|---|---|---|---|

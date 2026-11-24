@@ -1,4 +1,5 @@
 import { join } from "node:path";
+import type { AsrStatus } from "./i18n/languages";
 import type { AudioSource } from "./store/sessionStore";
 
 export type ExportFormat = "markdown" | "plain" | "csv";
@@ -7,15 +8,17 @@ export type ExportFormat = "markdown" | "plain" | "csv";
 /// `feedDemo` is true only for the demo source: system audio and files must
 /// never be padded with scripted demo speech.
 export type SessionPlan =
-  | { ok: true; source: AudioSource; feedDemo: boolean; asrStatus: "simplify_only" | "tbd" }
+  | { ok: true; source: AudioSource; feedDemo: boolean; asrStatus: AsrStatus }
   | { ok: false; error: string };
 
-export function planSession(selected: string): SessionPlan {
+/// `languageStatus` is the selected language's measured ASR status; only system
+/// audio is transcribed live, so only that source reports it.
+export function planSession(selected: string, languageStatus: AsrStatus = "tbd"): SessionPlan {
   switch (selected) {
     case "demo":
       return { ok: true, source: "demo", feedDemo: true, asrStatus: "simplify_only" };
     case "monitor":
-      return { ok: true, source: "monitor", feedDemo: false, asrStatus: "tbd" };
+      return { ok: true, source: "monitor", feedDemo: false, asrStatus: languageStatus };
     case "silence":
     case "file":
       return {

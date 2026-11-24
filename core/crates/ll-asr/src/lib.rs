@@ -454,10 +454,15 @@ mod tests {
     }
 
     #[test]
-    fn coverage_gate_is_honest_before_s3a() {
+    fn coverage_gate_follows_the_measured_matrix() {
         let matrix = CoverageMatrix::v1();
-        assert!(!can_promise_live_listening(Language::DeDe, &matrix));
-        assert_eq!(asr_status(Language::DeDe, &matrix), AsrStatus::SimplifyOnly);
+        assert!(can_promise_live_listening(Language::DeDe, &matrix));
+        assert_eq!(asr_status(Language::DeDe, &matrix), AsrStatus::Ok);
+        assert!(!can_promise_live_listening(Language::DaDk, &matrix));
+        assert_eq!(asr_status(Language::DaDk, &matrix), AsrStatus::SimplifyOnly);
+        let mut unmeasured = matrix.clone();
+        unmeasured.set_status(Language::DeDe, AsrStatus::Tbd);
+        assert!(!can_promise_live_listening(Language::DeDe, &unmeasured));
     }
 
     #[test]
