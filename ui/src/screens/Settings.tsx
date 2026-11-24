@@ -7,7 +7,6 @@ import {
   Slider,
   Surface,
   Tabs,
-  Toast,
   Toggle,
 } from "../aurora/components";
 import { colors, gradient, textStyle } from "../aurora/theme";
@@ -68,7 +67,6 @@ export function SettingsScreen({
   };
   const anyMissing = models ? !allReady(models) : true;
   const [tab, setTab] = useState(process.env.LL_TAB ?? "captions");
-  const [toast, setToast] = useState<string | null>(null);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18, padding: 28, height: "100%" }}>
@@ -229,7 +227,6 @@ export function SettingsScreen({
                 ) : null}
                 <Button label={t(locale, "Licenses")} kind="secondary" onClick={onLicenses} />
               </div>
-              {toast ? <Toast message={toast} tone="amber" /> : null}
             </Surface>
             <Surface style={{ padding: 16 }}>
               <text style={textStyle(11, colors.muted)}>
