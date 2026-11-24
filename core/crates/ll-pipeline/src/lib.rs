@@ -384,6 +384,14 @@ impl Pipeline {
         self.take_events_internal()
     }
 
+    /// Emit a bridge-level event on the session's sequence.
+    ///
+    /// The envelope continues the pipeline's `seq`/`ts` numbering, so the UI
+    /// does not drop it as stale.
+    pub fn emit_event(&mut self, event: CoreEvent) -> Envelope {
+        self.emitter.emit(event)
+    }
+
     pub fn export_csv(&self, include_latency: bool) -> String {
         export::session_csv(&self.store, Some(&self.metrics), include_latency)
     }
