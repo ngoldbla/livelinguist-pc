@@ -4,7 +4,7 @@
 //! WASAPI. The data callback only pushes into a lock-free ring; all downmixing
 //! and resampling happens on the pull side.
 
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
@@ -32,6 +32,8 @@ pub struct LoopbackCapture {
     device_rate: u32,
     channels: usize,
     overruns: Arc<AtomicU64>,
+    device_lost: Arc<AtomicBool>,
+    device_name: String,
     scratch: Vec<f32>,
     resampler: rubato::Fft<f32>,
     /// Mono device-rate samples waiting for a full resampler input chunk.
@@ -66,9 +68,20 @@ impl LoopbackCapture {
         let capacity = device_rate as usize * channels * CAPTURE_RING_SECONDS;
         let (producer, consumer) = HeapRb::<f32>::new(capacity).split();
         let overruns = Arc::new(AtomicU64::new(0));
+        let device_lost = Arc::new(AtomicBool::new(false));
+        let device_name = device
+            .description()
+            .map(|description| description.name().to_string())
+            .unwrap_or_else(|_| "unknown output".to_string());
         let resampler = build_resampler(device_rate)?;
 
-        let stream = build_stream(&device, config, producer, Arc::clone(&overruns))?;
+        let stream = build_stream(
+            &device,
+            config,
+            producer,
+            Arc::clone(&overruns),
+            Arc::clone(&device_lost),
+        )?;
         stream.play().map_err(device_error)?;
 
         Ok(Self {
@@ -77,6 +90,8 @@ impl LoopbackCapture {
             device_rate,
             channels,
             overruns,
+            device_lost,
+            device_name,
             scratch: Vec::new(),
             resampler,
             pending: Vec::new(),
@@ -86,6 +101,16 @@ impl LoopbackCapture {
     /// Native sample rate of the output device.
     pub fn device_rate(&self) -> u32 {
         self.device_rate
+    }
+
+    /// Name of the output device this capture opened.
+    pub fn device_name(&self) -> &str {
+        &self.device_name
+    }
+
+    /// True once the stream reported a device error; capture will not recover.
+    pub fn is_device_lost(&self) -> bool {
+        end_capture(&self.device_lost)
     }
 
     /// Number of callbacks whose samples did not fully fit in the ring.
@@ -111,6 +136,10 @@ impl LoopbackCapture {
 
 impl AudioSource for LoopbackCapture {
     fn next_buffer(&mut self) -> Option<Vec<f32>> {
+        // A lost device ends the source; reopening is the caller's decision.
+        if end_capture(&self.device_lost) {
+            return None;
+        }
         let deadline = Instant::now() + EMPTY_WAIT;
         while self.consumer.occupied_len() < self.channels && Instant::now() < deadline {
             std::thread::sleep(POLL_INTERVAL);
@@ -172,11 +201,34 @@ fn drain_resampled(resampler: &mut rubato::Fft<f32>, pending: &mut Vec<f32>, out
     }
 }
 
+/// True when the capture stream has reported a device error.
+///
+/// Kept separate from `next_buffer` so the decision is testable without a
+/// device.
+fn end_capture(device_lost: &AtomicBool) -> bool {
+    device_lost.load(Ordering::Relaxed)
+}
+
+/// Whether a stream error ends the capture.
+///
+/// cpal 0.18 reports routine buffer underruns as `Xrun` and route changes as
+/// `DeviceChanged` (the stream stays alive), so only a genuinely gone device
+/// or an invalidated stream counts as loss.
+fn ends_capture(error: &cpal::Error) -> bool {
+    matches!(
+        error.kind(),
+        cpal::ErrorKind::DeviceNotAvailable
+            | cpal::ErrorKind::StreamInvalidated
+            | cpal::ErrorKind::HostUnavailable
+    )
+}
+
 fn build_stream(
     device: &cpal::Device,
     config: cpal::StreamConfig,
     mut producer: HeapProd<f32>,
     overruns: Arc<AtomicU64>,
+    device_lost: Arc<AtomicBool>,
 ) -> Result<cpal::Stream, AudioError> {
     device
         .build_input_stream::<f32, _, _>(
@@ -188,8 +240,12 @@ fn build_stream(
                 }
             },
             // A device error cannot be reported through this callback; the
-            // pull side sees the stall as empty buffers and stays alive.
-            |_error| {},
+            // pull side sees the flag and ends the source.
+            move |error| {
+                if ends_capture(&error) {
+                    device_lost.store(true, Ordering::Relaxed);
+                }
+            },
             None,
         )
         .map_err(device_error)
@@ -204,10 +260,42 @@ pub fn default_output_available() -> bool {
     cpal::default_host().default_output_device().is_some()
 }
 
+/// Name of the current default output device, if there is one.
+pub fn default_device_name() -> Option<String> {
+    cpal::default_host()
+        .default_output_device()
+        .and_then(|device| device.description().ok())
+        .map(|description| description.name().to_string())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use std::process::Command;
+
+    #[test]
+    fn device_loss_ends_the_capture_source() {
+        // `next_buffer` returns `None` on this flag; the real `LoopbackCapture`
+        // cannot be built without a device, so the decision is tested directly.
+        let lost = AtomicBool::new(false);
+        assert!(!end_capture(&lost));
+        lost.store(true, Ordering::Relaxed);
+        assert!(end_capture(&lost));
+    }
+
+    #[test]
+    fn only_a_gone_device_ends_the_capture() {
+        let gone = cpal::Error::new(cpal::ErrorKind::DeviceNotAvailable);
+        assert!(ends_capture(&gone));
+        assert!(ends_capture(&cpal::Error::new(
+            cpal::ErrorKind::StreamInvalidated
+        )));
+        // Routine underruns and reroutes keep the stream alive.
+        assert!(!ends_capture(&cpal::Error::new(cpal::ErrorKind::Xrun)));
+        assert!(!ends_capture(&cpal::Error::new(
+            cpal::ErrorKind::DeviceChanged
+        )));
+    }
 
     #[test]
     fn resampler_keeps_sine_length_and_level() {

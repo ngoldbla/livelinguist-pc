@@ -25,6 +25,18 @@ use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
+#[cfg(feature = "capture")]
+use std::time::{Duration, Instant};
+
+/// How often the loopback feeder checks whether the default output changed.
+#[cfg(feature = "capture")]
+const DEVICE_CHECK_INTERVAL: Duration = Duration::from_secs(2);
+/// How long the feeder keeps trying to reopen the default output.
+#[cfg(feature = "capture")]
+const DEVICE_RETRY_WINDOW: Duration = Duration::from_secs(10);
+#[cfg(feature = "capture")]
+const DEVICE_RETRY_INTERVAL: Duration = Duration::from_secs(1);
+
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct StartRequest {
@@ -692,6 +704,10 @@ fn monitor_source_entry() -> serde_json::Value {
 }
 
 /// Pull loopback buffers into the running pipeline until the session stops.
+///
+/// When the capture ends or the default output device changes, the capture is
+/// dropped, the loss is reported, and the default output is reopened once a
+/// second for up to ten seconds. It never falls back to demo audio.
 #[cfg(feature = "capture")]
 fn start_monitor_feeder(
     inner: Arc<Mutex<BridgeInner>>,
@@ -699,28 +715,149 @@ fn start_monitor_feeder(
 ) {
     let _ = std::thread::Builder::new()
         .name("loopback-feed".into())
-        .spawn(move || loop {
-            let Some(buffer) = capture.next_buffer() else {
-                break;
-            };
-            let (events, callback) = {
-                let Ok(mut guard) = inner.lock() else {
-                    break;
-                };
-                let Some(pipeline) = guard.pipeline.as_mut() else {
-                    break;
-                };
-                let events = if buffer.is_empty() {
-                    Vec::new()
-                } else {
-                    pipeline.feed_audio(&buffer)
-                };
-                (events, guard.callback.clone())
-            };
-            if let Some(callback) = callback {
-                emit(&callback, events);
+        .spawn(move || {
+            let mut last_device_check = Instant::now();
+            loop {
+                match capture.next_buffer() {
+                    Some(buffer) => {
+                        if !push_capture_audio(&inner, &buffer) {
+                            break;
+                        }
+                    }
+                    None => {
+                        let Some(reopened) = reopen_capture(&inner, capture, "output device lost")
+                        else {
+                            stop_after_device_loss(&inner);
+                            break;
+                        };
+                        capture = reopened;
+                        last_device_check = Instant::now();
+                        continue;
+                    }
+                }
+
+                if last_device_check.elapsed() < DEVICE_CHECK_INTERVAL {
+                    continue;
+                }
+                last_device_check = Instant::now();
+                let current = ll_audio::capture::default_device_name();
+                if device_changed(capture.device_name(), current.as_deref()) {
+                    let Some(reopened) =
+                        reopen_capture(&inner, capture, "default output device changed")
+                    else {
+                        stop_after_device_loss(&inner);
+                        break;
+                    };
+                    capture = reopened;
+                    last_device_check = Instant::now();
+                }
             }
         });
+}
+
+/// Feed one loopback buffer into the running pipeline; false when it is gone.
+#[cfg(feature = "capture")]
+fn push_capture_audio(inner: &Arc<Mutex<BridgeInner>>, buffer: &[f32]) -> bool {
+    let (events, callback) = {
+        let Ok(mut guard) = inner.lock() else {
+            return false;
+        };
+        let Some(pipeline) = guard.pipeline.as_mut() else {
+            return false;
+        };
+        let events = if buffer.is_empty() {
+            Vec::new()
+        } else {
+            pipeline.feed_audio(buffer)
+        };
+        (events, guard.callback.clone())
+    };
+    if let Some(callback) = callback {
+        emit(&callback, events);
+    }
+    true
+}
+
+/// True when the capture no longer follows the default output device.
+#[cfg(feature = "capture")]
+fn device_changed(captured: &str, current: Option<&str>) -> bool {
+    match current {
+        // No default output at all: the device we captured is gone.
+        None => true,
+        Some(name) => name != captured,
+    }
+}
+
+/// Report the loss, drop the dead capture, and reopen the default output.
+///
+/// Returns the new capture, or `None` when nothing reopened within
+/// [`DEVICE_RETRY_WINDOW`].
+#[cfg(feature = "capture")]
+fn reopen_capture(
+    inner: &Arc<Mutex<BridgeInner>>,
+    stale: ll_audio::capture::LoopbackCapture,
+    reason: &str,
+) -> Option<ll_audio::capture::LoopbackCapture> {
+    emit_capture_event(inner, "AUDIO_DEVICE_LOST", reason);
+    drop(stale);
+
+    let deadline = Instant::now() + DEVICE_RETRY_WINDOW;
+    while Instant::now() < deadline {
+        std::thread::sleep(DEVICE_RETRY_INTERVAL);
+        if let Ok(capture) = ll_audio::capture::LoopbackCapture::start_default() {
+            emit_capture_event(
+                inner,
+                "AUDIO_DEVICE_CHANGED",
+                &format!("capturing {}", capture.device_name()),
+            );
+            return Some(capture);
+        }
+    }
+    None
+}
+
+/// The device did not come back: stop the session rather than use demo audio.
+#[cfg(feature = "capture")]
+fn stop_after_device_loss(inner: &Arc<Mutex<BridgeInner>>) {
+    emit_capture_event(inner, "AUDIO_DEVICE_LOST", "no output device after 10 s");
+    if let Ok(mut guard) = inner.lock() {
+        if let Some(mut pipeline) = guard.pipeline.take() {
+            let _ = pipeline.stop();
+        }
+        guard.last_error = Some("system audio device lost".into());
+    }
+}
+
+/// Loopback status and error events on the running session's callback.
+#[cfg(feature = "capture")]
+fn emit_capture_event(inner: &Arc<Mutex<BridgeInner>>, code: &str, message: &str) {
+    let event = if code == "AUDIO_DEVICE_CHANGED" {
+        ll_protocol::CoreEvent::Log {
+            level: ll_config::LogLevel::Info,
+            code: code.to_string(),
+            message: message.to_string(),
+        }
+    } else {
+        ll_protocol::CoreEvent::Error {
+            code: code.to_string(),
+            message: message.to_string(),
+            recoverable: true,
+        }
+    };
+    let (envelope, callback) = {
+        let Ok(mut guard) = inner.lock() else {
+            return;
+        };
+        let Some(pipeline) = guard.pipeline.as_mut() else {
+            return;
+        };
+        // Emitting through the pipeline keeps `seq`/`ts` monotonic with the
+        // session's other events.
+        (pipeline.emit_event(event), guard.callback.clone())
+    };
+    if let Some(callback) = callback {
+        emit(&callback, vec![envelope]);
+    }
 }
 
 #[cfg(test)]
@@ -752,6 +889,15 @@ mod tests {
             "system audio capture not built"
         );
         assert!(preflight_source("demo").is_ok());
+    }
+
+    #[test]
+    #[cfg(feature = "capture")]
+    fn a_new_default_output_counts_as_a_device_change() {
+        assert!(!device_changed("Speakers", Some("Speakers")));
+        assert!(device_changed("Speakers", Some("Headphones")));
+        // No default output at all means the captured device is gone.
+        assert!(device_changed("Speakers", None));
     }
 
     #[test]

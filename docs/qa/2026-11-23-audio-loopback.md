@@ -49,3 +49,29 @@ cargo run --release -p ll-eval --features capture -- --scenario mock --language 
 
 Zero capture overruns across 30 minutes: the 2 s ring at 48 kHz stereo was
 never full. Summary is content-free (counts and rates only).
+
+## Device change
+
+Two playback endpoints exist here: `LG HDR WFHD (NVIDIA High Definition Audio)`
+(default) and `Realtek Digital Output (Realtek(R) Audio)`.
+
+A `CoreClient` session was started on `{"language":"en-US","source":"monitor",
+"mode":"live"}` against the addon built with `--features capture`, with
+`tests/fixtures/sample.wav` looping, and the default output was switched with
+`Set-AudioDevice` (AudioDeviceCmdlets, installed for this check only) and
+restored 12 s later. Session events:
+
+| t (ms) | seq | type | code | message |
+|---|---|---|---|---|
+| 4704 | 58 | error | `AUDIO_DEVICE_LOST` | output device lost |
+| 5726 | 59 | log | `AUDIO_DEVICE_CHANGED` | capturing Realtek Digital Output (Realtek(R) Audio) |
+| 16789 | 60 | error | `AUDIO_DEVICE_LOST` | output device lost |
+| 17800 | 61 | log | `AUDIO_DEVICE_CHANGED` | capturing LG HDR WFHD (NVIDIA High Definition Audio) |
+
+`seq` continues the session sequence, so the UI does not drop these. The session
+produced 4 segments and 175 partials across the two switches: captions resume
+about a second after the change, and there is no fallback to demo audio.
+
+cpal 0.18 also reports routine buffer underruns as its `Xrun` error kind (see
+Run 1 above). Those do not end the capture; only `DeviceNotAvailable`,
+`StreamInvalidated`, and `HostUnavailable` are treated as device loss.
