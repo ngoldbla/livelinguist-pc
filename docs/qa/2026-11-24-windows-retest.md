@@ -3,7 +3,7 @@
 Runbook for the owner's Windows 11 PC after PR #31 (sherpa + llama, Windows
 static C runtime) and the Windows-feedback fixes (system audio through the UI,
 export to Documents, addon built with `capture,sherpa,llama`) are on `main`.
-Fill in **Results** on the Windows machine and commit from there (last section).
+Results were recorded on the Windows machine on 2026-11-24.
 
 Rules while recording: no transcript text, no screenshots that show captions
 of real calls, no model files, no audio. Numbers come from the tools, never
@@ -87,26 +87,55 @@ the Results.
 
 | # | Check | Result | Notes (no transcript text) |
 |---|---|---|---|
-| 0 | `verify-windows.ps1` | | |
-| 1 | System audio captions in the UI | | |
-| 1 | Microphone refused, no demo | | |
-| 2 | Click loads real GGUF | | first-click s / later clicks s |
-| 3 | Export md / txt / csv to Documents | | |
-| 4 | Tier C click bench (3 threads) | | p50 / p95 / peak_rss_mb / CPU / RAM |
-| 5 | Privacy check | | |
-| 6 | ADR 0021 decision | | |
+| 0 | `verify-windows.ps1` | pass | Needs LLVM (`libclang` for `llama-cpp-sys` bindgen): installed LLVM 23.1.6 first, without it the bridge step fails with `Unable to find libclang`. Close the app before running: copying `ui\livelinguist-core.node` fails while it is loaded. Re-run after the fixes below passed. |
+| 1 | System audio captions in the UI | pass | First live partial 1.15 s after playback, first finalized sentence 4.42 s; 31 captions, none matching the built-in demo lines; no new captions after stop (31 after 4 s; second run 7 after 3 s). |
+| 1 | Microphone refused, no demo | pass (after fix) | Before the fix the disabled tile swallowed clicks and showed nothing. Now: "Microphone input is not available in this version." and no session start. |
+| 2 | Click loads real GGUF | pass | First click 1.98 s / later 1.31 s; app RSS 1011 MB → 1639 MB after the first click; rewrites differ from the canned demo text. |
+| 3 | Export md / txt / csv to Documents | pass (after fix) | Before the fix every Summary export failed: `stop()` dropped the pipeline, so `export` returned `session not started`. After: 1015 B `.md`, 1053 B `.txt`, 1491 B `.csv` under `%USERPROFILE%\Documents\Live Linguist\`, each with a full-path toast. |
+| 4 | Tier C click bench (3 threads) | pass | p50 1802 ms, p95 2013 ms, max 2051 ms, 50/50 simplified, `peak_rss_mb=886`, `exit_code=0` (gate p95 ≤ 8 s, RSS ≤ 3.5 GB); wall 94.6 s. |
+| 5 | Privacy check | pass | Final line `privacy: PASS` (T12 TTS clip, loopback). |
+| 6 | ADR 0021 decision | option 1 | Compiled exe + both `.node` addons beside it; recorded in ADR 0021. |
 
-Machine: Windows build `winver` = …, CPU = …, RAM = …, commit = `git rev-parse --short HEAD`.
+Machine: Windows 11 Pro 26H2, build 26300.9974 (`winver`), CPU = AMD Ryzen 9 3900X (12C/24T), RAM = 127.9 GB, commit = `edab553` plus the fixes above on `windows-retest-2026-11-24`.
 
-## Commit from the Windows machine
+## Findings fixed in this retest
 
-```powershell
-git add docs/qa/2026-11-24-windows-retest.md
-git status            # only this file (and screenshots under docs/qa/ if any) — no models, audio, exports
-git commit -m "qa: Windows retest results 2026-11-24"
-git push -u origin windows-retest-2026-11-24
-```
+All were found by these steps, fixed on the same branch, and re-checked on this
+machine:
 
-Then open a PR from `windows-retest-2026-11-24` to `main` on GitHub (or tell
-the cloud session the branch name; it can open and merge the PR once CI is
-green and update the task cards from your results).
+1. **Summary export never worked** (`ll-bridge`): `stop()` took the pipeline, so
+   `export` always answered `session not started`. The stopped session is now
+   kept for exports and snapshots; `tests/bridge/bridge-smoke.mjs` exports all
+   three formats after `stop` and checks the files are non-empty.
+2. **Model cards always said "Not downloaded"** (`Console.tsx`): the panel
+   hard-coded the label instead of reading `modelStore`. It now shows Ready,
+   a download percentage, or Not downloaded from the bridge status.
+3. **Microphone tile was silent** (`Console.tsx`): the disabled tile discarded
+   clicks. It now shows the `planSession("mic")` message, stays focusable, and
+   exposes `aria-disabled`.
+4. **Onboarding rendered twice** (`Onboarding.tsx`): the language and models
+   beats existed twice, the second copy carrying the old "downloads arrive in a
+   preview build" stub. Removed the duplicate.
+5. **`tier-c-profile.ps1` with `--` flags** (`scripts`): the documented
+   `pwsh scripts\tier-c-profile.ps1 -- <exe> --scenario ...` form bound
+   `--scenario` as a script parameter and failed. The script now takes `$args`.
+
+## Open after this retest
+
+- `CoverageMatrix::v1()` still marks every locale `tbd`, so the console shows
+  "Live listening is not available for this language yet" for en-US even though
+  it captions. That is T33 (set the matrix from
+  `docs/qa/2026-11-23-asr-coverage-v1.md`); it is cosmetic until then.
+- The console's "DEMO READY" badge is still static; it should follow the source
+  and backend like the model cards now do.
+
+## Branch and PR
+
+Committed on `windows-retest-2026-11-24` and pushed: the results here plus the
+fixes they found (the runbook expected a docs-only commit, but steps 1–3 could
+not pass without them, so they are on the same branch and land in its PR).
+
+Before committing, `git status` showed only source, script and docs changes: no
+models, audio, screenshots of captions, or exported transcripts. The three
+exported files stay in `%USERPROFILE%\Documents\Live Linguist\` and are not
+tracked.
