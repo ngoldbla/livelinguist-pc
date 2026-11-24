@@ -1,5 +1,7 @@
 # T15 — Model download commands in the bridge (first-run UX)
 
+Linux part done in PR #27; Windows pending: none in code (Windows CI compiles and tests it); the real download is exercised from the Windows UI in T16.
+
 **Needs:** T11, T14 merged.
 
 **Goal:** the UI can ask which models are present and download them with

@@ -9,6 +9,8 @@ use sha2::{Digest, Sha256};
 use std::fs::File;
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 use thiserror::Error;
 
 pub const DISK_PREFLIGHT_BYTES: u64 = 6_000_000_000;
@@ -31,6 +33,22 @@ pub enum ModelError {
     Io(String),
     #[error("invalid catalog: {0}")]
     Catalog(String),
+    #[error("download cancelled")]
+    Cancelled,
+}
+
+impl ModelError {
+    /// Stable, content-free code for the UI (`model_error.code`).
+    pub fn code(&self) -> &'static str {
+        match self {
+            ModelError::DiskSpace { .. } => "DISK_FULL",
+            ModelError::HashMismatch { .. } | ModelError::Unpinned(_) => "HASH_MISMATCH",
+            ModelError::Download { .. } => "NETWORK",
+            ModelError::Cancelled => "CANCELLED",
+            ModelError::Io(_) => "IO",
+            ModelError::Catalog(_) => "CATALOG",
+        }
+    }
 }
 
 impl From<std::io::Error> for ModelError {
@@ -278,6 +296,28 @@ pub fn download_file(
     allow_unverified: bool,
     on_progress: &mut dyn FnMut(DownloadProgress),
 ) -> Result<PathBuf, ModelError> {
+    download_file_cancellable(
+        client,
+        artifact,
+        file,
+        destination,
+        allow_unverified,
+        None,
+        on_progress,
+    )
+}
+
+/// [`download_file`] with a cancel flag checked between chunks. A cancelled
+/// download keeps its partial file so the next run resumes with `Range`.
+pub fn download_file_cancellable(
+    client: &reqwest::blocking::Client,
+    artifact: &ModelArtifact,
+    file: &ModelFile,
+    destination: &Path,
+    allow_unverified: bool,
+    cancel: Option<&AtomicBool>,
+    on_progress: &mut dyn FnMut(DownloadProgress),
+) -> Result<PathBuf, ModelError> {
     let expected = match (&file.sha256, allow_unverified) {
         (Some(hash), _) => Some(hash.clone()),
         (None, true) => None,
@@ -293,20 +333,20 @@ pub fn download_file(
             return Ok(destination.to_path_buf());
         }
     }
-    let url = resolve_url(&artifact.repo, &artifact.revision, &file.path);
     let mut attempt = 0u32;
     loop {
         attempt += 1;
         match download_once(
             client,
-            &url,
             destination,
             file.size,
             artifact,
             file,
+            cancel,
             on_progress,
         ) {
             Ok(()) => break,
+            Err(ModelError::Cancelled) => return Err(ModelError::Cancelled),
             Err(error) if attempt < 3 => {
                 let _ = error;
                 std::thread::sleep(std::time::Duration::from_millis(250 * attempt as u64));
@@ -330,13 +370,18 @@ pub fn download_file(
 
 fn download_once(
     client: &reqwest::blocking::Client,
-    url: &str,
     destination: &Path,
     expected_size: u64,
     artifact: &ModelArtifact,
     file: &ModelFile,
+    cancel: Option<&AtomicBool>,
     on_progress: &mut dyn FnMut(DownloadProgress),
 ) -> Result<(), ModelError> {
+    let url = &resolve_url(&artifact.repo, &artifact.revision, &file.path);
+    let is_cancelled = || cancel.is_some_and(|flag| flag.load(Ordering::SeqCst));
+    if is_cancelled() {
+        return Err(ModelError::Cancelled);
+    }
     let existing = if destination.exists() {
         std::fs::metadata(destination)?.len()
     } else {
@@ -373,6 +418,10 @@ fn download_once(
     let started = std::time::Instant::now();
     let mut buffer = [0u8; 64 * 1024];
     loop {
+        if is_cancelled() {
+            sink.flush()?;
+            return Err(ModelError::Cancelled);
+        }
         let read = response
             .read(&mut buffer)
             .map_err(|error| ModelError::Download {
@@ -404,10 +453,317 @@ fn download_once(
     Ok(())
 }
 
+/// Present/verified state of one artifact, for the first-run screen.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ModelStatus {
+    pub id: String,
+    pub title: String,
+    pub bytes: u64,
+    /// Every file exists in the cache.
+    pub present: bool,
+    /// Every file has its pinned size. Hashes are checked during download,
+    /// not on every status call.
+    pub verified: bool,
+}
+
+impl ModelArtifact {
+    pub fn title(&self) -> String {
+        match self.role {
+            ModelRole::Asr => "Speech recognition".to_string(),
+            ModelRole::Llm => "Simplifier".to_string(),
+            ModelRole::Vad => "Voice activity".to_string(),
+        }
+    }
+
+    pub fn status(&self, root: &Path) -> ModelStatus {
+        let dir = model_dir(root, &self.repo, &self.revision);
+        let sizes: Vec<Option<u64>> = self
+            .files
+            .iter()
+            .map(|file| {
+                std::fs::metadata(dir.join(&file.path))
+                    .ok()
+                    .map(|meta| meta.len())
+            })
+            .collect();
+        let present = !sizes.is_empty() && sizes.iter().all(Option::is_some);
+        let verified = present
+            && self
+                .files
+                .iter()
+                .zip(&sizes)
+                .all(|(file, size)| *size == Some(file.size));
+        ModelStatus {
+            id: self.id.clone(),
+            title: self.title(),
+            bytes: self.total_bytes(),
+            present,
+            verified,
+        }
+    }
+}
+
+impl ModelCatalog {
+    pub fn status(&self, root: &Path) -> Vec<ModelStatus> {
+        self.artifacts
+            .iter()
+            .map(|artifact| artifact.status(root))
+            .collect()
+    }
+}
+
+/// What the shared download loop reports. Content-free: ids, file names,
+/// byte counts, and error codes only.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum DownloadEvent {
+    Progress {
+        id: String,
+        file: String,
+        done_bytes: u64,
+        total_bytes: u64,
+    },
+    Ready {
+        id: String,
+    },
+    Error {
+        id: String,
+        code: String,
+        reason: String,
+    },
+}
+
+/// Download every artifact of `catalog` into `root` (disk preflight, resume,
+/// SHA-256 verify, cancel between chunks). Used by `fetch_models` and the
+/// bridge. Progress is throttled to `max_per_sec` events per file (the last
+/// chunk of a file is always reported). Stops at the first error.
+pub fn download_catalog(
+    client: &reqwest::blocking::Client,
+    catalog: &ModelCatalog,
+    root: &Path,
+    cancel: Option<&AtomicBool>,
+    max_per_sec: u32,
+    on_event: &mut dyn FnMut(DownloadEvent),
+) -> Result<(), ModelError> {
+    let missing: u64 = catalog
+        .artifacts
+        .iter()
+        .filter(|artifact| !artifact.status(root).verified)
+        .map(ModelArtifact::total_bytes)
+        .sum();
+    let first = catalog
+        .artifacts
+        .first()
+        .map(|artifact| artifact.id.clone());
+    if let Err(error) = disk_preflight(&root.join(".preflight"), missing) {
+        on_event(DownloadEvent::Error {
+            id: first.unwrap_or_default(),
+            code: error.code().to_string(),
+            reason: error.to_string(),
+        });
+        return Err(error);
+    }
+    let interval = std::time::Duration::from_secs_f64(1.0 / f64::from(max_per_sec.max(1)));
+    for artifact in &catalog.artifacts {
+        let dir = model_dir(root, &artifact.repo, &artifact.revision);
+        for file in &artifact.files {
+            let mut last: Option<std::time::Instant> = None;
+            let mut forward = |progress: DownloadProgress| {
+                let now = std::time::Instant::now();
+                let due = last.is_none_or(|at| now.duration_since(at) >= interval);
+                if due || progress.received >= progress.total {
+                    last = Some(now);
+                    on_event(DownloadEvent::Progress {
+                        id: artifact.id.clone(),
+                        file: file.path.clone(),
+                        done_bytes: progress.received,
+                        total_bytes: progress.total,
+                    });
+                }
+            };
+            let result = download_file_cancellable(
+                client,
+                artifact,
+                file,
+                &dir.join(&file.path),
+                false,
+                cancel,
+                &mut forward,
+            );
+            if let Err(error) = result {
+                on_event(DownloadEvent::Error {
+                    id: artifact.id.clone(),
+                    code: error.code().to_string(),
+                    reason: error.to_string(),
+                });
+                return Err(error);
+            }
+        }
+        on_event(DownloadEvent::Ready {
+            id: artifact.id.clone(),
+        });
+    }
+    Ok(())
+}
+
+/// HTTP client for model downloads (tokenless; the only network use).
+pub fn http_client() -> Result<reqwest::blocking::Client, ModelError> {
+    reqwest::blocking::Client::builder()
+        .connect_timeout(std::time::Duration::from_secs(20))
+        .build()
+        .map_err(|error| ModelError::Download {
+            url: "https://huggingface.co".to_string(),
+            message: error.to_string(),
+        })
+}
+
+/// One download at a time. `try_begin` hands out a ticket; the slot frees
+/// when the ticket drops. `cancel` asks the running download to stop.
+#[derive(Debug, Clone, Default)]
+pub struct DownloadSlot {
+    running: Arc<AtomicBool>,
+    cancel: Arc<AtomicBool>,
+}
+
+#[derive(Debug)]
+pub struct DownloadTicket {
+    running: Arc<AtomicBool>,
+    cancel: Arc<AtomicBool>,
+}
+
+impl DownloadTicket {
+    pub fn cancel_flag(&self) -> &AtomicBool {
+        &self.cancel
+    }
+}
+
+impl Drop for DownloadTicket {
+    fn drop(&mut self) {
+        self.running.store(false, Ordering::SeqCst);
+    }
+}
+
+impl DownloadSlot {
+    pub fn try_begin(&self) -> Option<DownloadTicket> {
+        if self
+            .running
+            .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
+            .is_err()
+        {
+            return None;
+        }
+        self.cancel.store(false, Ordering::SeqCst);
+        Some(DownloadTicket {
+            running: self.running.clone(),
+            cancel: self.cancel.clone(),
+        })
+    }
+
+    pub fn is_running(&self) -> bool {
+        self.running.load(Ordering::SeqCst)
+    }
+
+    /// Returns true when a running download was asked to stop.
+    pub fn cancel(&self) -> bool {
+        if self.is_running() {
+            self.cancel.store(true, Ordering::SeqCst);
+            true
+        } else {
+            false
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use std::io::Write;
+
+    #[test]
+    fn status_on_empty_root_is_missing() {
+        let root = tempfile::tempdir().unwrap();
+        let status = ModelCatalog::plan_default().status(root.path());
+        assert_eq!(status.len(), 2);
+        assert!(status.iter().all(|model| !model.present && !model.verified));
+        assert!(status.iter().all(|model| model.bytes > 0));
+    }
+
+    #[test]
+    fn status_checks_presence_then_size() {
+        let root = tempfile::tempdir().unwrap();
+        let catalog = ModelCatalog::plan_default();
+        let llm = catalog.get("llm-qwen3-0.6b-easylanguage").unwrap();
+        let dir = model_dir(root.path(), &llm.repo, &llm.revision);
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join(&llm.files[0].path);
+        std::fs::write(&path, b"partial").unwrap();
+        let status = llm.status(root.path());
+        assert!(status.present && !status.verified);
+        File::create(&path)
+            .unwrap()
+            .set_len(llm.files[0].size)
+            .unwrap();
+        let status = llm.status(root.path());
+        assert!(status.present && status.verified);
+    }
+
+    #[test]
+    fn download_slot_allows_one_at_a_time_and_cancels() {
+        let slot = DownloadSlot::default();
+        assert!(!slot.cancel(), "nothing running to cancel");
+        let ticket = slot.try_begin().expect("first download starts");
+        assert!(slot.try_begin().is_none(), "second download is rejected");
+        assert!(slot.cancel());
+        assert!(ticket.cancel_flag().load(Ordering::SeqCst));
+        drop(ticket);
+        let again = slot.try_begin().expect("slot frees when the ticket drops");
+        assert!(!again.cancel_flag().load(Ordering::SeqCst), "cancel resets");
+    }
+
+    #[test]
+    fn error_codes_are_stable() {
+        assert_eq!(ModelError::Cancelled.code(), "CANCELLED");
+        assert_eq!(
+            ModelError::DiskSpace {
+                needed: 1,
+                available: 0
+            }
+            .code(),
+            "DISK_FULL"
+        );
+        assert_eq!(
+            ModelError::Download {
+                url: String::new(),
+                message: String::new()
+            }
+            .code(),
+            "NETWORK"
+        );
+    }
+
+    #[test]
+    fn cancelled_flag_stops_before_any_network_call() {
+        // The URL is unroutable on purpose; a pre-set cancel flag must return
+        // before the request is sent.
+        let client = reqwest::blocking::Client::builder()
+            .timeout(std::time::Duration::from_millis(1))
+            .build()
+            .unwrap();
+        let root = tempfile::tempdir().unwrap();
+        let catalog = ModelCatalog::plan_default();
+        let artifact = &catalog.artifacts[1];
+        let cancel = AtomicBool::new(true);
+        let result = download_file_cancellable(
+            &client,
+            artifact,
+            &artifact.files[0],
+            &root.path().join("model.gguf"),
+            false,
+            Some(&cancel),
+            &mut |_| {},
+        );
+        assert!(matches!(result, Err(ModelError::Cancelled)));
+    }
 
     #[test]
     fn resolve_url_is_tokenless_and_pinned() {

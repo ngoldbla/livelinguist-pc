@@ -26,8 +26,8 @@ writing new cards. Agents work from cards.
 | [T12](T12-sherpa-probe.md) | sherpa-onnx probe on a TTS speech clip | `stage-w3-asr-runtime` | todo |
 | [T13](T13-sherpa-engine.md) | Real streaming `SherpaAsr` | `stage-w3-asr-runtime` | todo |
 | [T14](T14-sherpa-in-app.md) | Real ASR in `ll-eval` and the app (PR) | `stage-w3-asr-runtime` | todo |
-| [T15](T15-model-download-bridge.md) | Bridge: model status, download, cancel | `stage-w3-model-download` | todo |
-| [T16](T16-model-download-ui.md) | Onboarding download screen (PR) | `stage-w3-model-download` | todo |
+| [T15](T15-model-download-bridge.md) | Bridge: model status, download, cancel | `stage-w3-model-download` | linux-done |
+| [T16](T16-model-download-ui.md) | Onboarding download screen (PR) | `stage-w3-model-download` | linux-done |
 | [T17](T17-llama-probe.md) | llama.cpp CPU probe | `stage-w4-llama-cpu` | todo |
 | [T18](T18-llama-backend.md) | `LlamaBackend` | `stage-w4-llama-cpu` | todo |
 | [T19](T19-click-queue.md) | Click-only queue rules | `stage-w4-llama-cpu` | done |

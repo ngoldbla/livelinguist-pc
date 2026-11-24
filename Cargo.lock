@@ -907,6 +907,7 @@ dependencies = [
  "ll-config",
  "ll-core",
  "ll-llm",
+ "ll-models",
  "ll-pipeline",
  "ll-protocol",
  "ll-window",
@@ -915,6 +916,7 @@ dependencies = [
  "napi-derive",
  "serde",
  "serde_json",
+ "tempfile",
 ]
 
 [[package]]

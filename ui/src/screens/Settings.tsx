@@ -7,13 +7,13 @@ import {
   Slider,
   Surface,
   Tabs,
-  Toast,
   Toggle,
 } from "../aurora/components";
 import { colors, gradient, textStyle } from "../aurora/theme";
 import type { RuntimeStatus } from "../bridge/generated/RuntimeStatus";
 import { DevPanel } from "../dev/DevPanel";
 import { t } from "../i18n/locales";
+import { allReady, type ModelView, percent } from "../store/modelStore";
 
 export interface UiSettings {
   captionSize: number;
@@ -39,6 +39,8 @@ export function SettingsScreen({
   onCopyDiagnostics,
   onScenario,
   onReset,
+  models,
+  onDownloadModels,
 }: {
   locale: string;
   settings: UiSettings;
@@ -53,9 +55,18 @@ export function SettingsScreen({
   onCopyDiagnostics: () => void;
   onScenario: (scenario: string) => void;
   onReset: () => void;
+  models?: ModelView;
+  onDownloadModels?: () => void;
 }) {
+  const modelState = (id: string, size: string) => {
+    const model = models?.models.find((entry) => entry.id === id);
+    if (!model) return `${size} · status unknown`;
+    if (model.phase === "ready") return "present · verified";
+    if (model.phase === "downloading") return `downloading · ${percent(model)}%`;
+    return model.present ? "incomplete" : "missing";
+  };
+  const anyMissing = models ? !allReady(models) : true;
   const [tab, setTab] = useState(process.env.LL_TAB ?? "captions");
-  const [toast, setToast] = useState<string | null>(null);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18, padding: 28, height: "100%" }}>
@@ -196,28 +207,26 @@ export function SettingsScreen({
                 name="Qwen3 0.6B EasyLanguage"
                 detail="GGUF Q4_K_M · Apache-2.0"
                 size="~397 MB"
-                state="pinned · first run"
+                state={modelState("llm-qwen3-0.6b-easylanguage", "~397 MB")}
                 tone="accent"
               />
               <ModelCard
                 name="Nemotron 3.5 ASR 0.6B"
                 detail="560 ms · int8 · 40 locales"
                 size="~682 MB"
-                state="pinned · first run"
+                state={modelState("asr-nemotron-3.5-0.6b-560ms", "~682 MB")}
                 tone="mint"
               />
               <div style={{ display: "flex", flexDirection: "row", gap: 10 }}>
-                <Button
-                  label={t(locale, "Download models")}
-                  onClick={() =>
-                    setToast(
-                      "Downloads are not wired in this preview build. Both model hashes are pinned in the catalog.",
-                    )
-                  }
-                />
+                {anyMissing ? (
+                  <Button
+                    label={models?.downloading ? "Downloading…" : t(locale, "Download models")}
+                    disabled={!onDownloadModels || models?.downloading}
+                    onClick={() => onDownloadModels?.()}
+                  />
+                ) : null}
                 <Button label={t(locale, "Licenses")} kind="secondary" onClick={onLicenses} />
               </div>
-              {toast ? <Toast message={toast} tone="amber" /> : null}
             </Surface>
             <Surface style={{ padding: 16 }}>
               <text style={textStyle(11, colors.muted)}>

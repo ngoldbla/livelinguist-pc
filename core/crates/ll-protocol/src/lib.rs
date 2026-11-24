@@ -143,6 +143,24 @@ pub enum CoreEvent {
         #[ts(type = "number")]
         eta_ms: u64,
     },
+    /// First-run model download progress (throttled per file).
+    ModelProgress {
+        id: String,
+        file: String,
+        #[ts(type = "number")]
+        done_bytes: u64,
+        #[ts(type = "number")]
+        total_bytes: u64,
+    },
+    ModelReady {
+        id: String,
+    },
+    /// `code`: DISK_FULL | HASH_MISMATCH | NETWORK | CANCELLED | IO.
+    ModelError {
+        id: String,
+        code: String,
+        reason: String,
+    },
     RuntimeStatus {
         status: Box<RuntimeStatus>,
     },
