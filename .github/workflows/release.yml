@@ -1,39 +1,149 @@
 name: Windows release
 
+# Push a tag vX.Y.Z (matching [workspace.package] version in Cargo.toml) to
+# build, test-install and publish a GitHub release. A tag with a pre-release
+# suffix (v1.0.0-rc.1) publishes a pre-release, which "latest" links skip.
+# Or, with no git needed: Actions -> Windows release -> Run workflow, pick
+# the branch, tick "Publish a release". The run tags that commit v<Cargo
+# version> and publishes the same way. Leave the box unticked for a dry run
+# (same build and install test, files kept as a workflow artifact).
+#
+# Unsigned until SignPath Foundation accepts the project (ADR 0020). Safety
+# without a signature: built only here from the tagged source, published
+# SHA256SUMS.txt, a build-provenance attestation (public repo), and an
+# install/self-test/uninstall check on a clean runner before publishing.
+
 on:
   push:
     tags: ["v*"]
   workflow_dispatch:
+    inputs:
+      release:
+        description: "Publish a release (tags this commit v<Cargo.toml version>)"
+        type: boolean
+        default: false
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  windows:
-    runs-on: windows-latest
+  build:
+    name: Build and test-install (Windows x64)
+    # Server 2025 (build 26100): the installer refuses builds below 22000.
+    runs-on: windows-2025
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
-      - uses: oven-sh/setup-bun@v2
+      # Actions are pinned by commit; the comment is the tag it was resolved from.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Version (Cargo.toml) and tag must agree
+        id: version
+        shell: pwsh
+        run: |
+          $cargo = Get-Content Cargo.toml -Raw
+          if ($cargo -notmatch '(?ms)^\[workspace\.package\].*?^version\s*=\s*"([^"]+)"') { throw "no workspace version" }
+          $version = $Matches[1]
+          if ("${{ github.ref_type }}" -eq "tag" -and "${{ github.ref_name }}" -ne "v$version") {
+            throw "tag ${{ github.ref_name }} does not match Cargo.toml version $version (expected v$version)"
+          }
+          "version=$version" >> $env:GITHUB_OUTPUT
+
+      # rustup on the runner installs the toolchain pinned in rust-toolchain.toml.
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
+        with:
+          key: release
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
           bun-version: 1.4.5
+
       - name: Install NSIS
         run: choco install nsis --no-progress -y
-      - name: Build app + installer
+
+      - name: Build, self-test and package
         shell: pwsh
         run: ./scripts/build-windows.ps1
-      - name: Upload Windows artifacts
-        uses: actions/upload-artifact@v4
+
+      - name: Install, launch self-test, uninstall (clean runner)
+        shell: pwsh
+        run: ./scripts/test-installer.ps1 -Version "${{ steps.version.outputs.version }}"
+
+      - name: Attest build provenance
+        if: ${{ !github.event.repository.private }}
+        uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2
+        with:
+          subject-path: |
+            dist/LiveLinguist-*-setup.exe
+            dist/LiveLinguist-*-portable.zip
+
+      # SignPath signing step goes here once the project is accepted (ADR 0020):
+      # submit dist/windows/livelinguist.exe and the installer to SignPath,
+      # replace the files with the signed ones, then recompute SHA256SUMS.txt.
+      # No certificates or tokens in the repository; only an org secret.
+
+      - name: Upload release files
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: livelinguist-windows-x64
+          if-no-files-found: error
           path: |
-            packaging/nsis/LiveLinguist-*-setup.exe
+            dist/LiveLinguist-*-setup.exe
             dist/LiveLinguist-*-portable.zip
-      - name: Attach to GitHub release
-        if: startsWith(github.ref, 'refs/tags/')
-        shell: pwsh
+            dist/SHA256SUMS.txt
+
+  publish:
+    name: Publish GitHub release
+    needs: build
+    if: github.ref_type == 'tag' || inputs.release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: livelinguist-windows-x64
+          path: release
+
+      - name: Verify checksums
+        working-directory: release
+        run: sha256sum -c SHA256SUMS.txt
+
+      - name: Create release
         env:
           GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.build.outputs.version }}
+          TAG: v${{ needs.build.outputs.version }}
+          FROM_TAG: ${{ github.ref_type == 'tag' }}
         run: |
-          gh release upload ${{ github.ref_name }} packaging/nsis/LiveLinguist-*-setup.exe dist/LiveLinguist-*-portable.zip --clobber
+          if [ "$FROM_TAG" = "true" ]; then
+            target=(--verify-tag)
+          else
+            # Run workflow: refuse to reuse a version that already has a tag.
+            if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null; then
+              echo "::error::$TAG already exists. Bump [workspace.package] version in Cargo.toml (and ui/package.json) first."
+              exit 1
+            fi
+            target=(--target "$GITHUB_SHA")
+          fi
+          sed -e "s/{{VERSION}}/${VERSION}/g" \
+              -e "s#{{REPO}}#${GITHUB_REPOSITORY}#g" \
+              packaging/release-notes.md > notes.md
+          echo '```' >> notes.md
+          cat release/SHA256SUMS.txt >> notes.md
+          echo '```' >> notes.md
+          prerelease=()
+          case "$TAG" in *-*) prerelease=(--prerelease) ;; esac
+          gh release create "$TAG" release/* \
+            "${target[@]}" \
+            --title "Live Linguist $VERSION" \
+            --notes-file notes.md \
+            "${prerelease[@]}"

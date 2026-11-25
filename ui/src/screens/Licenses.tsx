@@ -1,6 +1,7 @@
 import { Badge, Button, Divider, SectionHeader, Surface } from "../aurora/components";
 import { colors, textStyle } from "../aurora/theme";
 import { t } from "../i18n/locales";
+import { APP_VERSION } from "../version";
 
 export function LicensesScreen({ locale, onBack }: { locale: string; onBack: () => void }) {
   return (
@@ -86,7 +87,7 @@ export function LicensesScreen({ locale, onBack }: { locale: string; onBack: () 
             subtitle={t(locale, "Built for Windows 11 x64")}
           />
           <text style={textStyle(12, colors.muted)}>
-            {t(locale, "Linux dev preview")} · Live Linguist PC 0.1.0 · GPUIX 0.11.0 · React 19.2.3.
+            Live Linguist PC {APP_VERSION} · GPUIX 0.11.0 · React 19.2.3.
           </text>
           <Divider />
           <text style={textStyle(11, colors.faint)}>
