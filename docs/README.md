@@ -12,6 +12,7 @@ Start here. Everything in `docs/` is one of four kinds: **what to do next**,
 | [`plans/2026-11-23-windows-agent-prompt.md`](plans/2026-11-23-windows-agent-prompt.md) | Copy-paste prompts for the Windows host agent (short card-based prompt + full prompt). |
 | [`qa/implementation-progress.md`](qa/implementation-progress.md) | Live status board: merged stages, current stage, next run. |
 | [`plans/2026-11-22-v1-scope.md`](plans/2026-11-22-v1-scope.md) | What v1.0 is and is not; supported system; release gates G0–G9. |
+| [`plans/2026-11-25-public-release-plan.md`](plans/2026-11-25-public-release-plan.md) | Going public under MIT and a foolproof Windows download: gaps found, owner steps, cards R1–R7. |
 | [`budgets.md`](budgets.md) | Latency/RSS/fps budgets per hardware tier. |
 
 ## 2. What we decided

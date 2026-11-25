@@ -104,3 +104,9 @@ UI portfolio: [`docs/screenshots/m2/`](docs/screenshots/m2/README.md).
 
 - Mac/iOS implementation: <https://github.com/ngoldbla/live-linguist>
 - Product spec: `PRD.md` in the reference repo
+
+## License
+
+MIT (see [`LICENSE`](LICENSE)). Third-party components keep their own
+licenses: [`packaging/licenses/THIRD_PARTY.md`](packaging/licenses/THIRD_PARTY.md).
+Models are downloaded on first run and are not part of this repository.
