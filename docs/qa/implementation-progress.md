@@ -128,6 +128,12 @@ the live screen's ASR panel said "live listening is not available" for `ok`
 languages. T20's click path produced a real GGUF simplification (flagged
 `unfaithful` by the validator); evidence in `docs/qa/2026-11-23-llm-cpu.md`.
 
+**Windows, 2026-11-24:** T23 `workArea()` numbers recorded at 100% (2560x1032,
+scale 1.0) and 150% (1707x672 logical; 2560x1008 physical, dpi 144) in
+`docs/qa/2026-11-23-v1-ui.md` `## Work area`; the per-monitor-aware app fits
+the Console inside the work area at 150%, with a 13 px centred-position
+overshoot left to T25.
+
 **Linux work still open (resume here):**
 1. Owner decisions: **de-DE ASR gate** (Windows tier C score 0.157 vs the
    0.15 gate; Linux 0.141 — see `docs/tasks/BLOCKED.md` and
@@ -136,7 +142,6 @@ languages. T20's click path produced a real GGUF simplification (flagged
    the training renderer (T08).
 
 **Windows-only work left:**
-- T23: `workArea()` numbers at 100% and 150%.
 - T25, T26 (not started), T27 keyboard-only live run, T28 Narrator pass
   (human) + Arabic screenshot.
 - T34, T36–T40 (T37 has its ADR now; T38 needs admin once).

@@ -34,7 +34,7 @@ writing new cards. Agents work from cards.
 | [T20](T20-llama-in-app.md) | Real simplifier in `ll-eval` and the app | `stage-w4-llama-cpu` | done |
 | [T21](T21-tier-c-latency.md) | Tier C profile, click p95, RSS | `stage-w4-llama-cpu` | done |
 | [T22](T22-simplify-matrix.md) | 29-pack simplifier matrix (PR) | `stage-w4-llama-cpu` | linux-done |
-| [T23](T23-work-area.md) | Bridge `workArea()` | `stage-w5-layout` | linux-done |
+| [T23](T23-work-area.md) | Bridge `workArea()` | `stage-w5-layout` | done |
 | [T24](T24-window-size-clamp.md) | Fit windows to the work area | `stage-w5-layout` | done |
 | [T25](T25-layout-min-size.md) | Screens fit the minimum size + screenshots (PR) | `stage-w5-layout` | todo |
 | [T26](T26-a11y-checks.md) | Automated a11y checks on every screen | `stage-w5-a11y` | todo |
