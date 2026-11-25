@@ -35,6 +35,7 @@ Status labels: `proposed`, `accepted`, `baseline` (working default), `superseded
 | [0023](0023.md) | Open source under MIT; public GitHub Releases for non-technical users | D-060 | accepted |
 | [0024](0024.md) | Caption-latency benchmark and CPU-first autoresearch loop | D-061 | accepted |
 | [0025](0025.md) | Run click simplification outside the bridge lock | D-062 | accepted |
+| [0026](0026.md) | Quiet utility UI, one decision per screen, kept preferences | D-063 | accepted |
 
 ## Superseded
 

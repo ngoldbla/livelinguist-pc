@@ -49,7 +49,7 @@ This file is the live status board. Each merged PR is a validated stage.
 
 ## Decisions
 
-All 19 ADRs are present in `docs/decisions/`. New structural changes need a
+All 26 ADRs are present in `docs/decisions/`. New structural changes need a
 decision entry and an ADR update. **For 1.0, D-055/D-056 and
 `docs/plans/2026-11-22-v1-scope.md` are the source of truth.**
 
@@ -84,7 +84,18 @@ decision entry and an ADR update. **For 1.0, D-055/D-056 and
 
 ## Next run
 
-Checkpoint 2026-11-24 (Linux cloud session; PRs #24–#31). Card statuses are in
+**2026-11-25 UI clarity pass (branch `stage-ui-clarity`):** the shipped UI was
+reviewed with the impeccable design skill (20/40, Acceptable) and rebuilt as a
+quiet utility surface: one decision per screen, a 12px type floor, plain
+language, a flat high-contrast palette, the overlay honoring caption size and
+the two-tier choice, and persisted UI settings
+(`%LOCALAPPDATA%\LiveLinguist\ui-settings.json`). ADR 0026; evidence
+`docs/qa/2026-11-25-ui-clarity.md` and the rebuilt
+`docs/screenshots/m2-windows/` portfolio. UI: typecheck, 114 tests, Biome and
+13 capture scenarios pass. Pending: PR, the 28-catalog translation pass for 18
+new strings, and the human Narrator/DPI walk.
+
+Checkpoint 2026-11-24 (Linux cloud session; PRs #24-#31). Card statuses are in
 `docs/tasks/README.md` (`linux-done` = only the Windows part remains).
 
 **Post-v1 autoresearch (T41, 2026-11-24):** branch `stage-autoresearch-baseline`

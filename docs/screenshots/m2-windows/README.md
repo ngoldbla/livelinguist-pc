@@ -1,8 +1,9 @@
 # Windows screenshots
 
-Portfolio rebuilt 2026-11-22 on the Windows 11 host with the GPUIX 0.11 GPU
-test renderer (DirectX). Evidence and non-claims:
-`docs/qa/2026-11-22-gpu-renderer.md`.
+Portfolio rebuilt 2026-11-25 on the Windows 11 host with the GPUIX 0.11 GPU
+test renderer (DirectX) for the quiet utility UI pass (ADR 0026, evidence
+`docs/qa/2026-11-25-ui-clarity.md`). The 2026-11-22 renderer evidence and
+non-claims still apply: `docs/qa/2026-11-22-gpu-renderer.md`.
 
 | File | Path |
 |---|---|
