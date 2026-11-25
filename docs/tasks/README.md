@@ -52,6 +52,7 @@ writing new cards. Agents work from cards.
 | [T38](T38-clean-profile-install.md) | Clean-profile install test (needs admin once) | `stage-w6-packaging` | todo |
 | [T39](T39-release-workflow.md) | Release workflow dry run + install notes (PR) | `stage-w6-packaging` | todo |
 | [T40](T40-release-candidate.md) | Release gates and `v1.0.0` | `release-v1.0.0` | todo |
+| [T41](T41-caption-latency-baseline.md) | Caption-latency baseline + autoresearch harness | `stage-autoresearch-baseline` | done |
 
 Cards marked **(PR)** end their branch: open the PR, merge when CI is green.
 Two cards stop for a human on purpose: **T36** (MVP: real call + Narrator

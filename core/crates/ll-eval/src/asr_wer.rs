@@ -52,7 +52,7 @@ impl Manifest {
 }
 
 /// `--scenario asr-wer` arguments.
-#[derive(Debug, Clone, PartialEq, Default)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct AsrWerArgs {
     pub locale: Option<String>,
     pub manifest: Option<PathBuf>,
@@ -60,6 +60,21 @@ pub struct AsrWerArgs {
     pub all: bool,
     /// Recognizer CPU threads (T32 compares 2 vs 3).
     pub asr_threads: i32,
+    /// Streaming input chunk in milliseconds (autoresearch latency candidates).
+    pub chunk_ms: usize,
+}
+
+impl Default for AsrWerArgs {
+    fn default() -> Self {
+        Self {
+            locale: None,
+            manifest: None,
+            cache: None,
+            all: false,
+            asr_threads: 2,
+            chunk_ms: 1100,
+        }
+    }
 }
 
 /// What transcribing one clip produced.
@@ -219,6 +234,7 @@ pub fn run(
             "p95_chunk_ms": crate::wer_percentile(&score.chunk_ms, 95.0),
             "endpoints": score.endpoints,
             "asr_threads": args.asr_threads,
+            "asr_chunk_ms": args.chunk_ms,
             "model_sha256": crate::asr_encoder_sha256(),
             "host": if cfg!(windows) { "windows host" } else { "Linux dev approximation, not the Windows tier C gate" },
             "contentFree": true,
@@ -249,15 +265,17 @@ fn write(path: &Path, value: &Value) -> Result<(), EvalError> {
 pub fn sherpa_transcribe(
     asr: &mut ll_asr::SherpaAsr,
     samples: &[f32],
+    chunk_ms: usize,
 ) -> Result<ClipRun, EvalError> {
     use ll_asr::AsrEngine;
+    let chunk_samples = (chunk_ms * 16).max(1);
     let mut run = ClipRun::default();
     let mut committed: Vec<String> = Vec::new();
     let mut current = String::new();
-    for (index, chunk) in samples.chunks(CHUNK_SAMPLES).enumerate() {
+    for (index, chunk) in samples.chunks(chunk_samples).enumerate() {
         let started = std::time::Instant::now();
         let event = asr
-            .process(chunk, (index + 1) as f64 * CHUNK_SAMPLES as f64 / 16_000.0)
+            .process(chunk, (index + 1) as f64 * chunk_samples as f64 / 16_000.0)
             .map_err(|error| EvalError::Audio(error.to_string()))?;
         let elapsed = started.elapsed().as_secs_f64() * 1000.0;
         run.chunk_ms.push(elapsed);

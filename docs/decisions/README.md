@@ -32,6 +32,7 @@ Status labels: `proposed`, `accepted`, `baseline` (working default), `superseded
 | [0020](0020.md) | Code signing: unsigned v1.0.0 + SHA-256, SignPath Foundation next | D-057 | accepted |
 | [0021](0021.md) | Packaging the GPUIX addon: compiled exe + addons beside it | D-058 | accepted |
 | [0022](0022.md) | Link sherpa-onnx as a shared library on Linux | D-059 | accepted |
+| [0023](0023.md) | Caption-latency benchmark and CPU-first autoresearch loop | D-060 | accepted |
 
 ## Superseded
 

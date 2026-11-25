@@ -87,6 +87,15 @@ decision entry and an ADR update. **For 1.0, D-055/D-056 and
 Checkpoint 2026-11-24 (Linux cloud session; PRs #24–#31). Card statuses are in
 `docs/tasks/README.md` (`linux-done` = only the Windows part remains).
 
+**Post-v1 autoresearch (T41, 2026-11-24):** branch `stage-autoresearch-baseline`
+adds the content-free media-clock → UIA caption-latency harness, explicit ASR
+chunk/thread/endpoint experiment knobs, and overlay partial presentation. The
+installed RC baseline and CPU parameter screen are recorded in
+`docs/qa/2026-11-24-caption-latency-baseline.md`: RC live partial p95 3657 ms;
+confirmed overlay-partial + 80 ms candidate p95 2278 ms with 93.8% cue coverage.
+Shipping ASR defaults remain unchanged pending second-voice/WER/tier-C/click
+continuity checks. GPU inference is not implemented or measured.
+
 **Owner Windows retest 2026-11-24: steps 0–5 pass** —
 `docs/qa/2026-11-24-windows-retest.md` (results table, machine, evidence). The
 run found and the branch `windows-retest-2026-11-24` fixes: Summary exports

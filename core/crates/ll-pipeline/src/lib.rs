@@ -94,6 +94,9 @@ pub struct PipelineConfig {
     pub max_caption_lag: Option<f64>,
     pub audio_fault: AudioFault,
     pub batch_threshold: usize,
+    /// Streaming ASR input chunk in 16 kHz samples. Defaults to the original
+    /// 1.1 s; smaller values are benchmark candidates, not silent fallbacks.
+    pub asr_chunk_samples: usize,
     /// Dev-only: lets `SimplificationMode::Automatic` simplify every finalized
     /// segment (stress scenario / `LL_PIPELINE=live`). Off in 1.0 builds of
     /// the app: without it, Automatic behaves like OnDemand (click-only).
@@ -109,6 +112,7 @@ impl PipelineConfig {
             max_caption_lag: None,
             audio_fault: AudioFault::None,
             batch_threshold: 3,
+            asr_chunk_samples: ll_audio::CHUNK_SAMPLES,
             dev_automatic: false,
         }
     }
@@ -156,6 +160,7 @@ impl Pipeline {
             "ses-{:06}",
             NEXT_SESSION.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
         );
+        let chunker = AudioChunker::with_chunk_samples(config.asr_chunk_samples.max(1));
         let reversion = ReversionDetector::new(config.session.language.base_code());
         let engine = SimplificationEngine::with_config(backend, &pack, config.engine);
         Self {
@@ -168,7 +173,7 @@ impl Pipeline {
             cancel_handle: SimplifyCancel::default(),
             segmenter: Segmenter::default(),
             vad: VoiceActivityDetector::default(),
-            chunker: AudioChunker::new(),
+            chunker,
             reversion,
             metrics: LatencyMetrics::new(),
             emitter: EventEmitter::new(),
@@ -572,7 +577,9 @@ impl Pipeline {
         self.metrics.record(
             &segment.id,
             Stage::AudioEnd,
-            (segment.audio_start - ll_audio::CHUNK_DURATION).max(0.0),
+            (segment.audio_start
+                - self.config.asr_chunk_samples as f64 / ll_audio::TARGET_SAMPLE_RATE as f64)
+                .max(0.0),
         );
         self.metrics
             .record(&segment.id, Stage::Finalized, self.wall_ms());
