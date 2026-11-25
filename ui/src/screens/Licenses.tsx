@@ -1,21 +1,17 @@
-import { Badge, Button, Divider, SectionHeader, Surface } from "../aurora/components";
-import { colors, textStyle } from "../aurora/theme";
+import { Badge, Divider, PageHeader, Surface } from "../aurora/components";
+import { colors, textStyle, type } from "../aurora/theme";
 import { t } from "../i18n/locales";
 import { APP_VERSION } from "../version";
 
 export function LicensesScreen({ locale, onBack }: { locale: string; onBack: () => void }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16, padding: 28, height: "100%" }}>
-      <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 12 }}>
-        <Button label={t(locale, "Back")} kind="secondary" onClick={onBack} />
-        <div style={{ display: "flex", flexDirection: "column", gap: 2, flexGrow: 1 }}>
-          <text style={{ ...textStyle(10, colors.accent, 700) }}>
-            {t(locale, "LICENSES").toUpperCase()}
-          </text>
-          <text style={textStyle(24, colors.text, 700)}>{t(locale, "Licenses")}</text>
-        </div>
-        <Badge label="Apache-2.0 · MIT" tone="mint" />
-      </div>
+    <div style={{ display: "flex", flexDirection: "column", gap: 14, padding: 24, height: "100%" }}>
+      <PageHeader
+        backLabel={t(locale, "Back")}
+        title={t(locale, "Licenses")}
+        subtitle={t(locale, "Everything this app runs on, and the terms it ships under.")}
+        onBack={onBack}
+      />
 
       <div
         style={{
@@ -81,16 +77,15 @@ export function LicensesScreen({ locale, onBack }: { locale: string; onBack: () 
             },
           ]}
         />
-        <Surface style={{ padding: 18, display: "flex", flexDirection: "column", gap: 8 }}>
-          <SectionHeader
-            title={t(locale, "About")}
-            subtitle={t(locale, "Built for Windows 11 x64")}
+        <Surface style={{ padding: 18, display: "flex", flexDirection: "column", gap: 10 }}>
+          <text style={{ ...textStyle(type.title, colors.text, 600) }}>{t(locale, "About")}</text>
+          <InfoRow label={t(locale, "Version")} value={APP_VERSION} />
+          <InfoRow
+            label={t(locale, "Built for Windows 11 x64")}
+            value="GPUIX 0.11.0 · React 19.2.3"
           />
-          <text style={textStyle(12, colors.muted)}>
-            Live Linguist PC {APP_VERSION} · GPUIX 0.11.0 · React 19.2.3.
-          </text>
           <Divider />
-          <text style={textStyle(11, colors.faint)}>
+          <text style={{ ...textStyle(type.meta, colors.muted), lineHeight: 18 }}>
             {t(
               locale,
               "No telemetry. No cloud inference. Model downloads contact Hugging Face only when you start one.",
@@ -98,6 +93,17 @@ export function LicensesScreen({ locale, onBack }: { locale: string; onBack: () 
           </text>
         </Surface>
       </div>
+    </div>
+  );
+}
+
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 16 }}>
+      <text style={{ ...textStyle(type.meta, colors.faint), width: 200 }}>{label}</text>
+      <text style={{ ...textStyle(type.body, colors.text), flexGrow: 1, minWidth: 0 }}>
+        {value}
+      </text>
     </div>
   );
 }
@@ -111,7 +117,7 @@ function LicenseBlock({
 }) {
   return (
     <Surface style={{ padding: 18, display: "flex", flexDirection: "column", gap: 10 }}>
-      <text style={{ ...textStyle(10, colors.faint, 700) }}>{title}</text>
+      <text style={{ ...textStyle(type.meta, colors.faint, 600) }}>{title}</text>
       {rows.map((row) => (
         <div
           key={row.name}
@@ -120,8 +126,8 @@ function LicenseBlock({
           <div
             style={{ display: "flex", flexDirection: "column", gap: 2, flexGrow: 1, minWidth: 0 }}
           >
-            <text style={textStyle(12, colors.text, 600)}>{row.name}</text>
-            <text style={textStyle(10, colors.faint)}>{row.detail}</text>
+            <text style={textStyle(type.body, colors.text, 600)}>{row.name}</text>
+            <text style={textStyle(type.meta, colors.faint)}>{row.detail}</text>
           </div>
           <Badge label={row.tag} tone="neutral" />
         </div>

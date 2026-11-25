@@ -259,12 +259,26 @@ export function languageByUiCode(code: string): LanguageOption {
 export function statusLabel(status: AsrStatus): string {
   switch (status) {
     case "ok":
-      return "Live ASR";
+      return "Live captions";
     case "degraded":
-      return "Live ASR · reduced";
+      return "Live captions · reduced";
     case "tbd":
       return "Not measured";
     default:
-      return "Simplify only";
+      return "Simplified text only";
+  }
+}
+
+/** One plain sentence explaining what the status means for the user. */
+export function statusDetail(status: AsrStatus): string {
+  switch (status) {
+    case "ok":
+      return "Captions come straight from what is said.";
+    case "degraded":
+      return "Captions work, but recognition is less accurate for this language.";
+    case "tbd":
+      return "Live captions for this language have not been measured yet.";
+    default:
+      return "No live captions yet. Paste or type text to simplify it.";
   }
 }

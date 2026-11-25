@@ -18,14 +18,16 @@ const [defaultWidth, defaultHeight] =
   screen === "overlay"
     ? [780, 250]
     : screen === "licenses"
-      ? [1020, 880]
+      ? [1020, 820]
       : screen === "settings"
-        ? [1180, 880]
+        ? [1000, 860]
         : screen === "summary"
-          ? [1180, 840]
+          ? [1180, 820]
           : screen === "expanded"
             ? [1180, 900]
-            : [1180, 820];
+            : screen === "onboarding"
+              ? [980, 680]
+              : [1100, 700];
 
 // Fit to the monitor work area so nothing clips at 150% scale. The overlay
 // keeps its fixed size; LL_WIDTH/LL_HEIGHT still override everything.

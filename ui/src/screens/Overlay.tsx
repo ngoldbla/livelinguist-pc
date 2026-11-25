@@ -1,13 +1,20 @@
 import type { StyleDesc } from "@gpuix/react";
-import { Badge, Button } from "../aurora/components";
-import { colors, gradient, textStyle } from "../aurora/theme";
-import { languageByCode, statusLabel } from "../i18n/languages";
+import { BrandMark, Button, StatusDot } from "../aurora/components";
+import { colors, textStyle, type } from "../aurora/theme";
+import { languageByCode } from "../i18n/languages";
 import { t } from "../i18n/locales";
 import type { SessionView } from "../store/sessionStore";
 
+/**
+ * The overlay is the surface people read during a call: caption size and the
+ * two-tier choice come from Settings, the content is centred while sparse, and
+ * every control carries a visible word.
+ */
 export function OverlayScreen({
   state,
   locale,
+  captionSize,
+  showTier1,
   onSimplify,
   onPause,
   onResume,
@@ -18,6 +25,8 @@ export function OverlayScreen({
 }: {
   state: SessionView;
   locale: string;
+  captionSize: number;
+  showTier1: boolean;
   onSimplify: (id: string) => void;
   onPause: () => void;
   onResume: () => void;
@@ -28,94 +37,102 @@ export function OverlayScreen({
 }) {
   const language = languageByCode(state.language);
   const latest = state.segments[state.segments.length - 1];
-  const simplified = [...state.segments].reverse().find((segment) => segment.simplified);
 
   const shell: StyleDesc = {
     height: "100%",
-    padding: 14,
+    padding: 12,
     display: "flex",
     flexDirection: "column",
     gap: 8,
-    background: gradient("#0B0B12F2", "#15102AF2", 120),
+    backgroundColor: "#0D0D12F2",
     borderWidth: 1,
-    borderColor: "#FFFFFF22",
-    borderRadius: 16,
-    boxShadow: { offsetX: 0, offsetY: 12, blurRadius: 40, spreadRadius: 0, color: "#00000088" },
+    borderColor: "#FFFFFF24",
+    borderRadius: 12,
   };
 
   return (
-    <div style={{ height: "100%", padding: 10 }}>
-      <div style={shell}>
+    <div style={{ height: "100%", padding: 8 }}>
+      <div style={shell} role="group" aria-label={t(locale, "Caption overlay")}>
         <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <div
-            style={{
-              width: 22,
-              height: 22,
-              borderRadius: 7,
-              background: gradient("#8B7CFF", "#2ED3B7", 135),
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <text style={textStyle(8, "#0B0B12", 800)}>LL</text>
-          </div>
-          <text style={textStyle(11, colors.text, 700)}>{language.shortName}</text>
-          <Badge
-            label={state.phase === "paused" ? t(locale, "Paused") : t(locale, "Listening")}
+          <BrandMark size={20} />
+          <text style={textStyle(type.meta, colors.text, 600)}>{language.shortName}</text>
+          <StatusDot
             tone={state.phase === "paused" ? "amber" : "mint"}
+            label={state.phase === "paused" ? t(locale, "Paused") : t(locale, "Listening")}
           />
-          {state.reversionActive ? <Badge label="EN" tone="info" /> : null}
+          {state.reversionActive ? (
+            <text style={textStyle(type.meta, colors.faint)}>EN</text>
+          ) : null}
           <div style={{ flexGrow: 1 }} />
-          <text style={textStyle(9, colors.faint)}>{statusLabel(language.asrStatus)}</text>
-          <OverlayIcon
-            glyph="⋮⋮"
-            label="Move window"
-            onClick={() => {}}
+          <Button
+            label={t(locale, "Move window")}
+            kind="ghost"
             onMouseDown={onDrag}
-            focusable={false}
+            style={{ height: 28, paddingLeft: 8, paddingRight: 8 }}
           />
-          <OverlayIcon glyph="⟳" label={t(locale, "Settings")} onClick={onSettings} />
-          <OverlayIcon glyph="⤢" label={t(locale, "Expanded transcript")} onClick={onExpand} />
-          <OverlayIcon glyph="▣" label={t(locale, "Console window")} onClick={onConsole} />
+          <Button
+            label={t(locale, "Settings")}
+            kind="ghost"
+            onClick={onSettings}
+            style={{ height: 28, paddingLeft: 8, paddingRight: 8 }}
+          />
+          <Button
+            label={t(locale, "Expand")}
+            kind="ghost"
+            onClick={onExpand}
+            style={{ height: 28, paddingLeft: 8, paddingRight: 8 }}
+          />
+          <Button
+            label={t(locale, "Console")}
+            kind="ghost"
+            onClick={onConsole}
+            style={{ height: 28, paddingLeft: 8, paddingRight: 8 }}
+          />
         </div>
 
         <div
-          style={{ flexGrow: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 5 }}
+          style={{
+            flexGrow: 1,
+            minHeight: 0,
+            display: "flex",
+            flexDirection: "column",
+            gap: 5,
+            justifyContent: "center",
+          }}
         >
           {state.partial ? (
             <div role="group" aria-label={t(locale, "Listening — keep speaking")}>
-              <text style={textStyle(12, colors.muted, 500)}>{state.partial.text}</text>
+              <text style={textStyle(type.body, colors.muted, 500)}>{state.partial.text}</text>
             </div>
           ) : null}
           {latest ? (
-            <>
-              <div
-                role="button"
-                tabIndex={0}
-                aria-label={latest.text}
-                onClick={() => onSimplify(latest.id)}
-                onKeyDown={(event) => {
-                  if (event.key === "enter" || event.key === "space" || event.key === " ") {
-                    event.preventDefault();
-                    onSimplify(latest.id);
-                  }
-                }}
-                style={{ display: "flex", flexDirection: "column", gap: 3, cursor: "pointer" }}
-              >
-                <text style={textStyle(11, colors.muted)}>{latest.text}</text>
-                <text style={textStyle(17, colors.text, 600)}>
-                  {latest.simplified ?? t(locale, "Tap a sentence to simplify it")}
+            <div
+              role="button"
+              tabIndex={0}
+              aria-label={latest.text}
+              onClick={() => onSimplify(latest.id)}
+              onKeyDown={(event) => {
+                if (event.key === "enter" || event.key === "space" || event.key === " ") {
+                  event.preventDefault();
+                  onSimplify(latest.id);
+                }
+              }}
+              style={{ display: "flex", flexDirection: "column", gap: 4, cursor: "pointer" }}
+            >
+              {showTier1 ? (
+                <text style={textStyle(Math.max(14, Math.round(captionSize * 0.72)), colors.muted)}>
+                  {latest.text}
                 </text>
-              </div>
-              {latest.flags.length > 0 ? (
-                <div style={{ display: "flex", flexDirection: "row", gap: 5 }}>
-                  {latest.flags.slice(0, 2).map((flag) => (
-                    <Badge key={flag} label={flag} tone="amber" />
-                  ))}
-                </div>
               ) : null}
-            </>
+              <text
+                style={{
+                  ...textStyle(captionSize, colors.text, 600),
+                  lineHeight: Math.round(captionSize * 1.3),
+                }}
+              >
+                {latest.simplified ?? t(locale, "Tap a sentence to simplify it")}
+              </text>
+            </div>
           ) : (
             <div
               style={{
@@ -126,10 +143,10 @@ export function OverlayScreen({
                 justifyContent: "center",
               }}
             >
-              <text style={textStyle(17, colors.text, 600)}>
+              <text style={{ ...textStyle(captionSize, colors.text, 600), lineHeight: 24 }}>
                 {t(locale, "Listening — keep speaking")}
               </text>
-              <text style={textStyle(11, colors.faint)}>
+              <text style={textStyle(type.meta, colors.faint)}>
                 {t(locale, "Start speaking, or use the demo conversation.")}
               </text>
             </div>
@@ -137,8 +154,8 @@ export function OverlayScreen({
         </div>
 
         <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <text style={textStyle(9, colors.faint)}>
-            {simplified ? t(locale, "Simplified caption") : t(locale, "Verbatim")}
+          <text style={textStyle(type.meta, colors.faint)}>
+            {latest?.simplified ? t(locale, "Simplified caption") : t(locale, "Verbatim")}
           </text>
           <div style={{ flexGrow: 1 }} />
           <Button
@@ -146,57 +163,9 @@ export function OverlayScreen({
             kind="ghost"
             onClick={state.phase === "paused" ? onResume : onPause}
           />
-          <text style={textStyle(9, colors.faint)}>{t(locale, "click to simplify")}</text>
+          <text style={textStyle(type.meta, colors.faint)}>{t(locale, "click to simplify")}</text>
         </div>
       </div>
-    </div>
-  );
-}
-
-function OverlayIcon({
-  glyph,
-  label,
-  onClick,
-  onMouseDown,
-  focusable = true,
-}: {
-  glyph: string;
-  label: string;
-  onClick: () => void;
-  onMouseDown?: () => void;
-  focusable?: boolean;
-}) {
-  return (
-    <div
-      role={focusable ? "button" : undefined}
-      tabIndex={focusable ? 0 : undefined}
-      aria-label={focusable ? label : undefined}
-      aria-hidden={focusable ? undefined : true}
-      onClick={onClick}
-      onMouseDown={onMouseDown}
-      onKeyDown={
-        focusable
-          ? (event) => {
-              if (event.key === "enter" || event.key === "space" || event.key === " ") {
-                event.preventDefault();
-                onClick();
-              }
-            }
-          : undefined
-      }
-      style={{
-        width: 22,
-        height: 22,
-        borderRadius: 7,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: "#FFFFFF0A",
-        cursor: "pointer",
-        hover: { backgroundColor: "#FFFFFF16" },
-      }}
-    >
-      <text style={textStyle(10, colors.muted, 700)}>{glyph}</text>
     </div>
   );
 }

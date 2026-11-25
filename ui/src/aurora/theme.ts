@@ -1,32 +1,51 @@
 import type { StyleDesc } from "@gpuix/react";
 
+/**
+ * Quiet utility palette. One accent, three semantic tones, no decorative
+ * gradients: text sits on flat near-black surfaces and every body token keeps
+ * >= 4.5:1 against them (see contrast.test.ts).
+ */
 export const colors = {
-  bg: "#0B0B12",
-  bgDeep: "#07070C",
-  surface: "#151522E6",
-  surfaceSolid: "#151522",
-  surfaceRaised: "#1D1D2E",
-  border: "#FFFFFF14",
-  borderStrong: "#FFFFFF24",
-  text: "#F5F3FF",
-  muted: "#A8A3BD",
-  // Lightened from #6F6A85 to reach 4.5:1 on every surface (contrast test).
-  faint: "#87829D",
-  accent: "#8B7CFF",
-  accentSoft: "#8B7CFF24",
-  mint: "#59E1C8",
-  mintSoft: "#59E1C824",
-  amber: "#FFC46B",
-  amberSoft: "#FFC46B24",
-  rose: "#FF7A90",
-  roseSoft: "#FF7A9024",
+  bg: "#0A0A0D",
+  bgDeep: "#070709",
+  surface: "#111116",
+  surfaceSolid: "#111116",
+  surfaceRaised: "#18181F",
+  border: "#FFFFFF1A",
+  borderStrong: "#FFFFFF2E",
+  text: "#F4F4F7",
+  muted: "#C6C7D0",
+  faint: "#A0A1AC",
+  accent: "#AFA2FF",
+  accentSoft: "#AFA2FF1F",
+  mint: "#5FE3C0",
+  mintSoft: "#5FE3C01F",
+  amber: "#F5C06A",
+  amberSoft: "#F5C06A1F",
+  rose: "#FF8A9B",
+  roseSoft: "#FF8A9B1F",
 } as const;
 
+/**
+ * One type scale. Nothing renders below 12px, so metadata stays readable for
+ * the people the product is for (easy-language readers, low vision).
+ */
+export const type = {
+  meta: 12,
+  label: 13,
+  body: 14,
+  title: 20,
+  page: 28,
+  hero: 34,
+} as const;
+
+const isWindows = typeof process !== "undefined" && process.platform === "win32";
+
 export const fonts = {
-  sans: "Noto Sans",
-  display: "Noto Sans",
+  sans: isWindows ? "Segoe UI" : "Noto Sans",
+  display: isWindows ? "Segoe UI" : "Noto Sans",
   arabic: "Noto Sans Arabic",
-  mono: "Noto Sans Mono",
+  mono: isWindows ? "Consolas" : "Noto Sans Mono",
 } as const;
 
 export function gradient(from: string, to: string, angle = 120): StyleDesc["background"] {
@@ -41,28 +60,27 @@ export function gradient(from: string, to: string, angle = 120): StyleDesc["back
   };
 }
 
+/** Flat panel. No blur, no drop shadow: the surface is the elevation. */
 export const glass: StyleDesc = {
   backgroundColor: colors.surface,
   borderWidth: 1,
   borderColor: colors.border,
-  borderRadius: 18,
-  boxShadow: {
-    offsetX: 0,
-    offsetY: 12,
-    blurRadius: 36,
-    spreadRadius: 0,
-    color: "#00000055",
-  },
+  borderRadius: 12,
 };
 
+/** A panel nested inside a Surface. */
 export const card: StyleDesc = {
-  backgroundColor: colors.surfaceRaised,
+  backgroundColor: "#FFFFFF06",
   borderWidth: 1,
   borderColor: colors.border,
-  borderRadius: 14,
+  borderRadius: 10,
 };
 
-export function textStyle(size = 14, color: string = colors.text, weight?: number): StyleDesc {
+export function textStyle(
+  size: number = type.body,
+  color: string = colors.text,
+  weight?: number,
+): StyleDesc {
   return {
     fontSize: size,
     color,
@@ -78,7 +96,7 @@ export const focusRing: StyleDesc = {
 };
 
 export const pressable: StyleDesc = {
-  borderRadius: 12,
+  borderRadius: 8,
   cursor: "pointer",
   hover: { backgroundColor: "#FFFFFF10" },
   active: { backgroundColor: "#FFFFFF18" },

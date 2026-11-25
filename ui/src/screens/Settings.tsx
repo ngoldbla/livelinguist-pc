@@ -3,28 +3,21 @@ import {
   Badge,
   Button,
   Divider,
+  PageHeader,
   SectionHeader,
   Slider,
+  StatusDot,
   Surface,
   Tabs,
   Toggle,
 } from "../aurora/components";
-import { colors, gradient, textStyle } from "../aurora/theme";
+import { colors, textStyle, type } from "../aurora/theme";
 import type { RuntimeStatus } from "../bridge/generated/RuntimeStatus";
 import { DevPanel } from "../dev/DevPanel";
 import { t } from "../i18n/locales";
+import { CAPTION_SIZE_MAX, CAPTION_SIZE_MIN, type UiSettings } from "../settings";
 import { allReady, type ModelView, percent } from "../store/modelStore";
 import { APP_VERSION } from "../version";
-
-export interface UiSettings {
-  captionSize: number;
-  showTier1: boolean;
-  detection: boolean;
-  reducedEffects: boolean;
-  followLearning: boolean;
-  devEnabled: boolean;
-  scenario: string;
-}
 
 export function SettingsScreen({
   locale,
@@ -59,33 +52,30 @@ export function SettingsScreen({
   models?: ModelView;
   onDownloadModels?: () => void;
 }) {
+  const [tab, setTab] = useState(process.env.LL_TAB ?? "captions");
+  const anyMissing = models ? !allReady(models) : true;
+
   const modelState = (id: string, size: string) => {
     const model = models?.models.find((entry) => entry.id === id);
-    if (!model) return `${size} · status unknown`;
-    if (model.phase === "ready") return "present · verified";
-    if (model.phase === "downloading") return `downloading · ${percent(model)}%`;
-    return model.present ? "incomplete" : "missing";
+    if (!model) return `${size} · ${t(locale, "Not downloaded")}`;
+    if (model.phase === "ready") return t(locale, "Ready");
+    if (model.phase === "downloading") return `${percent(model)}%`;
+    return model.present ? t(locale, "Download failed: %@", "retry") : t(locale, "Not downloaded");
   };
-  const anyMissing = models ? !allReady(models) : true;
-  const [tab, setTab] = useState(process.env.LL_TAB ?? "captions");
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 18, padding: 28, height: "100%" }}>
-      <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 12 }}>
-        <Button label={t(locale, "Back")} kind="secondary" onClick={onBack} />
-        <div style={{ display: "flex", flexDirection: "column", gap: 2, flexGrow: 1 }}>
-          <text style={{ ...textStyle(10, colors.accent, 700) }}>
-            {t(locale, "SETTINGS").toUpperCase()}
-          </text>
-          <text style={textStyle(24, colors.text, 700)}>{t(locale, "Settings")}</text>
-        </div>
-        <Badge label={t(locale, "Content-free diagnostics")} tone="mint" />
-      </div>
+    <div style={{ display: "flex", flexDirection: "column", gap: 16, padding: 24, height: "100%" }}>
+      <PageHeader
+        backLabel={t(locale, "Back")}
+        title={t(locale, "Settings")}
+        subtitle={t(locale, "Changes apply immediately and are kept for next time.")}
+        onBack={onBack}
+      />
 
       <Tabs
         tabs={[
-          { id: "captions", label: t(locale, "CAPTIONS") },
-          { id: "models", label: t(locale, "MODELS") },
+          { id: "captions", label: t(locale, "Captions") },
+          { id: "models", label: t(locale, "Models") },
           { id: "developer", label: t(locale, "Developer") },
           { id: "about", label: t(locale, "About") },
         ]}
@@ -103,134 +93,148 @@ export function SettingsScreen({
         }}
       >
         {tab === "captions" ? (
-          <div style={{ display: "flex", flexDirection: "row", gap: 16 }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
             <Surface
               style={{
-                flexGrow: 1,
-                padding: 20,
+                width: "100%",
+                maxWidth: 780,
+                padding: 22,
                 display: "flex",
                 flexDirection: "column",
-                gap: 16,
+                gap: 14,
               }}
             >
               <SectionHeader
                 title={t(locale, "Captions")}
                 subtitle={t(locale, "Caption size and the two-tier display.")}
               />
+              <div
+                style={{
+                  padding: 12,
+                  backgroundColor: "#00000033",
+                  borderRadius: 8,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 8,
+                }}
+              >
+                <text style={{ ...textStyle(type.meta, colors.faint, 600) }}>
+                  {t(locale, "PREVIEW").toUpperCase()}
+                </text>
+                <text style={{ ...textStyle(type.body, colors.muted), lineHeight: 20 }}>
+                  On s'est retrouvés coincés dans les embouteillages pendant une éternité.
+                </text>
+                <text
+                  style={{
+                    ...textStyle(settings.captionSize, colors.text, 600),
+                    lineHeight: Math.round(settings.captionSize * 1.35),
+                  }}
+                >
+                  Il y avait beaucoup de voitures. On a attendu très longtemps.
+                </text>
+              </div>
               <Slider
                 label={t(locale, "Caption size")}
                 value={settings.captionSize}
-                min={14}
-                max={30}
+                min={CAPTION_SIZE_MIN}
+                max={CAPTION_SIZE_MAX}
                 unit="px"
                 onChange={(value) => onChange({ captionSize: value })}
               />
               <Divider />
-              <Toggle
-                label={t(locale, "Show live verbatim text (Tier 1)")}
-                checked={settings.showTier1}
-                onChange={(checked) => onChange({ showTier1: checked })}
-                description="Verbatim partials above the simplified final."
-              />
-              <Toggle
-                label={t(locale, "Detect language")}
-                checked={settings.detection}
-                onChange={(checked) => onChange({ detection: checked })}
-                description="Powers the English-reversion indicator."
-              />
+              <div style={{ display: "flex", flexDirection: "row", gap: 20 }}>
+                <div style={{ flexGrow: 1, minWidth: 0 }}>
+                  <Toggle
+                    label={t(locale, "Show live verbatim text (Tier 1)")}
+                    checked={settings.showTier1}
+                    onChange={(checked) => onChange({ showTier1: checked })}
+                    description={t(
+                      locale,
+                      "Two caption tiers: verbatim partial + simplified final.",
+                    )}
+                  />
+                </div>
+                <div style={{ flexGrow: 1, minWidth: 0 }}>
+                  <Toggle
+                    label={t(locale, "Detect language")}
+                    checked={settings.detection}
+                    onChange={(checked) => onChange({ detection: checked })}
+                    description={t(
+                      locale,
+                      "Language detection powers the English-reversion indicator.",
+                    )}
+                  />
+                </div>
+              </div>
               <Toggle
                 label={t(locale, "Reduced effects")}
                 checked={settings.reducedEffects}
                 onChange={(checked) => onChange({ reducedEffects: checked })}
-                description="Turns off the background glow. The app has no animations and redraws only when something changes."
+                description={t(
+                  locale,
+                  "Turns off the background glow. The app has no animations and redraws only when something changes.",
+                )}
               />
               <Divider />
               <Toggle
                 label={t(locale, "App language follows learning language")}
                 checked={settings.followLearning}
                 onChange={(checked) => onChange({ followLearning: checked })}
-                description="Switch back to the device language any time."
+                description={t(locale, "Switch back to the device language any time.")}
               />
               <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 10 }}>
-                <text style={textStyle(12, colors.muted)}>{t(locale, "App language")}</text>
+                <text style={textStyle(type.body, colors.muted)}>{t(locale, "App language")}</text>
                 <div style={{ flexGrow: 1 }} />
                 <Badge label={settings.followLearning ? locale : "en"} tone="accent" />
               </div>
-            </Surface>
-            <Surface
-              style={{
-                width: 300,
-                flexShrink: 0,
-                padding: 18,
-                display: "flex",
-                flexDirection: "column",
-                gap: 10,
-              }}
-            >
-              <text style={{ ...textStyle(10, colors.faint, 700) }}>
-                {t(locale, "PREVIEW").toUpperCase()}
-              </text>
-              <div
-                style={{
-                  ...{ padding: 10 },
-                  backgroundColor: "#00000033",
-                  borderRadius: 10,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 6,
-                }}
-              >
-                <text style={textStyle(11, colors.muted)}>
-                  On s'est retrouvés coincés dans les embouteillages pendant une éternité.
-                </text>
-                <text style={textStyle(settings.captionSize * 0.8, "#E4DFFF", 600)}>
-                  Il y avait beaucoup de voitures. On a attendu très longtemps.
-                </text>
-              </div>
-              <text style={textStyle(11, colors.faint)}>
-                {t(
-                  locale,
-                  "Validators are confidence signals, not gates. Flagged captions stay visible.",
-                )}
-              </text>
             </Surface>
           </div>
         ) : null}
 
         {tab === "models" ? (
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            <Surface style={{ padding: 20, display: "flex", flexDirection: "column", gap: 12 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 14, minHeight: "100%" }}>
+            <Surface style={{ padding: 22, display: "flex", flexDirection: "column", gap: 14 }}>
               <SectionHeader
                 title={t(locale, "On-device models")}
                 subtitle={t(locale, "No models are bundled. Downloads are public and tokenless.")}
               />
               <ModelCard
                 name="Qwen3 0.6B EasyLanguage"
-                detail="GGUF Q4_K_M · Apache-2.0"
-                size="~397 MB"
+                detail="GGUF Q4_K_M · Apache-2.0 · ~397 MB"
                 state={modelState("llm-qwen3-0.6b-easylanguage", "~397 MB")}
-                tone="accent"
+                ready={models?.models.some(
+                  (entry) => entry.id === "llm-qwen3-0.6b-easylanguage" && entry.phase === "ready",
+                )}
               />
               <ModelCard
                 name="Nemotron 3.5 ASR 0.6B"
-                detail="560 ms · int8 · 40 locales"
-                size="~682 MB"
+                detail="560 ms · int8 · 40 locales · ~682 MB"
                 state={modelState("asr-nemotron-3.5-0.6b-560ms", "~682 MB")}
-                tone="mint"
+                ready={models?.models.some(
+                  (entry) => entry.id === "asr-nemotron-3.5-0.6b-560ms" && entry.phase === "ready",
+                )}
               />
               <div style={{ display: "flex", flexDirection: "row", gap: 10 }}>
                 {anyMissing ? (
                   <Button
-                    label={models?.downloading ? "Downloading…" : t(locale, "Download models")}
+                    label={
+                      models?.downloading
+                        ? t(locale, "Downloading models…")
+                        : t(locale, "Download models")
+                    }
                     disabled={!onDownloadModels || models?.downloading}
                     onClick={() => onDownloadModels?.()}
                   />
-                ) : null}
+                ) : (
+                  <StatusDot tone="mint" label={t(locale, "Models ready")} />
+                )}
                 <Button label={t(locale, "Licenses")} kind="secondary" onClick={onLicenses} />
               </div>
             </Surface>
             <Surface style={{ padding: 16 }}>
-              <text style={textStyle(11, colors.muted)}>
+              <text style={{ ...textStyle(type.meta, colors.muted), lineHeight: 18 }}>
                 {t(
                   locale,
                   "Model downloads contact Hugging Face. Audio and transcripts stay on this device. Nothing is uploaded.",
@@ -242,27 +246,12 @@ export function SettingsScreen({
 
         {tab === "developer" ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            <Surface
-              style={{
-                padding: 16,
-                display: "flex",
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 12,
-              }}
-            >
-              <div style={{ display: "flex", flexDirection: "column", gap: 2, flexGrow: 1 }}>
-                <text style={textStyle(13, colors.text, 600)}>
-                  {t(locale, "Developer settings")}
-                </text>
-                <text style={textStyle(11, colors.muted)}>
-                  {t(locale, "Visible by default in dev builds; gated in release.")}
-                </text>
-              </div>
+            <Surface style={{ padding: 16 }}>
               <Toggle
-                label=""
+                label={t(locale, "Developer settings")}
                 checked={settings.devEnabled}
                 onChange={(checked) => onChange({ devEnabled: checked })}
+                description={t(locale, "Visible by default in dev builds; gated in release.")}
               />
             </Surface>
             {settings.devEnabled ? (
@@ -280,7 +269,7 @@ export function SettingsScreen({
               />
             ) : (
               <Surface style={{ padding: 18 }}>
-                <text style={textStyle(11, colors.muted)}>
+                <text style={{ ...textStyle(type.body, colors.muted), lineHeight: 20 }}>
                   {t(
                     locale,
                     "Enable the master switch to show scenario presets, strict mode, and runtime health.",
@@ -292,22 +281,23 @@ export function SettingsScreen({
         ) : null}
 
         {tab === "about" ? (
-          <Surface style={{ padding: 22, display: "flex", flexDirection: "column", gap: 14 }}>
+          <Surface style={{ padding: 22, display: "flex", flexDirection: "column", gap: 16 }}>
             <SectionHeader
               title="Live Linguist PC"
               subtitle={`${t(locale, "Version")} ${APP_VERSION} · ${t(locale, "Built for Windows 11 x64")}`}
             />
-            <div style={{ display: "flex", flexDirection: "row", gap: 10, flexWrap: "wrap" }}>
-              <Badge label="GPUIX 0.11.0" tone="accent" />
-              <Badge label="React 19.2.3" tone="accent" />
-              <Badge label="Rust" tone="mint" />
-              <Badge label="llama.cpp" tone="neutral" />
-              <Badge label="sherpa-onnx" tone="neutral" />
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <InfoRow label={t(locale, "Version")} value={APP_VERSION} />
+              <InfoRow label="UI" value="GPUIX 0.11.0 · React 19.2.3" />
+              <InfoRow label={t(locale, "Backend")} value="llama.cpp · sherpa-onnx" />
+              <InfoRow label={t(locale, "Licenses")} value="Apache-2.0 · MIT · product data" />
             </div>
             <Divider />
-            <text style={textStyle(12, colors.muted)}>
-              {t(locale, "Linux dev preview")} · {t(locale, "Built for Windows 11 x64")}.{" "}
-              {t(locale, "Offline — audio never leaves this device")}.
+            <text style={{ ...textStyle(type.meta, colors.muted), lineHeight: 18 }}>
+              {t(
+                locale,
+                "No telemetry. No cloud inference. Model downloads contact Hugging Face only when you start one.",
+              )}
             </text>
             <div style={{ display: "flex", flexDirection: "row", gap: 10 }}>
               <Button label={t(locale, "Licenses")} kind="secondary" onClick={onLicenses} />
@@ -324,20 +314,28 @@ export function SettingsScreen({
   );
 }
 
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 16 }}>
+      <text style={{ ...textStyle(type.meta, colors.faint), width: 120 }}>{label}</text>
+      <text style={{ ...textStyle(type.body, colors.text), flexGrow: 1, minWidth: 0 }}>
+        {value}
+      </text>
+    </div>
+  );
+}
+
 function ModelCard({
   name,
   detail,
-  size,
   state,
-  tone,
+  ready,
 }: {
   name: string;
   detail: string;
-  size: string;
   state: string;
-  tone: "accent" | "amber" | "mint";
+  ready?: boolean;
 }) {
-  const color = tone === "accent" ? colors.accent : tone === "amber" ? colors.amber : colors.mint;
   return (
     <div
       style={{
@@ -345,7 +343,7 @@ function ModelCard({
         flexDirection: "row",
         alignItems: "center",
         gap: 12,
-        padding: 12,
+        padding: 14,
         borderRadius: 10,
         backgroundColor: "#FFFFFF06",
         borderWidth: 1,
@@ -356,23 +354,21 @@ function ModelCard({
         style={{
           width: 34,
           height: 34,
-          borderRadius: 10,
-          background: gradient(`${color}44`, `${color}11`, 120),
+          borderRadius: 8,
+          backgroundColor: ready ? colors.mintSoft : "#FFFFFF0A",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          flexShrink: 0,
         }}
       >
-        <text style={textStyle(10, color, 800)}>◇</text>
+        <text style={textStyle(type.meta, ready ? colors.mint : colors.faint, 800)}>◇</text>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 2, flexGrow: 1, minWidth: 0 }}>
-        <text style={textStyle(13, colors.text, 600)}>{name}</text>
-        <text style={textStyle(10, colors.faint)}>{detail}</text>
+        <text style={textStyle(type.body, colors.text, 600)}>{name}</text>
+        <text style={textStyle(type.meta, colors.faint)}>{detail}</text>
       </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 2, alignItems: "flex-end" }}>
-        <text style={textStyle(11, colors.muted)}>{size}</text>
-        <text style={textStyle(9, color, 700)}>{state}</text>
-      </div>
+      <text style={textStyle(type.meta, ready ? colors.mint : colors.muted, 600)}>{state}</text>
     </div>
   );
 }

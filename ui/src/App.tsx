@@ -17,9 +17,10 @@ import { LicensesScreen } from "./screens/Licenses";
 import { LiveScreen } from "./screens/Live";
 import { Onboarding } from "./screens/Onboarding";
 import { OverlayScreen } from "./screens/Overlay";
-import { SettingsScreen, type UiSettings } from "./screens/Settings";
+import { SettingsScreen } from "./screens/Settings";
 import { SummaryScreen } from "./screens/Summary";
 import { exportDir, exportPath, planSession } from "./sessionPlan";
+import { defaultSettings, loadSettings, saveSettings, type UiSettings } from "./settings";
 import { createModelStore, useModels } from "./store/modelStore";
 import { createSessionStore, useSession } from "./store/sessionStore";
 import { sizeForMode } from "./windowSize";
@@ -59,16 +60,6 @@ function readLanguage(): string {
   return languageByCode(code).code;
 }
 
-const defaultSettings: UiSettings = {
-  captionSize: 20,
-  showTier1: true,
-  detection: true,
-  reducedEffects: false,
-  followLearning: true,
-  devEnabled: true,
-  scenario: "mock",
-};
-
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export function App() {
@@ -85,7 +76,7 @@ export function App() {
   const [screen, setScreen] = useState<Screen>(readScreen());
   const [windowMode, setWindowModeState] = useState<WindowMode>(readWindowMode());
   const [backTo, setBackTo] = useState<Screen>("console");
-  const [settings, setSettings] = useState<UiSettings>(defaultSettings);
+  const [settings, setSettings] = useState<UiSettings>(loadSettings);
   const [toast, setToast] = useState<string | null>(null);
   const [simplifyingId, setSimplifyingId] = useState<string | null>(null);
   const [modelStore] = useState(createModelStore);
@@ -94,16 +85,34 @@ export function App() {
   const started = useRef(false);
   const renderer = useGpuixRequired();
 
+  const applySettings = (patch: Partial<UiSettings>) => {
+    setSettings((current) => {
+      const next = { ...current, ...patch };
+      saveSettings(next);
+      return next;
+    });
+  };
+
   const locale =
     process.env.LL_UI_LOCALE ??
     (settings.followLearning ? languageByCode(state.language).uiCode : state.uiLocale || "en");
 
   useEffect(() => {
-    try {
-      const bytes = readFileSync("/usr/share/fonts/truetype/noto/NotoSansArabic-Regular.ttf");
-      renderer.registerFont?.(bytes);
-    } catch {
-      // System fallback is fine; Arabic still renders through Noto Sans Arabic.
+    // Register the UI faces GPUIX may not list on its own. Missing files are
+    // fine: the platform font is the fallback.
+    const candidates = [
+      "C:\\Windows\\Fonts\\segoeui.ttf",
+      "C:\\Windows\\Fonts\\seguisb.ttf",
+      "C:\\Windows\\Fonts\\NotoSansArabic-Regular.ttf",
+      "/usr/share/fonts/truetype/noto/NotoSansArabic-Regular.ttf",
+      "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf",
+    ];
+    for (const path of candidates) {
+      try {
+        renderer.registerFont?.(readFileSync(path));
+      } catch {
+        // Optional face; the system fallback still renders.
+      }
     }
   }, [renderer]);
 
@@ -343,11 +352,14 @@ export function App() {
   };
 
   const openSettings = () => {
+    // Settings needs a normal window; the overlay is 780x250 and cannot show it.
+    if (windowMode === "overlay") void setWindowMode("console");
     setBackTo(screen === "settings" ? "console" : screen);
     setScreen("settings");
   };
 
   const openLicenses = () => {
+    if (windowMode === "overlay") void setWindowMode("console");
     setBackTo(screen === "licenses" ? "console" : screen);
     setScreen("licenses");
   };
@@ -375,9 +387,12 @@ export function App() {
           source={state.source}
           mode={state.mode}
           models={models}
+          settings={settings}
+          hasTranscript={state.segments.length > 0}
           onLanguage={onLanguage}
           onSource={(source) => bootStore.setSource(source)}
           onMode={(mode) => bootStore.setMode(mode)}
+          onChange={applySettings}
           onStart={() => void startSession()}
           onBlocked={(message) => setToast(message)}
           onSettings={openSettings}
@@ -391,7 +406,7 @@ export function App() {
         <SettingsScreen
           locale={locale}
           settings={settings}
-          onChange={(patch) => setSettings((current) => ({ ...current, ...patch }))}
+          onChange={applySettings}
           runtime={state.runtime}
           onBack={() => setScreen(backTo)}
           onLicenses={openLicenses}
@@ -406,7 +421,7 @@ export function App() {
           models={models}
           onDownloadModels={() => void onDownloadModels()}
           onReset={() => {
-            setSettings(defaultSettings);
+            applySettings(defaultSettings);
             void onScenario("auto");
           }}
         />
@@ -434,6 +449,8 @@ export function App() {
         <OverlayScreen
           state={state}
           locale={locale}
+          captionSize={settings.captionSize}
+          showTier1={settings.showTier1}
           onSimplify={(id) => void onSimplify(id)}
           onPause={() => void ensureTransport().pause()}
           onResume={() => void ensureTransport().resume()}
@@ -456,6 +473,7 @@ export function App() {
         locale={locale}
         captionSize={settings.captionSize}
         showTier1={settings.showTier1}
+        windowMode={windowMode}
         onSimplify={(id) => void onSimplify(id)}
         onStop={() => void stopWith(ensureTransport())}
         onPause={() => void ensureTransport().pause()}

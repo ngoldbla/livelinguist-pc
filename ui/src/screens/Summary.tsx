@@ -1,15 +1,15 @@
 import { useState } from "react";
 import {
-  Badge,
   Button,
   CaptionRow,
   Divider,
-  SectionHeader,
+  PageHeader,
+  StatusDot,
   SummaryTile,
   Surface,
   Toast,
 } from "../aurora/components";
-import { colors, textStyle } from "../aurora/theme";
+import { colors, textStyle, type } from "../aurora/theme";
 import { t } from "../i18n/locales";
 import type { SessionView } from "../store/sessionStore";
 
@@ -41,6 +41,7 @@ export function SummaryScreen({
             100,
         );
   const simplified = state.segments.filter((segment) => segment.simplified).length;
+  const inEnglish = state.segments.filter((segment) => segment.detectedLanguage === "en").length;
 
   const exportAs = async (format: "markdown" | "plain" | "csv") => {
     try {
@@ -52,31 +53,29 @@ export function SummaryScreen({
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 18, padding: 28, height: "100%" }}>
-      <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 12 }}>
-        <Button label={t(locale, "Back")} kind="secondary" onClick={onBack} />
-        <div style={{ display: "flex", flexDirection: "column", gap: 2, flexGrow: 1 }}>
-          <text style={{ ...textStyle(10, colors.accent, 700) }}>
-            {t(locale, "SESSION SUMMARY").toUpperCase()}
-          </text>
-          <text style={textStyle(24, colors.text, 700)}>{t(locale, "Session summary")}</text>
-        </div>
-        <Badge
-          label={state.phase === "summary" ? t(locale, "Done") : t(locale, "Listening")}
-          tone={state.phase === "summary" ? "mint" : "amber"}
-        />
-      </div>
+    <div style={{ display: "flex", flexDirection: "column", gap: 16, padding: 24, height: "100%" }}>
+      <PageHeader
+        backLabel={t(locale, "Back")}
+        title={t(locale, "Session summary")}
+        subtitle={new Date().toLocaleDateString(locale)}
+        onBack={onBack}
+        trailing={
+          <StatusDot
+            tone={state.phase === "summary" ? "mint" : "amber"}
+            label={state.phase === "summary" ? t(locale, "Done") : t(locale, "Listening")}
+          />
+        }
+      />
 
       <div style={{ display: "flex", flexDirection: "row", gap: 12 }}>
         <SummaryTile
           label={t(locale, "DURATION")}
-          value={`${minutes} min ${seconds} s`}
-          hint={`${Math.round(duration)} seconds`}
+          value={`${minutes}:${String(seconds).padStart(2, "0")}`}
         />
         <SummaryTile
           label={t(locale, "SENTENCES")}
           value={String(state.segments.length)}
-          hint={`${simplified} simplified`}
+          hint={`${simplified} ${t(locale, "SIMPLIFIED").toLowerCase()}`}
         />
         <SummaryTile
           label={t(locale, "IN TARGET LANGUAGE")}
@@ -86,8 +85,8 @@ export function SummaryScreen({
         />
         <SummaryTile
           label={t(locale, "ENGLISH REVERSIONS")}
-          value={String(state.reversionActive ? 1 : 0)}
-          hint={t(locale, "detected segments")}
+          value={String(inEnglish)}
+          hint={t(locale, "sentences in English")}
         />
       </div>
 
@@ -102,10 +101,14 @@ export function SummaryScreen({
             minHeight: 0,
           }}
         >
-          <SectionHeader
-            title={t(locale, "Transcript")}
-            subtitle={t(locale, "Transcripts are kept in memory only. Export now to keep one.")}
-          />
+          <div style={{ display: "flex", flexDirection: "row", alignItems: "baseline", gap: 10 }}>
+            <text style={{ ...textStyle(type.title, colors.text, 600), flexGrow: 1 }}>
+              {t(locale, "Transcript")}
+            </text>
+            <text style={textStyle(type.meta, colors.faint)}>
+              {t(locale, "Transcripts are kept in memory only. Export now to keep one.")}
+            </text>
+          </div>
           <div
             style={{
               flexGrow: 1,
@@ -119,7 +122,9 @@ export function SummaryScreen({
             }}
           >
             {state.segments.length === 0 ? (
-              <text style={textStyle(12, colors.muted)}>{t(locale, "No session data.")}</text>
+              <text style={textStyle(type.body, colors.muted)}>
+                {t(locale, "No session data.")}
+              </text>
             ) : (
               state.segments.map((segment) => (
                 <CaptionRow key={segment.id} segment={segment} locale={locale} compact />
@@ -132,13 +137,14 @@ export function SummaryScreen({
           style={{
             width: 320,
             flexShrink: 0,
+            alignSelf: "flex-start",
             padding: 18,
             display: "flex",
             flexDirection: "column",
-            gap: 12,
+            gap: 10,
           }}
         >
-          <text style={{ ...textStyle(10, colors.faint, 700) }}>
+          <text style={{ ...textStyle(type.meta, colors.faint, 600) }}>
             {t(locale, "EXPORT").toUpperCase()}
           </text>
           <Button label={t(locale, "Markdown")} onClick={() => void exportAs("markdown")} />
@@ -152,13 +158,11 @@ export function SummaryScreen({
             kind="secondary"
             onClick={() => void exportAs("csv")}
           />
-          <Divider />
-          <text style={textStyle(11, colors.muted)}>
+          <text style={{ ...textStyle(type.meta, colors.muted), lineHeight: 18 }}>
             {t(locale, "Transcripts are kept in memory only. Export now to keep one.")}
           </text>
-          <Badge label={t(locale, "Content-free diagnostics")} tone="mint" />
-          <div style={{ flexGrow: 1 }} />
-          <Button label={t(locale, "Back to console")} kind="ghost" onClick={onConsole} />
+          <Divider />
+          <Button label={t(locale, "Start another session")} onClick={onConsole} />
           {toast ? <Toast message={toast} tone="mint" /> : null}
         </Surface>
       </div>

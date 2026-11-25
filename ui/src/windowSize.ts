@@ -62,6 +62,6 @@ export type WindowModeName = "console" | "overlay" | "expanded";
 /** Size a mode requests, fitted to the work area. Overlay stays 780x250. */
 export function sizeForMode(mode: WindowModeName, area: WorkArea | null): Size {
   if (mode === "overlay") return OVERLAY_SIZE;
-  const desired = mode === "expanded" ? { width: 1180, height: 900 } : { width: 1180, height: 820 };
+  const desired = mode === "expanded" ? { width: 1180, height: 900 } : { width: 1100, height: 700 };
   return fitWindow(desired, area);
 }
