@@ -11,7 +11,7 @@ import {
   type Transport,
 } from "./bridge/transport";
 import { languageByCode } from "./i18n/languages";
-import { t } from "./i18n/locales";
+import { deviceLocales, resolveLocale, t } from "./i18n/locales";
 import { ConsoleScreen } from "./screens/Console";
 import { LiveScreen } from "./screens/Live";
 import { Onboarding } from "./screens/Onboarding";
@@ -91,7 +91,10 @@ export function App() {
     });
   };
 
-  const locale = process.env.LL_UI_LOCALE ?? languageByCode(state.language).uiCode;
+  const deviceUi = resolveLocale(false, null, deviceLocales());
+  const locale =
+    process.env.LL_UI_LOCALE ??
+    (settings.uiLanguage === "device" ? deviceUi : languageByCode(state.language).uiCode);
 
   useEffect(() => {
     // Register the UI faces GPUIX may not list on its own. Missing files are
@@ -389,6 +392,7 @@ export function App() {
       return (
         <SettingsScreen
           locale={locale}
+          language={state.language}
           settings={settings}
           onChange={applySettings}
           runtime={state.runtime}

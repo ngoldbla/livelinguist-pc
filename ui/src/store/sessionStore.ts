@@ -47,6 +47,8 @@ export interface SessionView {
   asrStatus: string;
   lastSeq: number;
   sessionId: string | null;
+  /** Wall-clock start of the running session, for the header timer. */
+  startedAt: number | null;
   runtime: RuntimeStatus | null;
   summary: SessionSummary | null;
   lastError: string | null;
@@ -87,6 +89,7 @@ const initialState = (language = "fr-FR", uiLocale = "fr"): SessionView => ({
   asrStatus: "simplify_only",
   lastSeq: 0,
   sessionId: null,
+  startedAt: null,
   runtime: null,
   summary: null,
   lastError: null,
@@ -225,7 +228,11 @@ export function createSessionStore(language = "fr-FR", uiLocale = "fr"): Session
       });
       notify();
     },
-    setPhase: (phase) => set({ phase }),
+    setPhase: (phase) =>
+      set({
+        phase,
+        ...(phase === "listening" && state.startedAt == null ? { startedAt: Date.now() } : {}),
+      }),
     setLanguage: (code, uiLocale) => set({ language: code, uiLocale }),
     setSource: (source) => set({ source }),
     setMode: (mode) => set({ mode }),

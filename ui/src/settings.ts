@@ -9,6 +9,8 @@ export interface UiSettings {
   detection: boolean;
   devEnabled: boolean;
   scenario: string;
+  /** Follow the learning language's UI, or the device UI language. */
+  uiLanguage: "learning" | "device";
 }
 
 export const CAPTION_SIZE_MIN = 16;
@@ -20,6 +22,7 @@ export const defaultSettings: UiSettings = {
   detection: true,
   devEnabled: true,
   scenario: "mock",
+  uiLanguage: "learning",
 };
 
 /** `%LOCALAPPDATA%\LiveLinguist\ui-settings.json`, else the XDG config dir. */
@@ -52,6 +55,7 @@ export function loadSettings(path: string = settingsPath()): UiSettings {
       devEnabled: bool(raw.devEnabled, defaultSettings.devEnabled),
       scenario:
         typeof raw.scenario === "string" && raw.scenario ? raw.scenario : defaultSettings.scenario,
+      uiLanguage: raw.uiLanguage === "device" ? "device" : "learning",
     };
   } catch {
     return defaultSettings;

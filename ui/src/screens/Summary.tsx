@@ -81,7 +81,7 @@ export function SummaryScreen({
         <div style={{ display: "flex", flexDirection: "row", gap: 12 }}>
           <SummaryTile
             label={t(locale, "DURATION")}
-            value={`${minutes}:${String(seconds).padStart(2, "0")}`}
+            value={t(locale, "%lld min %lld s", minutes, seconds)}
           />
           <SummaryTile label={t(locale, "LANGUAGE")} value={languageByCode(state.language).name} />
         </div>

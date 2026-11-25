@@ -13,7 +13,8 @@ import {
 import { colors, textStyle, type } from "../aurora/theme";
 import type { RuntimeStatus } from "../bridge/generated/RuntimeStatus";
 import { DevPanel } from "../dev/DevPanel";
-import { t } from "../i18n/locales";
+import { languageByCode, languageByUiCode } from "../i18n/languages";
+import { deviceLocales, resolveLocale, t } from "../i18n/locales";
 import { CAPTION_SIZE_MAX, CAPTION_SIZE_MIN, type UiSettings } from "../settings";
 import { allReady, type ModelView, percent } from "../store/modelStore";
 import { LicensesContent } from "./Licenses";
@@ -24,6 +25,7 @@ import { LicensesContent } from "./Licenses";
  */
 export function SettingsScreen({
   locale,
+  language,
   settings,
   onChange,
   runtime,
@@ -39,6 +41,7 @@ export function SettingsScreen({
   onDownloadModels,
 }: {
   locale: string;
+  language: string;
   settings: UiSettings;
   onChange: (patch: Partial<UiSettings>) => void;
   runtime: RuntimeStatus | null;
@@ -55,6 +58,9 @@ export function SettingsScreen({
 }) {
   const [tab, setTab] = useState(process.env.LL_TAB ?? "captions");
   const anyMissing = models ? !allReady(models) : true;
+  const deviceUi = resolveLocale(false, null, deviceLocales());
+  const learningName = languageByCode(language).shortName;
+  const deviceName = languageByUiCode(deviceUi).shortName;
 
   const modelState = (id: string) => {
     const model = models?.models.find((entry) => entry.id === id);
@@ -136,6 +142,25 @@ export function SettingsScreen({
               <text style={{ ...textStyle(type.meta, colors.faint), lineHeight: 18 }}>
                 {t(locale, "Simplified captions always stay visible — they are the point.")}
               </text>
+              <Divider />
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <text style={textStyle(type.body, colors.text, 600)}>
+                  {t(locale, "App language")}
+                </text>
+                <Tabs
+                  tabs={[
+                    { id: "learning", label: learningName },
+                    { id: "device", label: deviceName },
+                  ]}
+                  value={settings.uiLanguage}
+                  onChange={(id) =>
+                    onChange({ uiLanguage: id === "device" ? "device" : "learning" })
+                  }
+                />
+                <text style={{ ...textStyle(type.meta, colors.muted), lineHeight: 18 }}>
+                  {t(locale, "The app follows the language you're learning. Switch back any time.")}
+                </text>
+              </div>
             </Surface>
           </div>
         ) : null}

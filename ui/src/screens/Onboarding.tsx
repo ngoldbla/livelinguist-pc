@@ -198,12 +198,19 @@ export function Onboarding({
                   style={{ height: 46 }}
                 />
               ) : models.downloading ? (
-                <Button
-                  label={t(locale, "Cancel download")}
-                  kind="danger"
-                  onClick={onCancelDownload}
-                  style={{ height: 46 }}
-                />
+                <>
+                  <Button
+                    label={t(locale, "Try the demo while you wait")}
+                    onClick={onFinish}
+                    style={{ height: 46 }}
+                  />
+                  <Button
+                    label={t(locale, "Cancel download")}
+                    kind="danger"
+                    onClick={onCancelDownload}
+                    style={{ height: 40 }}
+                  />
+                </>
               ) : (
                 <Button
                   label={
@@ -215,7 +222,13 @@ export function Onboarding({
                   style={{ height: 46 }}
                 />
               )}
-              <Button label={t(locale, "Continue in demo mode")} kind="ghost" onClick={onFinish} />
+              {!models.downloading ? (
+                <Button
+                  label={t(locale, "Continue in demo mode")}
+                  kind="ghost"
+                  onClick={onFinish}
+                />
+              ) : null}
             </div>
           </>
         ) : null}

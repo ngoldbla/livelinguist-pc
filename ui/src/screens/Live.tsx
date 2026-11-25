@@ -1,14 +1,6 @@
 import { useEffect, useState } from "react";
-import {
-  BrandMark,
-  Button,
-  CaptionRow,
-  StatusDot,
-  Surface,
-  Tabs,
-  Toast,
-} from "../aurora/components";
-import { colors, focusRing, textStyle, type } from "../aurora/theme";
+import { Badge, Button, CaptionRow, StatusDot, Surface, Tabs, Toast } from "../aurora/components";
+import { colors, focusRing, fonts, textStyle, type } from "../aurora/theme";
 import {
   captionKeyAction,
   isReadLatestShortcut,
@@ -64,11 +56,23 @@ export function LiveScreen({
   const [typed, setTyped] = useState("");
   const [typedResult, setTypedResult] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [now, setNow] = useState(() => Date.now());
   const latest =
     [...state.segments].reverse().find((segment) => segment.simplified) ??
     state.segments[state.segments.length - 1];
   const needsTypedInput = language.asrStatus !== "ok";
   const hearing = Boolean(state.partial?.text);
+
+  useEffect(() => {
+    if (state.phase !== "listening" && state.phase !== "paused") return;
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [state.phase]);
+
+  const elapsed = state.startedAt ? Math.max(0, Math.floor((now - state.startedAt) / 1000)) : 0;
+  const timer = `${String(Math.floor(elapsed / 60)).padStart(2, "0")}:${String(
+    elapsed % 60,
+  ).padStart(2, "0")}`;
 
   // Keyboard focus: GPUIX has no imperative focus(), so the focused row is
   // remounted with autoFocus (key carries a nonce) when focus should move.
@@ -114,14 +118,17 @@ export function LiveScreen({
     setTypedResult(result.text ?? t(locale, "Shown without simplification"));
   };
 
-  const cadence =
-    state.phase === "paused"
-      ? t(locale, "Paused — click a sentence to simplify it")
-      : simplifyingId
-        ? t(locale, "Simplifying…")
-        : hearing
-          ? t(locale, "Listening — keep speaking")
-          : t(locale, "Waiting for speech");
+  const cadence = state.lastError
+    ? state.lastError
+    : state.phase === "paused"
+      ? t(locale, "Paused")
+      : hearing
+        ? t(locale, "Listening — keep speaking")
+        : simplifyingId
+          ? t(locale, "Simplifying…")
+          : state.segments.length === 0
+            ? t(locale, "Waiting for speech")
+            : t(locale, "Tap a sentence to simplify it");
 
   return (
     <div
@@ -134,11 +141,21 @@ export function LiveScreen({
       }}
     >
       <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 10 }}>
-        <BrandMark size={compact ? 24 : 28} />
-        <text style={{ ...textStyle(type.meta, colors.faint, 700) }}>
-          {t(locale, "LIVE LINGUIST · ON-DEVICE")}
+        <text
+          style={{
+            ...textStyle(compact ? type.title : 20, colors.text, 600),
+            flexGrow: 1,
+            minWidth: 0,
+            whiteSpace: "nowrap",
+            textOverflow: "ellipsis",
+          }}
+        >
+          {language.name}
         </text>
-        <div style={{ flexGrow: 1 }} />
+        {state.reversionActive ? <Badge label="EN" tone="amber" /> : null}
+        <text style={{ ...textStyle(type.meta, colors.faint), fontFamily: fonts.mono }}>
+          {timer}
+        </text>
         {!compact ? (
           <>
             <Button
@@ -152,9 +169,23 @@ export function LiveScreen({
       </div>
 
       <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 12 }}>
-        <text style={{ ...textStyle(compact ? 24 : 32, colors.text, 600), lineHeight: 38 }}>
-          {state.phase === "paused" ? t(locale, "Paused") : t(locale, "Captioning")}
-        </text>
+        <StatusDot
+          tone={
+            state.lastError
+              ? "rose"
+              : state.phase === "paused"
+                ? "amber"
+                : hearing
+                  ? "mint"
+                  : "neutral"
+          }
+          label={cadence}
+        />
+        {state.overrunCount > 0 ? (
+          <text style={textStyle(type.meta, colors.rose)}>
+            {t(locale, "overrun %@", state.overrunCount)}
+          </text>
+        ) : null}
         <div style={{ flexGrow: 1 }} />
         {!compact ? (
           <Tabs
@@ -169,19 +200,6 @@ export function LiveScreen({
         ) : null}
       </div>
 
-      <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 7 }}>
-        <StatusDot
-          tone={state.phase === "paused" ? "amber" : hearing ? "mint" : "neutral"}
-          label={cadence}
-        />
-        {state.reversionActive ? <StatusDot tone="amber" label="EN" /> : null}
-        {state.overrunCount > 0 ? (
-          <text style={textStyle(type.meta, colors.rose)}>
-            {t(locale, "overrun %@", state.overrunCount)}
-          </text>
-        ) : null}
-      </div>
-
       <Surface
         style={{
           padding: compact ? 8 : 12,
@@ -190,6 +208,8 @@ export function LiveScreen({
           flexDirection: "column",
           gap: 8,
           minHeight: 0,
+          borderWidth: state.reversionActive ? 2 : 1,
+          borderColor: state.reversionActive ? "#F5C06A99" : colors.border,
         }}
       >
         {state.segments.length === 0 ? (

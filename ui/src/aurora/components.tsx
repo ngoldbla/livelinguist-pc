@@ -563,60 +563,86 @@ export function CaptionRow({
       }}
       style={{
         display: "flex",
-        flexDirection: "column",
-        gap: compact ? 4 : 6,
-        padding: compact ? 10 : 16,
+        flexDirection: "row",
+        alignItems: "stretch",
+        gap: 10,
+        paddingTop: compact ? 10 : 16,
+        paddingBottom: compact ? 10 : 16,
+        paddingLeft: compact ? 10 : 12,
+        paddingRight: compact ? 10 : 16,
         width: "100%",
         maxWidth: 820,
         alignSelf: "center",
-        borderRadius: 10,
+        borderRadius: 12,
         backgroundColor: segment.simplified ? "#FFFFFF06" : "#00000000",
         cursor: onSimplify ? "pointer" : "default",
         hover: onSimplify ? { backgroundColor: "#FFFFFF0A" } : undefined,
         focusVisible: focusRing,
       }}
     >
-      <div style={{ display: "flex", flexDirection: "row", alignItems: "flex-start", gap: 8 }}>
-        {showTier1 ? (
+      {segment.simplified ? (
+        <div
+          style={{
+            width: 3,
+            borderRadius: 2,
+            backgroundColor: segment.flags.length > 0 ? "#F5C06AB3" : "#5FE3C0B3",
+            flexShrink: 0,
+          }}
+        />
+      ) : null}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: compact ? 4 : 6,
+          flexGrow: 1,
+          minWidth: 0,
+        }}
+      >
+        <div style={{ display: "flex", flexDirection: "row", alignItems: "flex-start", gap: 8 }}>
+          {showTier1 ? (
+            <text
+              style={{
+                ...textStyle(
+                  segment.simplified ? type.label : compact ? type.label : 16,
+                  colors.muted,
+                  500,
+                ),
+                lineHeight: segment.simplified ? 18 : 22,
+                textAlign: rtl ? "right" : "left",
+                flexGrow: 1,
+                minWidth: 0,
+              }}
+            >
+              {segment.text}
+            </text>
+          ) : (
+            <div style={{ flexGrow: 1 }} />
+          )}
+          {showEnglish ? <Badge label="EN" tone="info" /> : null}
+        </div>
+        {segment.simplified ? (
           <text
             style={{
-              ...textStyle(
-                segment.simplified ? type.label : compact ? type.label : 16,
-                colors.muted,
-                500,
-              ),
-              lineHeight: segment.simplified ? 18 : 22,
+              ...textStyle(simpleSize, colors.text, 600),
+              lineHeight: compact ? 24 : Math.round(simpleSize * 1.32),
               textAlign: rtl ? "right" : "left",
-              flexGrow: 1,
-              minWidth: 0,
+              paddingLeft: rtl ? 0 : 8,
+              paddingRight: rtl ? 8 : 0,
             }}
           >
-            {segment.text}
+            {segment.simplified}
           </text>
-        ) : (
-          <div style={{ flexGrow: 1 }} />
-        )}
-        {showEnglish ? <Badge label="EN" tone="info" /> : null}
+        ) : null}
+        {simplifying ? (
+          <text style={textStyle(type.meta, colors.faint)}>{t(locale, "Simplifying…")}</text>
+        ) : null}
+        {segment.simplified && segment.flags.length > 0 ? (
+          <text style={textStyle(type.meta, colors.faint)}>
+            {t(locale, "~ simplified — may not be exact")}
+          </text>
+        ) : null}
       </div>
-      {segment.simplified ? (
-        <text
-          style={{
-            ...textStyle(simpleSize, colors.text, 600),
-            lineHeight: compact ? 24 : Math.round(simpleSize * 1.32),
-            textAlign: rtl ? "right" : "left",
-          }}
-        >
-          {segment.simplified}
-        </text>
-      ) : null}
-      {simplifying ? (
-        <text style={textStyle(type.meta, colors.faint)}>{t(locale, "Simplifying…")}</text>
-      ) : null}
-      {segment.simplified && segment.flags.length > 0 ? (
-        <text style={textStyle(type.meta, colors.faint)}>
-          {t(locale, "~ simplified — may not be exact")}
-        </text>
-      ) : null}
     </div>
   );
 }

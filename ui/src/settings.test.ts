@@ -30,6 +30,7 @@ describe("ui settings", () => {
       detection: false,
       devEnabled: false,
       scenario: "cpu-strict",
+      uiLanguage: "device" as const,
     };
     expect(saveSettings(saved, path)).toBe(true);
     expect(loadSettings(path)).toEqual(saved);
