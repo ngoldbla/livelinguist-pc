@@ -54,7 +54,7 @@ bun autoresearch\benchmark.ts `
 ```powershell
 bun build autoresearch\benchmark.ts --target=bun --outfile=target\benchmark-check.js
 bun test autoresearch\align.test.ts
-pwsh -NoProfile -Command "[System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path 'autoresearch/uia-captions.ps1').Path,[ref]$null,[ref]$null) | Out-Null"
+pwsh -NoProfile -Command "$e=$null; $t=$null; [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path 'autoresearch/uia-captions.ps1').Path,[ref]$t,[ref]$e) | Out-Null; if ($e.Count) { $e | ForEach-Object Message; exit 1 } else { 'ps parse ok' }"
 ffprobe -v error -show_entries format=duration:stream=codec_type,codec_name `
   -of default=noprint_wrappers=1 target\autoresearch\german-60s\german-60s.mp4
 ```
