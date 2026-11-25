@@ -8,6 +8,7 @@ test renderer (DirectX). Evidence and non-claims:
 |---|---|
 | `onboarding-welcome.png` | GPUIX GPU test renderer |
 | `onboarding-language.png` | GPUIX GPU test renderer |
+| `language-picker-coverage.png` | GPUIX GPU test renderer (T33: coverage badges) |
 | `onboarding-models.png` | GPUIX GPU test renderer |
 | `console.png` | GPUIX GPU test renderer |
 | `console-start-captions.png` | GPUIX click path console → live |

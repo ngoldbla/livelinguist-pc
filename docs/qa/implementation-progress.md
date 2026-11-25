@@ -107,9 +107,20 @@ option 1** (compiled exe + both `.node` addons beside it), so T37 is unblocked.
   a Linux-only crash when sherpa and llama share a binary; fixed by linking
   sherpa-onnx shared on Linux (ADR 0022). Windows is unchanged.
 
+**Windows, 2026-11-24 (owner PC, this run):** T33 tier C re-check of the 12 `ok`
+locales + ja-JP: timing passes on every row (RTF 0.24–0.26, p95 283–322 ms,
+peak RSS 778–780 MB); scores match Linux within 0.016 except **de-DE, which
+scores 0.157 and misses the 0.15 gate** (open owner decision, `BLOCKED.md`).
+ja-JP stays `simplify_only` (0.1597). The language picker shows the measured
+statuses (`docs/screenshots/m2-windows/language-picker-coverage.png`, scenario
+`language-picker-coverage` in `ui/scripts/screenshots-windows.tsx`).
+
 **Linux work still open (resume here):**
-1. Owner decisions: es-ES matrix guard false negative (T22); confirm the
-   ` /no_think` soft switch in the training renderer (T08).
+1. Owner decisions: **de-DE ASR gate** (Windows tier C score 0.157 vs the
+   0.15 gate; Linux 0.141 — see `docs/tasks/BLOCKED.md` and
+   `docs/qa/2026-11-23-asr-coverage-v1.md` `## Windows tier C re-check`); es-ES
+   matrix guard false negative (T22); confirm the ` /no_think` soft switch in
+   the training renderer (T08).
 
 **Windows-only work left:**
 - T16: onboarding download/cancel/retry on Windows + 2 screenshots (the
@@ -118,7 +129,7 @@ option 1** (compiled exe + both `.node` addons beside it), so T37 is unblocked.
   (the behaviour itself is verified by the retest).
 - T23: `workArea()` numbers at 100% and 150%.
 - T25, T26 (not started), T27 keyboard-only live run, T28 Narrator pass
-  (human) + Arabic screenshot, T33 language-picker screenshot.
+  (human) + Arabic screenshot.
 - T34, T36–T40 (T37 has its ADR now; T38 needs admin once).
 
 ## Known environment limitations
