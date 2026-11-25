@@ -87,6 +87,22 @@ decision entry and an ADR update. **For 1.0, D-055/D-056 and
 Checkpoint 2026-11-24 (Linux cloud session; PRs #24–#31). Card statuses are in
 `docs/tasks/README.md` (`linux-done` = only the Windows part remains).
 
+**Post-v1 autoresearch (T41, 2026-11-24):** branch `stage-autoresearch-baseline`
+adds the content-free media-clock → UIA caption-latency harness, explicit ASR
+chunk/thread/endpoint experiment knobs, and overlay partial presentation. The
+installed RC baseline and CPU parameter screen are recorded in
+`docs/qa/2026-11-24-caption-latency-baseline.md`: RC live partial p95 3657 ms;
+confirmed overlay-partial + 80 ms candidate p95 2278 ms with 93.8% cue coverage.
+Shipping ASR defaults remain unchanged pending second-voice/WER/tier-C/click
+continuity checks. GPU inference is not implemented or measured.
+
+**2026-11-25 README rerun (same branch):** the four benchmark commands were
+executed on the reference PC. RC live 90 s × 3 partial p95 3349 ms (84.4%
+coverage); the README's example candidate (80 ms + fast endpoint + 4 threads)
+reached p95 2666 ms but only 75.0% coverage, so 0/3 trials were valid; the 45 s
+screen again selected 80 ms + default endpoint + 2 threads (p95 2722 ms, 88.9%).
+Numbers in `docs/qa/2026-11-24-caption-latency-baseline.md`; no default changed.
+
 **Owner Windows retest 2026-11-24: steps 0–5 pass** —
 `docs/qa/2026-11-24-windows-retest.md` (results table, machine, evidence). The
 run found and the branch `windows-retest-2026-11-24` fixes: Summary exports
@@ -134,6 +150,19 @@ scale 1.0) and 150% (1707x672 logical; 2560x1008 physical, dpi 144) in
 `docs/qa/2026-11-23-v1-ui.md` `## Work area`; the per-monitor-aware app fits
 the Console inside the work area at 150%, with a 13 px centred-position
 overshoot left to T25.
+
+**Release pipeline, 2026-11-25 (owner request; ADR 0023):** MIT only; tag
+`vX.Y.Z` → `release.yml` builds, self-tests, test-installs/uninstalls on a
+clean runner and publishes an unsigned GitHub release with `SHA256SUMS.txt`
+(`packaging/README.md`). This covers the mechanics of T37/T39 ahead of the MVP
+human pass; tagging `v1.0.0` still waits for T36 and the owner (T40).
+First run: **`v1.0.0-rc.1` published 2026-11-25** as an unsigned pre-release
+(Actions run 45534402943, 21 min, Run workflow with "Publish a release").
+Setup 56.5 MB, portable ZIP 77.2 MB, installed payload 160.7 MB (over T37's
+60 MB target; the Bun runtime dominates). All install-test checks passed:
+payload/installed/upgraded/portable self-tests `gpuix ok, core ok`, shortcuts,
+Installed apps entry, uninstall cleanup, models kept. Not yet run on a real
+PC with a GPU window and the model download.
 
 **Linux work still open (resume here):**
 1. Owner decisions: es-ES

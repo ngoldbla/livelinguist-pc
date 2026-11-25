@@ -10,8 +10,10 @@ Start here. Everything in `docs/` is one of four kinds: **what to do next**,
 | [`plans/2026-11-23-windows-v1-plan.md`](plans/2026-11-23-windows-v1-plan.md) | **The execution plan.** Stages S1–S9 to ship v1.0 on Windows: what to build, which files, which tests, exit gates. |
 | [`tasks/README.md`](tasks/README.md) | **Task cards:** small one-session work orders cut from the plan. Agents work from these. |
 | [`plans/2026-11-23-windows-agent-prompt.md`](plans/2026-11-23-windows-agent-prompt.md) | Copy-paste prompts for the Windows host agent (short card-based prompt + full prompt). |
+| [`plans/2026-11-24-autoresearch-plan.md`](plans/2026-11-24-autoresearch-plan.md) | Post-v1 caption-latency baseline and CPU-first autoresearch loop. |
 | [`qa/implementation-progress.md`](qa/implementation-progress.md) | Live status board: merged stages, current stage, next run. |
 | [`plans/2026-11-22-v1-scope.md`](plans/2026-11-22-v1-scope.md) | What v1.0 is and is not; supported system; release gates G0–G9. |
+| [`plans/2026-11-25-public-release-plan.md`](plans/2026-11-25-public-release-plan.md) | Going public under MIT and a foolproof Windows download: gaps found, owner steps, cards R1–R7. |
 | [`budgets.md`](budgets.md) | Latency/RSS/fps budgets per hardware tier. |
 
 ## 2. What we decided

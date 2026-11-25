@@ -14,6 +14,7 @@ import type { RuntimeStatus } from "../bridge/generated/RuntimeStatus";
 import { DevPanel } from "../dev/DevPanel";
 import { t } from "../i18n/locales";
 import { allReady, type ModelView, percent } from "../store/modelStore";
+import { APP_VERSION } from "../version";
 
 export interface UiSettings {
   captionSize: number;
@@ -294,7 +295,7 @@ export function SettingsScreen({
           <Surface style={{ padding: 22, display: "flex", flexDirection: "column", gap: 14 }}>
             <SectionHeader
               title="Live Linguist PC"
-              subtitle={`${t(locale, "Version")} 0.1.0 · ${t(locale, "Built for Windows 11 x64")}`}
+              subtitle={`${t(locale, "Version")} ${APP_VERSION} · ${t(locale, "Built for Windows 11 x64")}`}
             />
             <div style={{ display: "flex", flexDirection: "row", gap: 10, flexWrap: "wrap" }}>
               <Badge label="GPUIX 0.11.0" tone="accent" />

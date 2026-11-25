@@ -186,6 +186,10 @@ pub struct RuntimeConfig {
     pub asr: AsrMode,
     pub asr_model: AsrModel,
     pub asr_threads: usize,
+    pub asr_chunk_ms: usize,
+    pub asr_rule1_trailing_ms: usize,
+    pub asr_rule2_trailing_ms: usize,
+    pub asr_rule3_utterance_ms: usize,
     pub audio: AudioMode,
     pub pipeline: PipelineMode,
     pub strict: bool,
@@ -216,6 +220,10 @@ impl Default for RuntimeConfig {
             asr: AsrMode::Mock,
             asr_model: AsrModel::Nemotron,
             asr_threads: 2,
+            asr_chunk_ms: 1100,
+            asr_rule1_trailing_ms: 2400,
+            asr_rule2_trailing_ms: 1200,
+            asr_rule3_utterance_ms: 20_000,
             audio: AudioMode::Demo,
             pipeline: PipelineMode::OnDemand,
             strict: false,
@@ -271,6 +279,10 @@ pub struct ConfigLayer {
     pub asr: Option<AsrMode>,
     pub asr_model: Option<AsrModel>,
     pub asr_threads: Option<usize>,
+    pub asr_chunk_ms: Option<usize>,
+    pub asr_rule1_trailing_ms: Option<usize>,
+    pub asr_rule2_trailing_ms: Option<usize>,
+    pub asr_rule3_utterance_ms: Option<usize>,
     pub audio: Option<AudioMode>,
     pub pipeline: Option<PipelineMode>,
     pub strict: Option<bool>,
@@ -306,6 +318,10 @@ impl ConfigLayer {
             asr,
             asr_model,
             asr_threads,
+            asr_chunk_ms,
+            asr_rule1_trailing_ms,
+            asr_rule2_trailing_ms,
+            asr_rule3_utterance_ms,
             audio,
             pipeline,
             strict,
@@ -346,6 +362,21 @@ impl ConfigLayer {
         if let Some(value) = get("LL_ASR_MODEL") {
             layer.asr_model = AsrModel::parse(value);
         }
+        layer.asr_threads = get("LL_ASR_THREADS")
+            .and_then(|value| value.parse().ok())
+            .filter(|threads| (1..=64).contains(threads));
+        layer.asr_chunk_ms = get("LL_ASR_CHUNK_MS")
+            .and_then(|value| value.parse().ok())
+            .filter(|chunk_ms| (80..=2000).contains(chunk_ms));
+        layer.asr_rule1_trailing_ms = get("LL_ASR_RULE1_MS")
+            .and_then(|value| value.parse().ok())
+            .filter(|value| (100..=10_000).contains(value));
+        layer.asr_rule2_trailing_ms = get("LL_ASR_RULE2_MS")
+            .and_then(|value| value.parse().ok())
+            .filter(|value| (100..=10_000).contains(value));
+        layer.asr_rule3_utterance_ms = get("LL_ASR_RULE3_MS")
+            .and_then(|value| value.parse().ok())
+            .filter(|value| (1000..=60_000).contains(value));
         if let Some(value) = get("LL_AUDIO") {
             layer.audio = AudioMode::parse(value);
         }
@@ -834,6 +865,7 @@ mod tests {
         assert_eq!(config.backend, Backend::Auto);
         assert_eq!(config.llm_model, LlmModel::Qwen06b);
         assert_eq!(config.pipeline, PipelineMode::OnDemand);
+        assert_eq!(config.asr_chunk_ms, 1100);
         assert!(!config.strict);
         assert!(config.threads >= 1 && config.threads <= DEFAULT_LLM_THREADS);
         assert_eq!(default_threads_for(4), 3);
@@ -876,6 +908,11 @@ mod tests {
         env.insert("LL_BACKEND".to_string(), "vulkan".to_string());
         env.insert("LL_GPU_LAYERS".to_string(), "24".to_string());
         env.insert("LL_THREADS".to_string(), "6".to_string());
+        env.insert("LL_ASR_THREADS".to_string(), "4".to_string());
+        env.insert("LL_ASR_CHUNK_MS".to_string(), "560".to_string());
+        env.insert("LL_ASR_RULE1_MS".to_string(), "1600".to_string());
+        env.insert("LL_ASR_RULE2_MS".to_string(), "600".to_string());
+        env.insert("LL_ASR_RULE3_MS".to_string(), "12000".to_string());
         env.insert("LL_LLM_MODEL".to_string(), "1.7b".to_string());
         env.insert("LL_PIPELINE".to_string(), "live".to_string());
         env.insert("LL_STRICT_BACKEND".to_string(), "1".to_string());
@@ -885,6 +922,11 @@ mod tests {
         assert_eq!(config.backend, Backend::Vulkan);
         assert_eq!(config.gpu_layers, GpuLayers::Count(24));
         assert_eq!(config.threads, 6);
+        assert_eq!(config.asr_threads, 4);
+        assert_eq!(config.asr_chunk_ms, 560);
+        assert_eq!(config.asr_rule1_trailing_ms, 1600);
+        assert_eq!(config.asr_rule2_trailing_ms, 600);
+        assert_eq!(config.asr_rule3_utterance_ms, 12_000);
         assert_eq!(config.llm_model, LlmModel::Qwen17b);
         assert_eq!(config.pipeline, PipelineMode::Live);
         assert!(config.strict);

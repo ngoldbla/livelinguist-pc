@@ -1,7 +1,8 @@
 {
   "name": "livelinguist-pc-ui",
   "private": true,
-  "version": "0.1.0",
+  "license": "MIT",
+  "version": "1.0.0-rc.2",
   "module": "src/main.tsx",
   "type": "module",
   "scripts": {

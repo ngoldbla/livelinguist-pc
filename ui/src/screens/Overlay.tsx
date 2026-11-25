@@ -83,6 +83,11 @@ export function OverlayScreen({
         <div
           style={{ flexGrow: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 5 }}
         >
+          {state.partial ? (
+            <div role="group" aria-label={t(locale, "Listening — keep speaking")}>
+              <text style={textStyle(12, colors.muted, 500)}>{state.partial.text}</text>
+            </div>
+          ) : null}
           {latest ? (
             <>
               <div

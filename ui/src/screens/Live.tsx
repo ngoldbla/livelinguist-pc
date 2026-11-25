@@ -259,6 +259,8 @@ export function LiveScreen({
           )}
           {state.partial ? (
             <div
+              role="group"
+              aria-label={t(locale, "Listening — keep speaking")}
               style={{
                 paddingTop: 8,
                 paddingBottom: 8,

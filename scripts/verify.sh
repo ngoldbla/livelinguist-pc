@@ -17,6 +17,8 @@ rm -rf target/verify-eval
 cargo run -q -p ll-eval -- --scenario mock --language fr-FR --out target/verify-eval/mock
 cargo run -q -p ll-eval -- --scenario mock --language fr-FR --wav tests/fixtures/sample.wav --out target/verify-eval/wav
 cargo run -q -p ll-eval -- --scenario simplify-only --language fr-FR --text "Il faudrait que tu viennes nous rendre visite dès que l'occasion se présentera." --out target/verify-eval/text
+echo "==> autoresearch alignment"
+bun test autoresearch/align.test.ts
 echo "==> UI typecheck / tests / Biome"
 cd ui
 bun install --frozen-lockfile

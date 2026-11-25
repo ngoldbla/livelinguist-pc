@@ -85,6 +85,8 @@ if (-not $SkipEval) {
 }
 
 if (-not $SkipUi) {
+    Write-Host "==> autoresearch alignment"
+    Invoke-Native $bun @('test', 'autoresearch/align.test.ts')
     Write-Host "==> UI install / typecheck / tests / Biome"
     Push-Location ui
     try {
