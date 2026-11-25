@@ -2,7 +2,7 @@
 
 - Date: 2026-11-24
 - Status: active
-- Decision: `docs/decisions/0023.md` (D-060)
+- Decision: `docs/decisions/0024.md` (D-061)
 - Scope: post-v1 optimization; does not change the v1 CPU-only/click-to-simplify
   release gates without a separate accepted decision.
 
@@ -83,7 +83,7 @@ For the winner:
 3. Run the existing WER/CER matrix or at least en/fr/de/es/ar.
 4. Run a click-during-live test and verify zero finalized-segment loss, surfaced
    overruns, and no caption gap beyond the accepted budget.
-5. Update ADR 0019/0023, budgets, and the progress tracker before changing a
+5. Update ADR 0019/0024, budgets, and the progress tracker before changing a
    shipping default.
 
 ### Stage E — GPU track (later)

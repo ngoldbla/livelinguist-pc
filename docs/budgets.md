@@ -31,7 +31,7 @@ to be measured.
 
 The Rust-side Tier 1 stamp is a diagnostic approximation, not proof of paint.
 The Windows product baseline is the media-clock → UIA-visible-caption benchmark
-in `autoresearch/` (D-060). It reports partial/final p50/p95, cue coverage,
+in `autoresearch/` (D-061). It reports partial/final p50/p95, cue coverage,
 token similarity, and polling quantization. See
 `docs/qa/2026-11-24-caption-latency-baseline.md` for measured numbers.
 

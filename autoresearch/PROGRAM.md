@@ -1,7 +1,7 @@
 # Autoresearch program — caption latency
 
 You are optimizing Live Linguist's real Windows live-caption latency. Work on a
-branch from fresh `main`. Read `docs/decisions/0023.md` and
+branch from fresh `main`. Read `docs/decisions/0024.md` and
 `docs/plans/2026-11-24-autoresearch-plan.md` before changing code.
 
 ## Objective

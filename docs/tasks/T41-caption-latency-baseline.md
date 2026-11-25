@@ -2,7 +2,7 @@
 
 - Branch: `stage-autoresearch-baseline`
 - Plan: `docs/plans/2026-11-24-autoresearch-plan.md`
-- Decision: `docs/decisions/0023.md` (D-060)
+- Decision: `docs/decisions/0024.md` (D-061)
 
 ## Goal
 
@@ -18,7 +18,7 @@ Do not change shipping ASR defaults or claim GPU inference.
   explicit ASR chunk/thread/endpoint experiment knobs; defaults unchanged.
 - `ui/src/screens/Overlay.tsx`, `Live.tsx` — show/tag the existing verbatim
   partial.
-- Docs: ADR 0023, plan, QA evidence, budgets/progress/decision index.
+- Docs: ADR 0024, plan, QA evidence, budgets/progress/decision index.
 
 ## Steps
 

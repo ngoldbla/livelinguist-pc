@@ -2,7 +2,7 @@
 
 This directory contains the Windows end-to-end benchmark and parameter search
 for live-caption latency. The canonical decision is
-[`docs/decisions/0023.md`](../docs/decisions/0023.md); the execution order is
+[`docs/decisions/0024.md`](../docs/decisions/0024.md); the execution order is
 [`docs/plans/2026-11-24-autoresearch-plan.md`](../docs/plans/2026-11-24-autoresearch-plan.md).
 
 ## What it measures
