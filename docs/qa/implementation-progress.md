@@ -96,6 +96,13 @@ confirmed overlay-partial + 80 ms candidate p95 2278 ms with 93.8% cue coverage.
 Shipping ASR defaults remain unchanged pending second-voice/WER/tier-C/click
 continuity checks. GPU inference is not implemented or measured.
 
+**2026-11-25 README rerun (same branch):** the four benchmark commands were
+executed on the reference PC. RC live 90 s × 3 partial p95 3349 ms (84.4%
+coverage); the README's example candidate (80 ms + fast endpoint + 4 threads)
+reached p95 2666 ms but only 75.0% coverage, so 0/3 trials were valid; the 45 s
+screen again selected 80 ms + default endpoint + 2 threads (p95 2722 ms, 88.9%).
+Numbers in `docs/qa/2026-11-24-caption-latency-baseline.md`; no default changed.
+
 **Owner Windows retest 2026-11-24: steps 0–5 pass** —
 `docs/qa/2026-11-24-windows-retest.md` (results table, machine, evidence). The
 run found and the branch `windows-retest-2026-11-24` fixes: Summary exports

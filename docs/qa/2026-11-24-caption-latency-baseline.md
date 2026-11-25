@@ -165,3 +165,52 @@ All 9 repeated-run `result.json` files parsed as JSON and contained no
 - Click-during-live contention is not part of this baseline yet.
 - GPU inference is not implemented or measured. The RTX 5060 Ti only renders
   the UI in the current RC.
+
+## 2026-11-25 rerun of `autoresearch/README.md`
+
+Same machine and installed RC (SHA-256
+`1591668c…cf06fa6`). Source run at `b81355f`; the bridge addon was rebuilt with
+`capture,sherpa,llama` and copied to `ui/livelinguist-core.node`.
+
+### Installed RC, live, 90 s × 3
+
+| Tier | p50 | p95 | Coverage | Mean similarity |
+|---|---:|---:|---:|---:|
+| Partial | 1992 ms | 3349 ms | 84.4% | 0.996 |
+| Final | 6166 ms | 10356 ms | 68.8% | 0.975 |
+
+Poll/scan quantum p95: 48 ms. All three trials valid.
+
+### Source UI, overlay, 80 ms + fast endpoint + 4 threads, 90 s × 3
+
+| Tier | p50 | p95 | Coverage | Mean similarity |
+|---|---:|---:|---:|---:|
+| Partial | 1079 ms | 2666 ms | 75.0% | 0.978 |
+| Final | 2998 ms | 6002 ms | 71.9% | 0.977 |
+
+Poll/scan quantum p95: 28 ms. **0/3 trials valid**: partial coverage 75.0% is
+below the 0.80 gate. This is the README's example candidate command, and as
+written it is a diagnostic, not confirmation evidence.
+
+### 45 s screen (`optimize.ts`)
+
+| Candidate | Partial p50 | Partial p95 | Coverage | Mean similarity | Eligible |
+|---|---:|---:|---:|---:|---|
+| Installed RC, live | 2012 ms | 3668 ms | 83.3% | 0.993 | yes |
+| Installed RC, overlay (final only) | — | — | 0% | — | no |
+| Overlay partial + 1100 ms | 1985 ms | 3640 ms | 83.3% | 0.993 | yes |
+| Overlay partial + 560 ms | 1617 ms | 3127 ms | 88.9% | 0.993 | yes |
+| Overlay partial + 80 ms | 1210 ms | 2722 ms | 88.9% | 0.993 | yes |
+| 80 ms + fast endpoint + 4 threads | 1091 ms | 3512 ms | 83.3% | 0.961 | yes, but worse p95 |
+
+The screen again selected **80 ms + default endpoint + 2 threads**
+(`source-overlay-80`): 25.2% below the overlay-partial/1100 ms control. The fast
+endpoint again lowered p50 but raised p95, and at 90 s it lost coverage. No
+shipping default changed.
+
+Privacy: all 12 `result.json` files from the three run directories contained no
+`text`, `hypothesis`, `transcript`, `audio`, `video`, or `uia` fields:
+`content-free benchmark outputs: PASS (12 files)`.
+
+Tests: `autoresearch/align.test.ts` 5/5; `ll-config`/`ll-audio`/`ll-pipeline`
+63 passed; `ll-eval --features sherpa` 21 passed.
