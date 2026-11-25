@@ -1,6 +1,6 @@
 # T33 — Measure all 29 locales and set coverage statuses (S3) (PR)
 
-Measurements for all 29 locales are in PR #31 (`docs/qa/2026-11-23-asr-coverage-v1.md`); `coverage.rs` + UI statuses, tests and the historical marker are done (2026-11-24, 12 `ok` / 17 `simplify_only`). Windows (2026-11-24): tier C re-check on the 12 `ok` rows + ja-JP recorded in that doc; language picker screenshot `docs/screenshots/m2-windows/language-picker-coverage.png` (the picker shows `Live ASR` and `Simplify only` from the matrix). **Blocked on one owner decision:** de-DE scores 0.157 on Windows (gate 0.15) — see `docs/tasks/BLOCKED.md`.
+Measurements for all 29 locales are in PR #31 (`docs/qa/2026-11-23-asr-coverage-v1.md`); `coverage.rs` + UI statuses, tests and the historical marker are done (2026-11-24, 12 `ok` / 17 `simplify_only`). Windows (2026-11-24): tier C re-check on the 12 `ok` rows + ja-JP recorded in that doc; language picker screenshot `docs/screenshots/m2-windows/language-picker-coverage.png` (the picker shows `Live ASR` and `Simplify only` from the matrix). de-DE scores 0.157 on Windows (gate 0.15); the owner decided to keep it `ok` and record the number.
 
 **Needs:** T32 passed.
 

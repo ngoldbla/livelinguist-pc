@@ -109,8 +109,9 @@ option 1** (compiled exe + both `.node` addons beside it), so T37 is unblocked.
 
 **Windows, 2026-11-24 (owner PC, this run):** T33 tier C re-check of the 12 `ok`
 locales + ja-JP: timing passes on every row (RTF 0.24–0.26, p95 283–322 ms,
-peak RSS 778–780 MB); scores match Linux within 0.016 except **de-DE, which
-scores 0.157 and misses the 0.15 gate** (open owner decision, `BLOCKED.md`).
+peak RSS 778-780 MB); scores match Linux within 0.016 except **de-DE, which
+scores 0.157 and misses the 0.15 gate** (owner kept it `ok` on 2026-11-24 with
+the number recorded in the coverage doc).
 ja-JP stays `simplify_only` (0.1597). The language picker shows the measured
 statuses (`docs/screenshots/m2-windows/language-picker-coverage.png`, scenario
 `language-picker-coverage` in `ui/scripts/screenshots-windows.tsx`).
@@ -135,9 +136,7 @@ the Console inside the work area at 150%, with a 13 px centred-position
 overshoot left to T25.
 
 **Linux work still open (resume here):**
-1. Owner decisions: **de-DE ASR gate** (Windows tier C score 0.157 vs the
-   0.15 gate; Linux 0.141 — see `docs/tasks/BLOCKED.md` and
-   `docs/qa/2026-11-23-asr-coverage-v1.md` `## Windows tier C re-check`); es-ES
+1. Owner decisions: es-ES
    matrix guard false negative (T22); confirm the ` /no_think` soft switch in
    the training renderer (T08).
 
