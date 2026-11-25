@@ -14,8 +14,9 @@ text to the video's SRT cue starts.
 
 - **Primary:** partial p95, cue start → visible partial.
 - **Secondary:** final p95, cue start → visible final.
+- **Click series:** with `--click-every-n`, per-click click → simplified latency.
 - **Gates:** cue coverage ≥ 80%, mean token similarity ≥ 0.85, valid media clock.
-- **Not measured:** click-to-simplify latency, WER/CER, or GPU inference.
+- **Not measured:** WER/CER or GPU inference.
 
 The UIA timestamp is a visibility proxy. `pollQuantumP95Ms` reports its
 resolution; it is not a native GPU present timestamp.
@@ -76,11 +77,33 @@ bun autoresearch\benchmark.ts --source-ui --mode overlay --seconds 90 `
   --asr-chunk-ms 560 --click-at-ms 45000 --out target\autoresearch\click
 ```
 
-`--fixture` defaults to `autoresearch/fixture.json`. `--click-at-ms` clicks a
-caption through UIA; use `--mode live` for the click gate (a synthetic click on
-the overlay hides it before React sees the handler). `result.json` then carries
-`click { requested, app, ok, maxGapMs, mediaMs }`, and the observation times show
-whether captions continued after the click.
+German run with alternating clicks and a recording:
+
+```powershell
+bun autoresearch\benchmark.ts --fixture autoresearch\fixtures\german-fastening.json `
+  --source-ui --mode live --seconds 60 --start-seconds 3 `
+  --click-every-n 2 `
+  --record target\autoresearch\german-60s\german-60s.mp4 `
+  --out target\autoresearch\german-60s
+```
+
+`--fixture` defaults to `autoresearch/fixture.json`. A manifest may name the app
+`language` (for example `de-DE`); the UI locale stays `en` so the UIA probe's
+labels are stable. `--click-at-ms` clicks one caption through UIA; use
+`--mode live` for the click gate (a synthetic click on the overlay hides it
+before React sees the handler). `--click-every-n 2` clicks every other finalized
+segment (the first, third, fifth, ...), scrolls the live list to the newest row
+first, and records click-to-simplified latency per click. `result.json` then
+carries `click` (the single-click gate), `clickSeries` (per-click index, media
+time, latency, p50/p95), and `recording`.
+
+Recording needs ffmpeg. The harness looks for `--ffmpeg`, `FFMPEG`, a copy under
+`target/tools/ffmpeg`, or `ffmpeg` on `PATH`. It captures the app window region
+with gdigrab at 20 fps and muxes the fixture's own audio track, trimmed to the
+media clock, so the file has audio without depending on a system loopback
+device. `recording.json` fields in `result.json` record the trim and source.
+The MP4 contains fixture captions and audio, so it stays under `target/` and is
+never uploaded by the harness.
 
 Rebuild a journal from completed runs without replaying audio:
 
@@ -101,7 +124,7 @@ cargo test -p ll-eval --features sherpa
 
 | Environment variable | Default | Meaning |
 |---|---:|---|
-| `LL_ASR_CHUNK_MS` | 1100 | Pipeline input chunk; 80–2000 ms |
+| `LL_ASR_CHUNK_MS` | 560 | Pipeline input chunk; 80–2000 ms |
 | `LL_ASR_THREADS` | 2 | ONNX Runtime CPU threads; 1–64 |
 | `LL_ASR_RULE1_MS` | 2400 | Endpoint rule 1 trailing silence |
 | `LL_ASR_RULE2_MS` | 1200 | Endpoint rule 2 trailing silence |

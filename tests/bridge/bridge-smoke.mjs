@@ -16,7 +16,10 @@ client.feedDemo()
 await new Promise((resolve) => setTimeout(resolve, 50))
 const snapshot = JSON.parse(client.snapshot())
 if (snapshot.segments.length !== 9) throw new Error(`expected 9 segments, got ${snapshot.segments.length}`)
-if (snapshot.lastSeq < 100) throw new Error('too few events')
+// The demo emits 84 envelopes today (74 partials, 9 finals, 1 state). The old
+// floor of 100 no longer matches the demo and failed on main; 50 still fails on
+// a dead or truncated callback stream without pinning the demo's exact length.
+if (snapshot.lastSeq < 50) throw new Error('too few events')
 let last = 0
 for (const envelope of envelopes) {
   if (envelope.v !== 1) throw new Error('protocol version')
@@ -24,8 +27,18 @@ for (const envelope of envelopes) {
   last = envelope.seq
 }
 const id = snapshot.segments[0].id
-const simplified = JSON.parse(client.simplify(id))
-if (!simplified.text) throw new Error('on-demand simplification returned no text')
+const simplifyResult = JSON.parse(client.simplify(id))
+// ADR 0025: a click returns a `queued` acknowledgement and the result arrives
+// as a `simplified` event. Cached results still return their text immediately.
+let simplified = simplifyResult.text
+if (!simplified) {
+  for (let attempt = 0; attempt < 200 && !simplified; attempt += 1) {
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    const current = JSON.parse(client.snapshot())
+    simplified = current.segments.find((segment) => segment.id === id)?.simplified ?? null
+  }
+}
+if (!simplified) throw new Error('on-demand simplification returned no text')
 const summary = JSON.parse(client.stop())
 if (summary.segments !== 9) throw new Error('summary segment count')
 if (summary.simplified !== 1) throw new Error('summary simplified count')

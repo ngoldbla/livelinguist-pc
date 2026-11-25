@@ -113,6 +113,16 @@ freeze is fixed by ADR 0025 (engine borrowed to a worker; a live click keeps
 92.3% coverage). Shipped-path reruns are in
 `docs/qa/2026-11-25-asr-chunk-confirmation.md`; the change is released as rc.3.
 
+**2026-11-25 German click baseline:** the autoresearch harness gained
+fixture-selected app language, `--click-every-n` (alternating finalized rows,
+scroll-to-newest, per-click click→simplified latency) and `--record` (app-window
+capture + the fixture audio track). Two 60 s dry runs on the Terra X German clip
+measured partial p50/p95 1907–1910 / 6302–6330 ms at 94.4% coverage, 7/7 clicks
+applied, click-to-simplified p50/p95 1620–1622 / 2240–2382 ms. The recorded run
+is 60.0 s with audio at `target/autoresearch/german-60s/german-60s.mp4`; details
+and the recording's small encoder overhead are in
+`docs/qa/2026-11-25-german-live-baseline.md`.
+
 **Owner Windows retest 2026-11-24: steps 0–5 pass** —
 `docs/qa/2026-11-24-windows-retest.md` (results table, machine, evidence). The
 run found and the branch `windows-retest-2026-11-24` fixes: Summary exports
