@@ -15,8 +15,9 @@ path.
    `SHA256SUMS.txt` and the notes from `packaging/release-notes.md`.
 
 A tag with a suffix (`v1.0.0-rc.1`) publishes a **pre-release**, which the
-"latest release" link skips. "Run workflow" on the Actions tab is a dry run:
-the same build and tests, with files kept as a workflow artifact and no release.
+"latest release" link skips. "Run workflow" on the Actions tab with **Publish a release** ticked tags the
+chosen commit and publishes the same way, no git needed. Unticked, it is a dry
+run: the same build and tests, files kept as a workflow artifact, no release.
 The tag must equal `v` + the Cargo version or the run fails.
 
 ## Build locally (on Windows)
