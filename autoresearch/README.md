@@ -65,6 +65,23 @@ bun autoresearch\optimize.ts --seconds 45 --repeat 1 `
   --out target\autoresearch\optimization
 ```
 
+Second voice and click probe:
+
+```powershell
+bun autoresearch\benchmark.ts --fixture autoresearch\fixtures\elena-serova.json `
+  --source-ui --mode overlay --seconds 90 --repeat 3 --asr-chunk-ms 560 `
+  --out target\autoresearch\second-voice
+
+bun autoresearch\benchmark.ts --source-ui --mode overlay --seconds 90 `
+  --asr-chunk-ms 560 --click-at-ms 45000 --out target\autoresearch\click
+```
+
+`--fixture` defaults to `autoresearch/fixture.json`. `--click-at-ms` clicks a
+caption through UIA; use `--mode live` for the click gate (a synthetic click on
+the overlay hides it before React sees the handler). `result.json` then carries
+`click { requested, app, ok, maxGapMs, mediaMs }`, and the observation times show
+whether captions continued after the click.
+
 Rebuild a journal from completed runs without replaying audio:
 
 ```powershell

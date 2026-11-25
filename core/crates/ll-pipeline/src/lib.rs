@@ -61,6 +61,24 @@ pub enum RunOutcome {
     Cancelled { id: String },
 }
 
+/// One simplification claimed from the queue, ready to run outside the
+/// pipeline lock. The engine is handed to the worker separately.
+#[derive(Debug, Clone)]
+pub struct SimplifyJob {
+    pub id: String,
+    pub session_id: String,
+    pub segment: FinalizedSegment,
+    pub started_ms: f64,
+}
+
+/// What claiming the active queue slot produced.
+#[derive(Debug, Clone)]
+pub enum ActiveJob {
+    Run(SimplifyJob),
+    Cached(SimplifiedSegment),
+    Cancelled { id: String },
+}
+
 /// Shared cancel flags for running requests (usable from another thread).
 #[derive(Debug, Clone, Default)]
 pub struct SimplifyCancel {
@@ -122,7 +140,7 @@ pub struct Pipeline {
     config: PipelineConfig,
     coverage: CoverageMatrix,
     asr: Box<dyn AsrEngine>,
-    engine: SimplificationEngine,
+    engine: Option<SimplificationEngine>,
     queue: SimplifyQueue,
     cancel_handle: SimplifyCancel,
     segmenter: Segmenter,
@@ -168,7 +186,7 @@ impl Pipeline {
             config,
             coverage,
             asr,
-            engine,
+            engine: Some(engine),
             queue: SimplifyQueue::default(),
             cancel_handle: SimplifyCancel::default(),
             segmenter: Segmenter::default(),
@@ -384,44 +402,91 @@ impl Pipeline {
         })
     }
 
-    /// Run the active item, then advance the queue. Returns `None` when
-    /// nothing is active. A cancel that arrives while the backend runs (via
-    /// [`SimplifyCancel`]) discards the result.
-    pub fn run_active(&mut self) -> Option<RunOutcome> {
+    /// Hand the simplifier engine to a worker so the backend can run outside
+    /// the bridge lock. Audio feeding continues; the worker returns it with
+    /// [`Self::restore_engine`]. The click queue is single-flight, so only one
+    /// worker holds it.
+    pub fn take_engine(&mut self) -> Option<SimplificationEngine> {
+        self.engine.take()
+    }
+
+    pub fn restore_engine(&mut self, engine: SimplificationEngine) {
+        self.engine = Some(engine);
+    }
+
+    /// Claim the active queue slot without running the backend. A worker can
+    /// then run [`SimplifyJob`] outside the lock and hand the result back to
+    /// [`Self::apply_simplified`].
+    pub fn take_active_job(&mut self) -> Option<ActiveJob> {
         let id = self.queue.active()?.to_string();
         if self.cancel_handle.take(&id) {
             let _ = self.queue.complete();
-            return Some(RunOutcome::Cancelled { id });
+            return Some(ActiveJob::Cancelled { id });
         }
         let Some(entry) = self.store.find(&id).cloned() else {
             let _ = self.queue.complete();
-            return Some(RunOutcome::Cancelled { id });
+            return Some(ActiveJob::Cancelled { id });
         };
         if entry.outcome.display_text().is_some() {
             let _ = self.queue.complete();
-            return Some(RunOutcome::Done(entry));
+            return Some(ActiveJob::Cached(entry));
         }
-        // Click path: only the clicked sentence reaches the simplifier. No
-        // rolling context from earlier segments (S4 prompt contract).
-        let previous: Vec<String> = Vec::new();
-        let started = self.wall_ms();
-        self.metrics.record(&id, Stage::SimplifyStart, started);
-        let result = self.engine.simplify(&entry.segment, &previous, false);
-        if self.cancel_handle.take(&id) {
+        let started_ms = self.wall_ms();
+        self.metrics.record(&id, Stage::SimplifyStart, started_ms);
+        Some(ActiveJob::Run(SimplifyJob {
+            id,
+            session_id: self.session_id.clone(),
+            segment: entry.segment.clone(),
+            started_ms,
+        }))
+    }
+
+    /// Store a worker's result, emit it, and advance the queue. A cancel that
+    /// arrived while the backend ran discards the result.
+    pub fn apply_simplified(
+        &mut self,
+        job: &SimplifyJob,
+        result: SimplifiedSegment,
+    ) -> Option<RunOutcome> {
+        if job.session_id != self.session_id {
+            return None;
+        }
+        if self.cancel_handle.take(&job.id) {
             let _ = self.queue.complete();
-            return Some(RunOutcome::Cancelled { id });
+            return Some(RunOutcome::Cancelled { id: job.id.clone() });
         }
         let finished = self.wall_ms();
-        self.metrics.record(&id, Stage::SimplifiedVisible, finished);
+        self.metrics
+            .record(&job.id, Stage::SimplifiedVisible, finished);
         self.store.update_outcome(
-            &id,
+            &job.id,
             result.outcome.clone(),
             result.soft_violations.clone(),
             result.confidence.clone(),
         );
-        self.emit_simplified(&result, (finished - started) as u64);
+        self.emit_simplified(&result, (finished - job.started_ms) as u64);
         let _ = self.queue.complete();
         Some(RunOutcome::Done(result))
+    }
+
+    /// Run the active item on the calling thread, then advance the queue.
+    /// Returns `None` when nothing is active. The live bridge uses
+    /// [`Self::take_active_job`] + [`Self::apply_simplified`] on a worker
+    /// instead, so audio keeps flowing while the backend runs.
+    pub fn run_active(&mut self) -> Option<RunOutcome> {
+        // The async worker owns the engine; it drains the queue.
+        self.engine.as_ref()?;
+        let job = match self.take_active_job()? {
+            ActiveJob::Cached(entry) => return Some(RunOutcome::Done(entry)),
+            ActiveJob::Cancelled { id } => return Some(RunOutcome::Cancelled { id }),
+            ActiveJob::Run(job) => job,
+        };
+        // Click path: only the clicked sentence reaches the simplifier. No
+        // rolling context from earlier segments (S4 prompt contract).
+        let previous: Vec<String> = Vec::new();
+        let engine = self.engine.as_mut()?;
+        let result = engine.simplify(&job.segment, &previous, false);
+        self.apply_simplified(&job, result)
     }
 
     /// On-demand simplification of one finalized segment: a click followed by
@@ -603,28 +668,28 @@ impl Pipeline {
         });
         let automatic = self.config.dev_automatic
             && self.config.session.simplification_mode == SimplificationMode::Automatic;
-        match automatic {
-            false => {
-                self.store.append(SimplifiedSegment::new(
-                    segment,
-                    SimplificationOutcome::Skipped {
-                        reason: ll_core::session::SkipReason::NotRequested,
-                    },
-                ));
-            }
-            true => {
+        if automatic {
+            if let Some(mut engine) = self.engine.take() {
                 let previous: Vec<String> = Vec::new();
                 let started = self.wall_ms();
                 self.metrics
                     .record(&segment.id, Stage::SimplifyStart, started);
-                let result = self.engine.simplify(&segment, &previous, false);
+                let result = engine.simplify(&segment, &previous, false);
                 let finished = self.wall_ms();
                 self.metrics
                     .record(&segment.id, Stage::SimplifiedVisible, finished);
                 self.emit_simplified(&result, (finished - started) as u64);
                 self.store.append(result);
+                self.engine = Some(engine);
+                return;
             }
         }
+        self.store.append(SimplifiedSegment::new(
+            segment,
+            SimplificationOutcome::Skipped {
+                reason: ll_core::session::SkipReason::NotRequested,
+            },
+        ));
     }
 
     fn emit_simplified(&mut self, result: &SimplifiedSegment, latency_ms: u64) {
@@ -1034,18 +1099,50 @@ mod tests {
     }
 
     #[test]
+    fn worker_job_path_keeps_the_pipeline_usable() {
+        let (mut pipeline, recorder, ids) = mock_pipeline(SimplificationMode::OnDemand, &THREE);
+        assert!(matches!(
+            pipeline.request_simplify(&ids[0]).unwrap(),
+            ClickOutcome::Started { .. }
+        ));
+        let job = match pipeline.take_active_job().unwrap() {
+            ActiveJob::Run(job) => job,
+            other => panic!("expected a run job, got {other:?}"),
+        };
+        let mut engine = pipeline.take_engine().expect("engine out for the worker");
+
+        // The click worker owns the engine; audio still feeds the pipeline.
+        pipeline.feed_audio(&[0.0; 1_280]);
+
+        let result = engine.simplify(&job.segment, &[], false);
+        assert!(matches!(
+            pipeline.apply_simplified(&job, result),
+            Some(RunOutcome::Done(_))
+        ));
+        pipeline.restore_engine(engine);
+
+        assert!(recorder.calls() >= 1);
+        assert!(matches!(
+            pipeline.request_simplify(&ids[0]).unwrap(),
+            ClickOutcome::Cached(_)
+        ));
+        let _ = pipeline.simplify_now(&ids[1]);
+        assert!(recorder.calls() >= 2);
+    }
+
+    #[test]
     fn cancel_while_running_discards_result_and_starts_queued() {
         let (mut pipeline, _recorder, ids) = mock_pipeline(SimplificationMode::OnDemand, &THREE);
         let calls = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
         let pack = FrameworkPack::load_framework(Framework::Falc).unwrap();
-        pipeline.engine = SimplificationEngine::with_config(
+        pipeline.engine = Some(SimplificationEngine::with_config(
             Box::new(CancellingBackend {
                 cancel: Some((pipeline.cancel_handle(), ids[0].clone())),
                 calls: calls.clone(),
             }),
             &pack,
             pipeline.config.engine,
-        );
+        ));
         let _ = pipeline.request_simplify(&ids[0]).unwrap();
         let _ = pipeline.request_simplify(&ids[1]).unwrap();
         let _ = pipeline.take_events();

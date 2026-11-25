@@ -1,0 +1,25 @@
+{
+  "id": "nasa-elena-serova",
+  "title": "Expedition 41 Crew Profile - Elena Serova",
+  "author": "NASA Johnson",
+  "sourcePage": "https://commons.wikimedia.org/wiki/File:Expedition_41_Crew_Profile-_Elena_Serova.webm",
+  "license": "Public domain",
+  "licenseUrl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "media": {
+    "file": "elena-serova.webm",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/d/de/Expedition_41_Crew_Profile-_Elena_Serova.webm",
+    "sha256": "c6ffaaaef8246e36df413e0a01e20261bb29393cca04b5fcdbd7a72807c1561c",
+    "bytes": 11268745,
+    "durationSeconds": 119.721
+  },
+  "captions": {
+    "file": "elena-serova.en.srt",
+    "url": "https://commons.wikimedia.org/w/index.php?title=TimedText:Expedition_41_Crew_Profile-_Elena_Serova.webm.en.srt&action=raw",
+    "sha256": "a78a3d620c75b500a84ac4c7295365cecf1704ef68f65a9e94737f2538f11faf",
+    "language": "en"
+  },
+  "benchmarkWindow": {
+    "startSeconds": 0,
+    "seconds": 90
+  }
+}

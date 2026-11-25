@@ -103,6 +103,16 @@ reached p95 2666 ms but only 75.0% coverage, so 0/3 trials were valid; the 45 s
 screen again selected 80 ms + default endpoint + 2 threads (p95 2722 ms, 88.9%).
 Numbers in `docs/qa/2026-11-24-caption-latency-baseline.md`; no default changed.
 
+**2026-11-25 chunk confirmation (supersedes "defaults unchanged" above):** a
+second voice (NASA Elena Serova, public domain) rejects 80 ms for the default:
+p95 6436–11102 ms vs 5671 ms at 1100 ms. 560 ms measures 4380–6811 ms on the
+second voice and 2685 ms on the lecture; WER is unchanged on four of five
+required locales, the ASR chunk p95 halves, and tier C passes (RTF 0.241,
+777 MB). **`ll-config` now defaults to 560 ms**, and the click gate's pre-existing
+freeze is fixed by ADR 0025 (engine borrowed to a worker; a live click keeps
+92.3% coverage). Shipped-path reruns are in
+`docs/qa/2026-11-25-asr-chunk-confirmation.md`; the change is released as rc.3.
+
 **Owner Windows retest 2026-11-24: steps 0–5 pass** —
 `docs/qa/2026-11-24-windows-retest.md` (results table, machine, evidence). The
 run found and the branch `windows-retest-2026-11-24` fixes: Summary exports

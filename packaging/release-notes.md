@@ -1,8 +1,11 @@
 ## What's new in this build
 
-- The compact overlay now shows the live partial caption above the latest
-  finalized line, so text appears while a sentence is still being recognized,
-  not only once it is finalized.
+- Captions start faster: the live ASR input chunk is now 560 ms instead of
+  1100 ms, which halves the recognizer's chunk latency without changing accuracy
+  or CPU use. The overlay partial is still shown above the latest final.
+- Clicking a sentence no longer pauses live captions. The simplification runs on
+  a worker while audio and captions keep flowing, and the simplified line
+  appears when it is ready.
 - Caption latency is now measured end to end against a pinned, openly licensed
   video, so future changes can be compared on the same numbers.
 

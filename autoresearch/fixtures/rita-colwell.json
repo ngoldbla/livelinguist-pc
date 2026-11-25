@@ -1,0 +1,25 @@
+{
+  "id": "nsf-rita-colwell",
+  "title": "Rita Colwell - National Medal of Science, 2006",
+  "author": "National Science Foundation",
+  "sourcePage": "https://commons.wikimedia.org/wiki/File:Rita_Colwell_-_National_Medal_of_Science,_2006.webm",
+  "license": "Public domain",
+  "licenseUrl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "media": {
+    "file": "rita-colwell.webm",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/c/cd/Rita_Colwell_-_National_Medal_of_Science%2C_2006.webm",
+    "sha256": "b35ba15965341d54156ce73c77de77365ad31d7d04a8c7389d86ea08af40e944",
+    "bytes": 22880926,
+    "durationSeconds": 350.768
+  },
+  "captions": {
+    "file": "rita-colwell.en.srt",
+    "url": "https://commons.wikimedia.org/w/index.php?title=TimedText:Rita_Colwell_-_National_Medal_of_Science,_2006.webm.en.srt&action=raw",
+    "sha256": "326993dee2bdb41a57239200a52495224b1a8a8935007656a5f9e5fec915e528",
+    "language": "en"
+  },
+  "benchmarkWindow": {
+    "startSeconds": 30,
+    "seconds": 90
+  }
+}

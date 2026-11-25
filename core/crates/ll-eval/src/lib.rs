@@ -362,7 +362,7 @@ pub fn help_text() -> String {
         "          [--language de-DE] [--wav tests/fixtures/sample.wav] [--out DIR] [--text TEXT]",
         "          [--source loopback] [--seconds 60]  (loopback needs --features capture)",
         "          [--asr mock|sherpa]  (sherpa needs --features sherpa + downloaded models)",
-        "          --scenario asr-wer --asr sherpa --cache DIR [--locale xx-XX|--all] [--manifest tests/asr-eval/manifest.json] [--asr-threads 2] [--asr-chunk-ms 1100]",
+        "          --scenario asr-wer --asr sherpa --cache DIR [--locale xx-XX|--all] [--manifest tests/asr-eval/manifest.json] [--asr-threads 2] [--asr-chunk-ms 560]",
         "          [--click-all]  (click every segment after an audio run)",
         "          [--llm demo|llama] [--threads 3]  (llama needs --features llama + downloaded models)",
         "",

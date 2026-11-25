@@ -11,12 +11,12 @@ use ll_config::{
 };
 use ll_core::coverage::CoverageMatrix;
 use ll_core::demo::DemoConversation;
-use ll_core::engine::SimplifierBackend;
+use ll_core::engine::{SimplificationEngine, SimplifierBackend};
 use ll_core::language::Language;
 use ll_core::pack::FrameworkPack;
 use ll_core::session::{AudioSourceKind, SessionConfiguration, SimplificationMode};
 use ll_llm::{DemoBackend, FaultyBackend};
-use ll_pipeline::{Pipeline, PipelineConfig};
+use ll_pipeline::{ActiveJob, ClickOutcome, Pipeline, PipelineConfig};
 use ll_window::{
     apply_for_current_window, begin_drag, resize_current_window, work_area, WindowPolicyResult,
 };
@@ -99,6 +99,10 @@ struct BridgeInner {
     language: Language,
     last_error: Option<String>,
     flood_stop: Option<Arc<AtomicBool>>,
+    /// Session whose simplifier engine is currently running on a worker. The
+    /// engine (and the LLM) is borrowed by that worker, so the bridge lock is
+    /// free and audio keeps feeding. `None` means no worker holds it.
+    simplify_engine_session: Option<String>,
 }
 
 impl Default for BridgeInner {
@@ -114,6 +118,7 @@ impl Default for BridgeInner {
             language: Language::FrFr,
             last_error: None,
             flood_stop: None,
+            simplify_engine_session: None,
         }
     }
 }
@@ -254,6 +259,7 @@ impl CoreClient {
             inner.pipeline = Some(pipeline);
             inner.finished = None;
             inner.llm_status = llm_status;
+            inner.simplify_engine_session = None;
             inner.pack = Some(pack);
             inner.callback = Some(callback.clone());
             inner.runtime = runtime;
@@ -361,70 +367,53 @@ impl CoreClient {
 
     #[napi]
     pub fn simplify(&self, segment_id: String) -> Result<String> {
-        let (result, callback, events) = {
-            let mut inner = self
-                .inner
-                .lock()
-                .map_err(|_| Error::from_reason("bridge lock poisoned"))?;
-            let callback = inner.callback.clone();
+        let mut inner = self
+            .inner
+            .lock()
+            .map_err(|_| Error::from_reason("bridge lock poisoned"))?;
+        let session_id = {
             let Some(pipeline) = inner.pipeline.as_mut() else {
                 return Err(Error::from_reason("session not started"));
             };
-            let result = pipeline
-                .simplify_now(&segment_id)
+            let outcome = pipeline
+                .request_simplify(&segment_id)
                 .map_err(|error| Error::from_reason(error.to_string()))?;
-            let load_error = inner
-                .llm_status
-                .as_ref()
-                .and_then(ll_llm::LoadStatus::take_error);
-            let strict = inner.runtime.strict;
+            if let ClickOutcome::Cached(entry) = outcome {
+                let simplified = SimplifyResult {
+                    id: entry.segment.id.clone(),
+                    text: entry.outcome.display_text().map(ToString::to_string),
+                    status: if entry.confidence.is_clean() {
+                        "clean".to_string()
+                    } else {
+                        "flagged".to_string()
+                    },
+                    flags: entry.confidence.reasons().to_vec(),
+                };
+                return serde_json::to_string(&simplified)
+                    .map_err(|error| Error::from_reason(error.to_string()));
+            }
+            pipeline.session_id().to_string()
+        };
+        if inner.simplify_engine_session.as_deref() == Some(session_id.as_str()) {
+            // The worker already owns this session's engine and will drain the
+            // queue; the result arrives as a `simplified` event.
+            return queued_json(&segment_id);
+        }
+        let engine = {
             let Some(pipeline) = inner.pipeline.as_mut() else {
                 return Err(Error::from_reason("session not started"));
             };
-            if let Some(error) = load_error {
-                match ll_llm::click_failure(strict, llm_load_missing(&error)) {
-                    ll_llm::ClickFailure::Verbatim { code } => {
-                        pipeline.emit_event(ll_protocol::CoreEvent::Error {
-                            code: code.to_string(),
-                            message: error.message.clone(),
-                            recoverable: true,
-                        });
-                    }
-                    ll_llm::ClickFailure::StopSession { code } => {
-                        let envelope = pipeline.emit_event(ll_protocol::CoreEvent::Error {
-                            code: code.to_string(),
-                            message: error.message.clone(),
-                            recoverable: false,
-                        });
-                        let _ = pipeline.stop();
-                        let mut events = pipeline.take_events();
-                        events.insert(0, envelope);
-                        if let Some(callback) = &callback {
-                            emit(callback, events);
-                        }
-                        inner.pipeline = None;
-                        return Err(Error::from_reason(format!(
-                            "{code}: strict scenario stops on simplifier failure"
-                        )));
-                    }
-                }
-            }
-            let simplified = SimplifyResult {
-                id: result.segment.id.clone(),
-                text: result.outcome.display_text().map(ToString::to_string),
-                status: if result.confidence.is_clean() {
-                    "clean".to_string()
-                } else {
-                    "flagged".to_string()
-                },
-                flags: result.confidence.reasons().to_vec(),
-            };
-            (simplified, callback, pipeline.take_events())
+            pipeline
+                .take_engine()
+                .ok_or_else(|| Error::from_reason("simplifier is busy"))?
         };
-        if let Some(callback) = callback {
-            emit(&callback, events);
-        }
-        serde_json::to_string(&result).map_err(|error| Error::from_reason(error.to_string()))
+        inner.simplify_engine_session = Some(session_id.clone());
+        let worker_inner = self.inner.clone();
+        std::thread::Builder::new()
+            .name("simplify-worker".into())
+            .spawn(move || run_simplify_worker(worker_inner, engine, session_id))
+            .map_err(|error| Error::from_reason(format!("simplify worker failed: {error}")))?;
+        queued_json(&segment_id)
     }
 
     /// Simplify typed/pasted text (the simplify-only locale path). This never
@@ -813,6 +802,130 @@ fn emit(callback: &ThreadsafeFunction<String>, events: Vec<ll_protocol::Envelope
     for event in events {
         if let Ok(json) = serde_json::to_string(&event) {
             let _ = callback.call(Ok(json), ThreadsafeFunctionCallMode::NonBlocking);
+        }
+    }
+}
+
+fn queued_json(segment_id: &str) -> Result<String> {
+    serde_json::to_string(&SimplifyResult {
+        id: segment_id.to_string(),
+        text: None,
+        status: "queued".to_string(),
+        flags: Vec::new(),
+    })
+    .map_err(|error| Error::from_reason(error.to_string()))
+}
+
+fn clear_engine_claim(inner: &mut BridgeInner, engine_session: &str) {
+    if inner.simplify_engine_session.as_deref() == Some(engine_session) {
+        inner.simplify_engine_session = None;
+    }
+}
+
+/// Run queued clicks off the bridge lock. The engine (and the LLM) lives on
+/// this thread while it runs, so `feed_audio` keeps flowing and the UI thread
+/// never waits on the backend. Results arrive as `simplified` events; the
+/// synchronous `simplify` call only returns a queued acknowledgement.
+fn run_simplify_worker(
+    inner: Arc<Mutex<BridgeInner>>,
+    mut engine: SimplificationEngine,
+    engine_session: String,
+) {
+    loop {
+        let job = {
+            let mut guard = match inner.lock() {
+                Ok(guard) => guard,
+                Err(_) => return,
+            };
+            let Some(pipeline) = guard.pipeline.as_mut() else {
+                clear_engine_claim(&mut guard, &engine_session);
+                return;
+            };
+            if pipeline.session_id() != engine_session {
+                clear_engine_claim(&mut guard, &engine_session);
+                return;
+            }
+            match pipeline.take_active_job() {
+                Some(ActiveJob::Run(job)) => job,
+                Some(ActiveJob::Cached(_)) | Some(ActiveJob::Cancelled { .. }) => continue,
+                None => {
+                    pipeline.restore_engine(engine);
+                    clear_engine_claim(&mut guard, &engine_session);
+                    return;
+                }
+            }
+        };
+
+        let result = engine.simplify(&job.segment, &[], false);
+
+        let (events, callback, stopped) = {
+            let mut guard = match inner.lock() {
+                Ok(guard) => guard,
+                Err(_) => return,
+            };
+            let same_session = guard
+                .pipeline
+                .as_ref()
+                .map(|pipeline| pipeline.session_id() == job.session_id)
+                .unwrap_or(false);
+            if !same_session {
+                clear_engine_claim(&mut guard, &engine_session);
+                return;
+            }
+            let load_error = guard
+                .llm_status
+                .as_ref()
+                .and_then(ll_llm::LoadStatus::take_error);
+            let strict = guard.runtime.strict;
+            let callback = guard.callback.clone();
+            let mut events;
+            let mut stopped;
+            {
+                let Some(pipeline) = guard.pipeline.as_mut() else {
+                    clear_engine_claim(&mut guard, &engine_session);
+                    return;
+                };
+                let _ = pipeline.apply_simplified(&job, result);
+                events = pipeline.take_events();
+                stopped = false;
+                if let Some(error) = load_error {
+                    match ll_llm::click_failure(strict, llm_load_missing(&error)) {
+                        ll_llm::ClickFailure::Verbatim { code } => {
+                            let envelope = pipeline.emit_event(ll_protocol::CoreEvent::Error {
+                                code: code.to_string(),
+                                message: error.message.clone(),
+                                recoverable: true,
+                            });
+                            events.insert(0, envelope);
+                        }
+                        ll_llm::ClickFailure::StopSession { code } => {
+                            let envelope = pipeline.emit_event(ll_protocol::CoreEvent::Error {
+                                code: code.to_string(),
+                                message: error.message.clone(),
+                                recoverable: false,
+                            });
+                            let _ = pipeline.stop();
+                            events = pipeline.take_events();
+                            events.insert(0, envelope);
+                            stopped = true;
+                        }
+                    }
+                }
+            }
+            if stopped {
+                guard.pipeline = None;
+            }
+            (events, callback, stopped)
+        };
+
+        if let Some(callback) = callback {
+            emit(&callback, events);
+        }
+        if stopped {
+            if let Ok(mut guard) = inner.lock() {
+                clear_engine_claim(&mut guard, &engine_session);
+            }
+            return;
         }
     }
 }

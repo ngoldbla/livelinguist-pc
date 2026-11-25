@@ -107,6 +107,14 @@ export function App() {
     }
   }, [renderer]);
 
+  useEffect(() => {
+    if (!simplifyingId) return;
+    const segment = state.segments.find((item) => item.id === simplifyingId);
+    if (segment?.simplified) {
+      setSimplifyingId((current) => (current === simplifyingId ? null : current));
+    }
+  }, [simplifyingId, state.segments]);
+
   const ensureTransport = (): Transport => {
     if (!transportRef.current) {
       transportRef.current = createTransport((envelope) => bootStore.applyEnvelope(envelope));
@@ -255,10 +263,19 @@ export function App() {
     setSimplifyingId(id);
     try {
       const result = await ensureTransport().simplify(id);
-      bootStore.applySimplified(result);
+      if (result.status === "queued") {
+        // The bridge runs the LLM on a worker and emits `simplified`; the
+        // effect above clears the spinner. The timeout only un-sticks a row
+        // when the request never produces a result.
+        setTimeout(() => {
+          setSimplifyingId((current) => (current === id ? null : current));
+        }, 15000);
+      } else {
+        bootStore.applySimplified(result);
+        setSimplifyingId((current) => (current === id ? null : current));
+      }
     } catch {
       setToast(t(locale, "Could not simplify that sentence."));
-    } finally {
       setSimplifyingId((current) => (current === id ? null : current));
     }
   };
