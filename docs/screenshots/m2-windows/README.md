@@ -14,6 +14,8 @@ test renderer (DirectX). Evidence and non-claims:
 | `onboarding-models-ready.png` | **real** window, native addon (T16: models ready) |
 | `console.png` | GPUIX GPU test renderer |
 | `console-start-captions.png` | GPUIX click path console → live |
+| `console-live-asr.png` | **real** window, real sherpa ASR on loopback (T14) |
+| `console-click-simplified.png` | **real** window, real GGUF click (T20) |
 | `console-arabic.png` | GPUIX GPU test renderer |
 | `live.png` | GPUIX GPU test renderer |
 | `expanded.png` | GPUIX GPU test renderer |

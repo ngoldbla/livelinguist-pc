@@ -61,7 +61,23 @@ With `LL_ASR_MODEL_DIR`, `LL_ASR_SMOKE_WAV` (the FLEURS clip) and
   uses `SherpaAsr`. A missing model emits `ASR_MODEL_MISSING` and the start
   fails. There is no scripted fallback, and a build without sherpa gives real
   audio no ASR instead of fake captions.
-- **Windows pending:** build the bridge with `--features capture,sherpa`, run
-  the UI with **System audio** and an English video, then take the screenshot
-  `docs/screenshots/m2-windows/console-live-asr.png` and record segment count
-  and RTF.
+- **Windows (2026-11-24, run through the UI):** bridge built with
+  `--features capture,sherpa,llama`; Console → **System audio** → **Start
+  captions**; a 16 kHz TTS clip (`target/asr-smoke/t20.wav`, project-authored
+  sentence, played through the default output) was captured as loopback and
+  decoded by `SherpaAsr`.
+  - **1 finalized segment** (stamp `00:02`) from the 10.2 s clip, plus the live
+    partial of the next clip updating while it played.
+  - The UI shows no RTF; the same engine on this host measures RTF 0.255
+    (p95 chunk 313.8 ms) in the Windows tier C row of
+    `2026-11-23-asr-coverage-v1.md`, and RTF ≈ 0.21 on the Linux
+    approximation.
+  - Clicking the finalized sentence ran the real GGUF (T20) — see
+    `2026-11-23-llm-cpu.md`.
+  - Screenshots: `docs/screenshots/m2-windows/console-live-asr.png`,
+    `console-click-simplified.png`. No call audio or private content: the clips
+    are project-generated TTS of test sentences.
+  - Found and fixed here: the live screen's ASR panel hard-coded the amber
+    badge and "Live listening is not available for this language yet" even for
+    a `ok` language, contradicting the session badge. Both now follow
+    `language.asrStatus`.

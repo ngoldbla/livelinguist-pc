@@ -121,6 +121,13 @@ reference PC with a fresh `LOCALAPPDATA`: cancel at 30%, retry resumes, finish â
 `docs/qa/2026-11-24-windows-download.md`, screenshots
 `onboarding-download-progress.png` / `onboarding-models-ready.png`.
 
+**Windows, 2026-11-24:** T14 live ASR confirmed in the app (System audio â†’ real
+captions, 1 finalized segment plus a live partial; screenshots
+`console-live-asr.png`, `console-click-simplified.png`). Found and fixed there:
+the live screen's ASR panel said "live listening is not available" for `ok`
+languages. T20's click path produced a real GGUF simplification (flagged
+`unfaithful` by the validator); evidence in `docs/qa/2026-11-23-llm-cpu.md`.
+
 **Linux work still open (resume here):**
 1. Owner decisions: **de-DE ASR gate** (Windows tier C score 0.157 vs the
    0.15 gate; Linux 0.141 â€” see `docs/tasks/BLOCKED.md` and
@@ -129,8 +136,6 @@ reference PC with a fresh `LOCALAPPDATA`: cancel at 30%, retry resumes, finish â
    the training renderer (T08).
 
 **Windows-only work left:**
-- T14/T20: screenshots `console-live-asr.png`, `console-click-simplified.png`
-  (the behaviour itself is verified by the retest).
 - T23: `workArea()` numbers at 100% and 150%.
 - T25, T26 (not started), T27 keyboard-only live run, T28 Narrator pass
   (human) + Arabic screenshot.

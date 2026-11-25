@@ -1,6 +1,6 @@
 # T14 — Use real ASR in `ll-eval` and the app (S2)
 
-Linux part done in PR #29; Windows pending: bridge built with `--features capture,sherpa`, UI System audio + English video shows real captions, screenshot `console-live-asr.png`, segment count and RTF in `docs/qa/2026-11-23-asr-runtime.md` `## In app`.
+Linux part done in PR #29. Windows done 2026-11-24: bridge with `capture,sherpa,llama`, System audio → real captions from a TTS clip captured as loopback (1 finalized segment + live partial), screenshot `console-live-asr.png`, segment count and RTF note in `docs/qa/2026-11-23-asr-runtime.md` `## In app`. Also fixed the live screen's ASR panel, which claimed "live listening is not available" for an `ok` language.
 
 **Needs:** T13 done.
 
