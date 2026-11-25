@@ -334,14 +334,19 @@ export function LiveScreen({
             <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8 }}>
               <text style={textStyle(11, colors.muted)}>{t(locale, "ASR status")}</text>
               <div style={{ flexGrow: 1 }} />
-              <Badge label={statusLabel(language.asrStatus)} tone="amber" />
+              <Badge
+                label={statusLabel(language.asrStatus)}
+                tone={language.asrStatus === "ok" ? "mint" : "amber"}
+              />
             </div>
-            <text style={textStyle(11, colors.faint)}>
-              {t(
-                locale,
-                "Live listening is not available for this language yet. Paste or type text to simplify it.",
-              )}
-            </text>
+            {language.asrStatus === "ok" ? null : (
+              <text style={textStyle(11, colors.faint)}>
+                {t(
+                  locale,
+                  "Live listening is not available for this language yet. Paste or type text to simplify it.",
+                )}
+              </text>
+            )}
           </Surface>
 
           <Surface style={{ padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
