@@ -1,6 +1,6 @@
 # T23 — Bridge `workArea()` (S6 layout)
 
-Linux part done in PR #25; Windows pending: run the `workArea()` node check on the real Windows desktop at 100% and 150% display scale and record the numbers.
+Linux part done in PR #25. Windows done 2026-11-24: `node` check at 100% and 150% display scale, plus the per-monitor-aware app numbers at 150%; recorded in `docs/qa/2026-11-23-v1-ui.md` `## Work area (T23)`.
 
 **Goal:** the UI can learn how much screen space it really has, so windows
 stop clipping at 150%.
