@@ -235,10 +235,11 @@ export function Onboarding({
               }}
             >
               <text style={textStyle(12, colors.text, 600)}>
-                {selected.name} ·{" "}
-                {selected.asrStatus === "simplify_only"
-                  ? "simplify-only preview"
-                  : "live captioning"}
+                {`${selected.name} · ${
+                  selected.asrStatus === "simplify_only"
+                    ? "simplify-only preview"
+                    : "live captioning"
+                }`}
               </text>
               <text style={textStyle(12, colors.muted)}>
                 {selected.asrStatus === "simplify_only"

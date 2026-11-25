@@ -1,6 +1,6 @@
 # T16 — Onboarding download screen (first-run UX) (PR)
 
-Linux part done in PR #27; Windows pending: manual download/cancel/retry from the onboarding window on Windows and the screenshots `onboarding-download-progress.png`, `onboarding-models-ready.png`.
+Linux part done in PR #27. Windows done 2026-11-24: download, cancel at 30%, retry (it resumes), finish → "Models ready", and the Console then shows both models ready; screenshots `onboarding-download-progress.png` and `onboarding-models-ready.png`. Evidence: `docs/qa/2026-11-24-windows-download.md`.
 
 **Needs:** T15 done.
 

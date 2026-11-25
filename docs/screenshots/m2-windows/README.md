@@ -10,6 +10,8 @@ test renderer (DirectX). Evidence and non-claims:
 | `onboarding-language.png` | GPUIX GPU test renderer |
 | `language-picker-coverage.png` | GPUIX GPU test renderer (T33: coverage badges) |
 | `onboarding-models.png` | GPUIX GPU test renderer |
+| `onboarding-download-progress.png` | **real** window, native addon (T16: live download) |
+| `onboarding-models-ready.png` | **real** window, native addon (T16: models ready) |
 | `console.png` | GPUIX GPU test renderer |
 | `console-start-captions.png` | GPUIX click path console → live |
 | `console-arabic.png` | GPUIX GPU test renderer |

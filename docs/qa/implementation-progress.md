@@ -115,6 +115,12 @@ ja-JP stays `simplify_only` (0.1597). The language picker shows the measured
 statuses (`docs/screenshots/m2-windows/language-picker-coverage.png`, scenario
 `language-picker-coverage` in `ui/scripts/screenshots-windows.tsx`).
 
+**Windows, 2026-11-24:** T16 first-run download verified end to end on the
+reference PC with a fresh `LOCALAPPDATA`: cancel at 30%, retry resumes, finish →
+"Models ready", and the Console then shows both models ready.
+`docs/qa/2026-11-24-windows-download.md`, screenshots
+`onboarding-download-progress.png` / `onboarding-models-ready.png`.
+
 **Linux work still open (resume here):**
 1. Owner decisions: **de-DE ASR gate** (Windows tier C score 0.157 vs the
    0.15 gate; Linux 0.141 — see `docs/tasks/BLOCKED.md` and
@@ -123,8 +129,6 @@ statuses (`docs/screenshots/m2-windows/language-picker-coverage.png`, scenario
    the training renderer (T08).
 
 **Windows-only work left:**
-- T16: onboarding download/cancel/retry on Windows + 2 screenshots (the
-  downloads UI now reads real status; the duplicate stub is gone).
 - T14/T20: screenshots `console-live-asr.png`, `console-click-simplified.png`
   (the behaviour itself is verified by the retest).
 - T23: `workArea()` numbers at 100% and 150%.

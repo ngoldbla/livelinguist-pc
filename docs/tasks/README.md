@@ -27,7 +27,7 @@ writing new cards. Agents work from cards.
 | [T13](T13-sherpa-engine.md) | Real streaming `SherpaAsr` | `stage-w3-asr-runtime` | done |
 | [T14](T14-sherpa-in-app.md) | Real ASR in `ll-eval` and the app (PR) | `stage-w3-asr-runtime` | linux-done |
 | [T15](T15-model-download-bridge.md) | Bridge: model status, download, cancel | `stage-w3-model-download` | linux-done |
-| [T16](T16-model-download-ui.md) | Onboarding download screen (PR) | `stage-w3-model-download` | linux-done |
+| [T16](T16-model-download-ui.md) | Onboarding download screen (PR) | `stage-w3-model-download` | done |
 | [T17](T17-llama-probe.md) | llama.cpp CPU probe | `stage-w4-llama-cpu` | done |
 | [T18](T18-llama-backend.md) | `LlamaBackend` | `stage-w4-llama-cpu` | done |
 | [T19](T19-click-queue.md) | Click-only queue rules | `stage-w4-llama-cpu` | done |
