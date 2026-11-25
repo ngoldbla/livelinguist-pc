@@ -1,6 +1,6 @@
 # T20 — Real simplifier in `ll-eval` and the app (S5)
 
-Linux part done in PR #31; Windows pending: bridge with `--features capture,sherpa,llama`, click a live caption, screenshot `console-click-simplified.png`.
+Linux part done in PR #31. Windows done 2026-11-24: bridge with `capture,sherpa,llama`, real session, clicked the captioned sentence → real GGUF simplification in place (validator flagged that rewrite `unfaithful`, the low-confidence path); screenshot `console-click-simplified.png`, recorded in `docs/qa/2026-11-23-llm-cpu.md` `## In app (T20)`.
 
 **Needs:** T19 done.
 
