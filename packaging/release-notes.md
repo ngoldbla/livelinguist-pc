@@ -1,3 +1,11 @@
+## What's new in this build
+
+- The compact overlay now shows the live partial caption above the latest
+  finalized line, so text appears while a sentence is still being recognized,
+  not only once it is finalized.
+- Caption latency is now measured end to end against a pinned, openly licensed
+  video, so future changes can be compared on the same numbers.
+
 ## Install on Windows 11
 
 1. Under **Assets** below, click **`LiveLinguist-{{VERSION}}-setup.exe`** to download it.
