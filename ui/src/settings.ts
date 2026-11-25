@@ -7,21 +7,17 @@ export interface UiSettings {
   captionSize: number;
   showTier1: boolean;
   detection: boolean;
-  reducedEffects: boolean;
-  followLearning: boolean;
   devEnabled: boolean;
   scenario: string;
 }
 
-export const CAPTION_SIZE_MIN = 14;
-export const CAPTION_SIZE_MAX = 30;
+export const CAPTION_SIZE_MIN = 16;
+export const CAPTION_SIZE_MAX = 40;
 
 export const defaultSettings: UiSettings = {
-  captionSize: 20,
+  captionSize: 24,
   showTier1: true,
   detection: true,
-  reducedEffects: false,
-  followLearning: true,
   devEnabled: true,
   scenario: "mock",
 };
@@ -53,8 +49,6 @@ export function loadSettings(path: string = settingsPath()): UiSettings {
       captionSize: clampSize(raw.captionSize),
       showTier1: bool(raw.showTier1, defaultSettings.showTier1),
       detection: bool(raw.detection, defaultSettings.detection),
-      reducedEffects: bool(raw.reducedEffects, defaultSettings.reducedEffects),
-      followLearning: bool(raw.followLearning, defaultSettings.followLearning),
       devEnabled: bool(raw.devEnabled, defaultSettings.devEnabled),
       scenario:
         typeof raw.scenario === "string" && raw.scenario ? raw.scenario : defaultSettings.scenario,

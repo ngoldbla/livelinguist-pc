@@ -1,25 +1,26 @@
-import { Badge, Divider, PageHeader, Surface } from "../aurora/components";
+import { Badge, Divider, Surface } from "../aurora/components";
 import { colors, textStyle, type } from "../aurora/theme";
 import { t } from "../i18n/locales";
 import { APP_VERSION } from "../version";
 
-export function LicensesScreen({ locale, onBack }: { locale: string; onBack: () => void }) {
+/**
+ * Attribution content, shared by the Settings Licenses tab. No page chrome:
+ * the tab provides the title and the scroll surface.
+ */
+export function LicensesContent({ locale }: { locale: string }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 14, padding: 24, height: "100%" }}>
-      <PageHeader
-        backLabel={t(locale, "Back")}
-        title={t(locale, "Licenses")}
-        subtitle={t(locale, "Everything this app runs on, and the terms it ships under.")}
-        onBack={onBack}
-      />
-
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 12,
+        alignItems: "flex-start",
+      }}
+    >
       <div
         style={{
-          flexGrow: 1,
-          minHeight: 0,
-          overflow: "scroll",
-          scrollbarColor: "#FFFFFF22",
-          scrollbarWidth: 6,
+          width: "100%",
+          maxWidth: 640,
           display: "flex",
           flexDirection: "column",
           gap: 12,

@@ -61,6 +61,6 @@ describe("sizeForMode", () => {
   test("console and expanded are fitted", () => {
     expect(sizeForMode("expanded", area).height).toBeLessThanOrEqual(664);
     expect(sizeForMode("console", area).height).toBeLessThanOrEqual(664);
-    expect(sizeForMode("console", null)).toEqual({ width: 1100, height: 700 });
+    expect(sizeForMode("console", null)).toEqual({ width: 960, height: 660 });
   });
 });

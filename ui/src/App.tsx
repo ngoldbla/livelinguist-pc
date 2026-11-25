@@ -13,7 +13,6 @@ import {
 import { languageByCode } from "./i18n/languages";
 import { t } from "./i18n/locales";
 import { ConsoleScreen } from "./screens/Console";
-import { LicensesScreen } from "./screens/Licenses";
 import { LiveScreen } from "./screens/Live";
 import { Onboarding } from "./screens/Onboarding";
 import { OverlayScreen } from "./screens/Overlay";
@@ -27,7 +26,7 @@ import { sizeForMode } from "./windowSize";
 
 const hasSizeOverride = () => Boolean(process.env.LL_WIDTH || process.env.LL_HEIGHT);
 
-type Screen = "onboarding" | "console" | "live" | "settings" | "summary" | "licenses";
+type Screen = "onboarding" | "console" | "live" | "settings" | "summary";
 type WindowMode = "console" | "overlay" | "expanded";
 
 const AUTO_SCREENS = new Set<Screen>(["live"]);
@@ -40,8 +39,7 @@ function readScreen(): Screen {
     raw === "console" ||
     raw === "live" ||
     raw === "settings" ||
-    raw === "summary" ||
-    raw === "licenses"
+    raw === "summary"
   ) {
     return raw;
   }
@@ -93,9 +91,7 @@ export function App() {
     });
   };
 
-  const locale =
-    process.env.LL_UI_LOCALE ??
-    (settings.followLearning ? languageByCode(state.language).uiCode : state.uiLocale || "en");
+  const locale = process.env.LL_UI_LOCALE ?? languageByCode(state.language).uiCode;
 
   useEffect(() => {
     // Register the UI faces GPUIX may not list on its own. Missing files are
@@ -358,12 +354,6 @@ export function App() {
     setScreen("settings");
   };
 
-  const openLicenses = () => {
-    if (windowMode === "overlay") void setWindowMode("console");
-    setBackTo(screen === "licenses" ? "console" : screen);
-    setScreen("licenses");
-  };
-
   const screenContent = (() => {
     if (screen === "onboarding") {
       return (
@@ -372,7 +362,6 @@ export function App() {
           locale={locale}
           onLanguage={onLanguage}
           onFinish={() => setScreen("console")}
-          onOpenLicenses={openLicenses}
           models={models}
           onDownload={() => void onDownloadModels()}
           onCancelDownload={onCancelDownload}
@@ -385,18 +374,13 @@ export function App() {
           language={state.language}
           locale={locale}
           source={state.source}
-          mode={state.mode}
           models={models}
-          settings={settings}
           hasTranscript={state.segments.length > 0}
           onLanguage={onLanguage}
           onSource={(source) => bootStore.setSource(source)}
-          onMode={(mode) => bootStore.setMode(mode)}
-          onChange={applySettings}
           onStart={() => void startSession()}
           onBlocked={(message) => setToast(message)}
           onSettings={openSettings}
-          onLicenses={openLicenses}
           onSummary={() => setScreen(state.segments.length > 0 ? "summary" : "console")}
         />
       );
@@ -409,7 +393,6 @@ export function App() {
           onChange={applySettings}
           runtime={state.runtime}
           onBack={() => setScreen(backTo)}
-          onLicenses={openLicenses}
           onProbe={onProbe}
           onCalibrate={onCalibrate}
           onReload={async () => setToast("Model reload is a no-op in the mock backend.")}
@@ -427,17 +410,13 @@ export function App() {
         />
       );
     }
-    if (screen === "licenses") {
-      return <LicensesScreen locale={locale} onBack={() => setScreen(backTo)} />;
-    }
     if (screen === "summary") {
       return (
         <SummaryScreen
           state={state}
           locale={locale}
           onExport={onExport}
-          onBack={() => setScreen("console")}
-          onConsole={() => {
+          onDone={() => {
             void setWindowMode("console");
             setScreen("console");
           }}
@@ -479,7 +458,6 @@ export function App() {
         onPause={() => void ensureTransport().pause()}
         onResume={() => void ensureTransport().resume()}
         onSettings={openSettings}
-        onMode={(mode) => bootStore.setMode(mode)}
         onWindowMode={(mode) => void setWindowMode(mode)}
         onTypedSimplify={onTypedSimplify}
         compact={false}
@@ -498,7 +476,7 @@ export function App() {
         backgroundColor: colors.bg,
       }}
     >
-      <AuroraField active={screen === "live" && !settings.reducedEffects} />
+      <AuroraField active={screen === "live"} />
       <div style={{ position: "relative", width: "100%", height: "100%" }}>{screenContent}</div>
       {toast ? (
         <div

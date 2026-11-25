@@ -4,7 +4,7 @@ import { captionAccessibleLabel } from "../captionKeys";
 import { directionFor } from "../i18n/direction";
 import { t } from "../i18n/locales";
 import type { Segment } from "../store/sessionStore";
-import { card, colors, focusRing, fonts, glass, gradient, textStyle, type } from "./theme";
+import { card, colors, focusRing, glass, gradient, textStyle, type } from "./theme";
 
 /**
  * A barely-there backdrop: flat near-black plus two very low-alpha washes.
@@ -517,6 +517,7 @@ export function CaptionRow({
   onSimplify,
   onKey,
   locale,
+  targetLanguage,
   compact = false,
   captionSize,
   showTier1 = true,
@@ -528,6 +529,7 @@ export function CaptionRow({
   /** List-level keyboard handling (Up/Down/Enter); returns true if handled. */
   onKey?: (key: string) => boolean;
   locale: string;
+  targetLanguage?: string;
   compact?: boolean;
   captionSize?: number;
   showTier1?: boolean;
@@ -535,6 +537,10 @@ export function CaptionRow({
   autoFocus?: boolean;
 }) {
   const rtl = directionFor(locale) === "rtl";
+  const showEnglish = Boolean(
+    segment.detectedLanguage === "en" && (targetLanguage ?? "").split("-")[0] !== "en",
+  );
+  const simpleSize = compact ? 18 : (captionSize ?? 24);
   return (
     <div
       role="button"
@@ -558,85 +564,61 @@ export function CaptionRow({
       style={{
         display: "flex",
         flexDirection: "column",
-        gap: compact ? 4 : 8,
-        padding: compact ? 10 : 14,
+        gap: compact ? 4 : 6,
+        padding: compact ? 10 : 16,
         width: "100%",
-        maxWidth: 960,
+        maxWidth: 820,
         alignSelf: "center",
         borderRadius: 10,
-        backgroundColor: "#FFFFFF07",
-        borderWidth: 1,
-        borderColor: segment.status === "flagged" ? "#F5C06A33" : colors.border,
+        backgroundColor: segment.simplified ? "#FFFFFF06" : "#00000000",
         cursor: onSimplify ? "pointer" : "default",
-        hover: onSimplify ? { backgroundColor: "#FFFFFF0D", borderColor: "#AFA2FF44" } : undefined,
+        hover: onSimplify ? { backgroundColor: "#FFFFFF0A" } : undefined,
         focusVisible: focusRing,
       }}
     >
-      <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 10 }}>
-        <text
-          style={{
-            ...textStyle(type.meta, colors.faint, 500),
-            fontFamily: fonts.mono,
-          }}
-        >
-          {formatTime(segment.startMs)}
-        </text>
-        <div style={{ flexGrow: 1 }} />
-        {segment.detectedLanguage === "en" ? (
-          <Badge label={t(locale, "English")} tone="info" />
-        ) : null}
-        {segment.status === "flagged" ? (
-          <Badge label={t(locale, "Check wording")} tone="amber" />
-        ) : null}
+      <div style={{ display: "flex", flexDirection: "row", alignItems: "flex-start", gap: 8 }}>
+        {showTier1 ? (
+          <text
+            style={{
+              ...textStyle(
+                segment.simplified ? type.label : compact ? type.label : 16,
+                colors.muted,
+                500,
+              ),
+              lineHeight: segment.simplified ? 18 : 22,
+              textAlign: rtl ? "right" : "left",
+              flexGrow: 1,
+              minWidth: 0,
+            }}
+          >
+            {segment.text}
+          </text>
+        ) : (
+          <div style={{ flexGrow: 1 }} />
+        )}
+        {showEnglish ? <Badge label="EN" tone="info" /> : null}
       </div>
-      {showTier1 ? (
-        <text
-          style={{
-            ...textStyle(compact ? type.label : 15, colors.muted, 500),
-            lineHeight: compact ? 19 : 22,
-            textAlign: rtl ? "right" : "left",
-          }}
-        >
-          {segment.text}
-        </text>
-      ) : null}
       {segment.simplified ? (
         <text
           style={{
-            ...textStyle(compact ? 15 : (captionSize ?? 18), colors.text, 600),
-            lineHeight: compact ? 22 : Math.round((captionSize ?? 18) * 1.35),
+            ...textStyle(simpleSize, colors.text, 600),
+            lineHeight: compact ? 24 : Math.round(simpleSize * 1.32),
             textAlign: rtl ? "right" : "left",
           }}
         >
           {segment.simplified}
         </text>
-      ) : (
+      ) : null}
+      {simplifying ? (
+        <text style={textStyle(type.meta, colors.faint)}>{t(locale, "Simplifying…")}</text>
+      ) : null}
+      {segment.simplified && segment.flags.length > 0 ? (
         <text style={textStyle(type.meta, colors.faint)}>
-          {simplifying
-            ? t(locale, "Simplifying…")
-            : t(locale, "Click or press Enter to simplify this sentence.")}
+          {t(locale, "~ simplified — may not be exact")}
         </text>
-      )}
-      {segment.flags.length > 0 ? (
-        <div style={{ display: "flex", flexDirection: "row", gap: 6, flexWrap: "wrap" }}>
-          {segment.flags.slice(0, 2).map((flag) => (
-            <Badge key={flag} label={flagLabel(flag)} tone="neutral" />
-          ))}
-        </div>
       ) : null}
     </div>
   );
-}
-
-export function formatTime(ms: number): string {
-  const total = Math.max(0, Math.floor(ms / 1000));
-  return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
-}
-
-/** `passive_voice` -> `Passive voice`, so validator codes read as words. */
-export function flagLabel(flag: string): string {
-  const words = flag.replace(/[_-]+/g, " ").trim();
-  return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
 export function Divider() {

@@ -25,11 +25,11 @@ interface Scenario {
 }
 
 const scenarios: Scenario[] = [
-  { name: "onboarding-welcome", screen: "onboarding", size: [980, 680], waitMs: 1200 },
+  { name: "onboarding-welcome", screen: "onboarding", size: [960, 680], waitMs: 1200 },
   {
     name: "onboarding-language",
     screen: "onboarding",
-    size: [980, 680],
+    size: [960, 680],
     env: { LL_ONBOARDING_BEAT: "1" },
     waitMs: 1200,
   },
@@ -39,22 +39,22 @@ const scenarios: Scenario[] = [
     // text-only; languages with live captions carry no badge.
     name: "language-picker-coverage",
     screen: "onboarding",
-    size: [980, 680],
+    size: [960, 680],
     env: { LL_ONBOARDING_BEAT: "1" },
     waitMs: 1200,
   },
   {
     name: "onboarding-models",
     screen: "onboarding",
-    size: [980, 680],
+    size: [960, 680],
     env: { LL_ONBOARDING_BEAT: "2" },
     waitMs: 1200,
   },
-  { name: "console", screen: "console", size: [1100, 700], waitMs: 1500 },
+  { name: "console", screen: "console", size: [960, 660], waitMs: 1500 },
   {
     name: "console-arabic",
     screen: "console",
-    size: [1100, 700],
+    size: [960, 660],
     env: { LL_LANGUAGE: "ar-SA", LL_UI_LOCALE: "en" },
     waitMs: 1500,
   },
@@ -75,8 +75,14 @@ const scenarios: Scenario[] = [
     size: [1000, 860],
     waitMs: 1500,
   },
-  { name: "summary", screen: "summary", mode: "live", size: [1180, 820], waitMs: 2500 },
-  { name: "licenses", screen: "licenses", size: [1020, 820], waitMs: 1200 },
+  { name: "summary", screen: "summary", mode: "live", size: [960, 700], waitMs: 2500 },
+  {
+    name: "licenses",
+    screen: "settings",
+    env: { LL_TAB: "licenses" },
+    size: [1000, 860],
+    waitMs: 1200,
+  },
 ];
 
 const sleep = (ms: number) => new Promise((done) => setTimeout(done, ms));
@@ -237,7 +243,7 @@ for (const scenario of scenarios) {
         root.renderer.flush();
         root.renderer.captureScreenshot(join(OUT, "console-start-captions.png"));
         const liveText = root.renderer.getAllText().join(" ");
-        const started = liveText.includes("Captions");
+        const started = liveText.includes("Pause captions");
         console.log(
           `  console-start-captions.png  click path ${started ? "reached the live screen" : "did not reach live"}`,
         );

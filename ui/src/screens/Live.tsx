@@ -18,10 +18,15 @@ import {
 } from "../captionKeys";
 import { languageByCode, statusLabel } from "../i18n/languages";
 import { t } from "../i18n/locales";
-import type { SessionView, SimplificationMode } from "../store/sessionStore";
+import type { SessionView } from "../store/sessionStore";
 
 type WindowMode = "console" | "overlay" | "expanded";
 
+/**
+ * Running face, Mac cadence: headline, one line that teaches speak -> pause ->
+ * click, the transcript as the only content, and the session cluster at the
+ * bottom. No per-row badges or timestamps; the simplified line is the caption.
+ */
 export function LiveScreen({
   state,
   locale,
@@ -33,7 +38,6 @@ export function LiveScreen({
   onPause,
   onResume,
   onSettings,
-  onMode,
   onWindowMode,
   onTypedSimplify,
   compact = false,
@@ -49,7 +53,6 @@ export function LiveScreen({
   onPause: () => void;
   onResume: () => void;
   onSettings: () => void;
-  onMode: (mode: SimplificationMode) => void;
   onWindowMode: (mode: WindowMode) => void;
   onTypedSimplify: (
     text: string,
@@ -64,8 +67,8 @@ export function LiveScreen({
   const latest =
     [...state.segments].reverse().find((segment) => segment.simplified) ??
     state.segments[state.segments.length - 1];
-  const simplifiedCount = state.segments.filter((segment) => segment.simplified).length;
   const needsTypedInput = language.asrStatus !== "ok";
+  const hearing = Boolean(state.partial?.text);
 
   // Keyboard focus: GPUIX has no imperative focus(), so the focused row is
   // remounted with autoFocus (key carries a nonce) when focus should move.
@@ -111,74 +114,49 @@ export function LiveScreen({
     setTypedResult(result.text ?? t(locale, "Shown without simplification"));
   };
 
+  const cadence =
+    state.phase === "paused"
+      ? t(locale, "Paused — click a sentence to simplify it")
+      : simplifyingId
+        ? t(locale, "Simplifying…")
+        : hearing
+          ? t(locale, "Listening — keep speaking")
+          : t(locale, "Waiting for speech");
+
   return (
     <div
       style={{
         display: "flex",
         flexDirection: "column",
-        gap: compact ? 10 : 16,
-        padding: compact ? 14 : 24,
+        gap: 12,
+        padding: compact ? 14 : 20,
         height: "100%",
       }}
     >
-      <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 12 }}>
-        <BrandMark size={compact ? 26 : 32} />
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 1,
-            flexGrow: 1,
-            minWidth: 0,
-          }}
-        >
-          <text style={{ ...textStyle(compact ? type.body : type.title, colors.text, 600) }}>
-            {t(locale, "CAPTIONS")}
-          </text>
-          <text
-            style={{
-              ...textStyle(type.meta, colors.faint),
-              whiteSpace: "nowrap",
-              textOverflow: "ellipsis",
-              lineClamp: 1,
-            }}
-          >
-            {`${language.name} · ${state.mode === "on_demand" ? t(locale, "On-demand") : t(locale, "Live")}`}
-          </text>
-        </div>
-        <StatusDot
-          tone={state.phase === "paused" ? "amber" : "mint"}
-          label={state.phase === "paused" ? t(locale, "Paused") : t(locale, "Listening")}
-        />
-        {state.reversionActive ? (
-          <StatusDot tone="accent" label={t(locale, "English reversion")} />
-        ) : null}
-        {state.overrunCount > 0 ? (
-          <StatusDot tone="rose" label={t(locale, "overrun %@", state.overrunCount)} />
-        ) : null}
+      <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 10 }}>
+        <BrandMark size={compact ? 24 : 28} />
+        <text style={{ ...textStyle(type.meta, colors.faint, 700) }}>
+          {t(locale, "LIVE LINGUIST · ON-DEVICE")}
+        </text>
+        <div style={{ flexGrow: 1 }} />
         {!compact ? (
-          <div style={{ display: "flex", flexDirection: "row", gap: 6 }}>
+          <>
             <Button
               label={`${t(locale, "Read latest")} (${READ_LATEST_SHORTCUT})`}
               kind="ghost"
               onClick={readLatest}
             />
             <Button label={t(locale, "Settings")} kind="secondary" onClick={onSettings} />
-          </div>
+          </>
         ) : null}
       </div>
 
-      {!compact ? (
-        <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 12 }}>
-          <Tabs
-            tabs={[
-              { id: "on_demand", label: t(locale, "On-demand") },
-              { id: "live", label: t(locale, "Live") },
-            ]}
-            value={state.mode}
-            onChange={(id) => onMode(id as SimplificationMode)}
-          />
-          <div style={{ width: 1, height: 20, backgroundColor: colors.border }} />
+      <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 12 }}>
+        <text style={{ ...textStyle(compact ? 24 : 32, colors.text, 600), lineHeight: 38 }}>
+          {state.phase === "paused" ? t(locale, "Paused") : t(locale, "Captioning")}
+        </text>
+        <div style={{ flexGrow: 1 }} />
+        {!compact ? (
           <Tabs
             tabs={[
               { id: "console", label: t(locale, "Console window") },
@@ -188,22 +166,30 @@ export function LiveScreen({
             value={windowMode}
             onChange={(id) => onWindowMode(id as WindowMode)}
           />
-          <div style={{ flexGrow: 1 }} />
-          <text style={textStyle(type.meta, colors.faint, 600)}>
-            {`${state.segments.length} ${t(locale, "SENTENCES")} · ${simplifiedCount} ${t(locale, "SIMPLIFIED")}`}
+        ) : null}
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 7 }}>
+        <StatusDot
+          tone={state.phase === "paused" ? "amber" : hearing ? "mint" : "neutral"}
+          label={cadence}
+        />
+        {state.reversionActive ? <StatusDot tone="amber" label="EN" /> : null}
+        {state.overrunCount > 0 ? (
+          <text style={textStyle(type.meta, colors.rose)}>
+            {t(locale, "overrun %@", state.overrunCount)}
           </text>
-        </div>
-      ) : null}
+        ) : null}
+      </div>
 
       <Surface
         style={{
-          padding: compact ? 10 : 14,
+          padding: compact ? 8 : 12,
           flexGrow: 1,
           display: "flex",
           flexDirection: "column",
-          gap: 10,
+          gap: 8,
           minHeight: 0,
-          backgroundColor: compact ? "#0F0F14" : "#101014",
         }}
       >
         {state.segments.length === 0 ? (
@@ -212,19 +198,14 @@ export function LiveScreen({
               display: "flex",
               flexDirection: "column",
               gap: 8,
-              padding: compact ? 8 : 24,
-              flexGrow: 1,
-              justifyContent: "center",
-              alignItems: "center",
+              padding: compact ? 8 : 20,
             }}
           >
-            <text style={{ ...textStyle(compact ? 16 : type.title, colors.text, 600) }}>
+            <text style={{ ...textStyle(type.body, colors.muted), lineHeight: 20 }}>
               {t(locale, "Start speaking — your sentences appear here as a transcript.")}
             </text>
-            <text style={{ ...textStyle(type.body, colors.muted), lineHeight: 20 }}>
-              {state.mode === "on_demand"
-                ? t(locale, "Pause any time and click a sentence to see it in simpler words.")
-                : t(locale, "Simplified captions always stay visible — they are the point.")}
+            <text style={{ ...textStyle(type.meta, colors.faint), lineHeight: 18 }}>
+              {t(locale, "Pause any time and click a sentence to see it in simpler words.")}
             </text>
           </div>
         ) : (
@@ -251,6 +232,7 @@ export function LiveScreen({
                 autoFocus={index === focus.index}
                 simplifying={segment.id === simplifyingId}
                 locale={locale}
+                targetLanguage={state.language}
                 compact={compact}
                 captionSize={captionSize}
                 showTier1={showTier1}
@@ -269,8 +251,6 @@ export function LiveScreen({
               paddingRight: 10,
               borderRadius: 8,
               backgroundColor: "#FFFFFF06",
-              borderWidth: 1,
-              borderColor: colors.border,
               display: "flex",
               flexDirection: "row",
               gap: 8,
@@ -278,23 +258,18 @@ export function LiveScreen({
             }}
           >
             <div style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: colors.mint }} />
-            <text
-              style={{ ...textStyle(compact ? type.meta : type.body, colors.muted), flexGrow: 1 }}
-            >
+            <text style={{ ...textStyle(compact ? type.meta : 15, colors.muted), flexGrow: 1 }}>
               {state.partial.text}
-            </text>
-            <text style={textStyle(type.meta, colors.faint)}>
-              {t(locale, "Listening — keep speaking")}
             </text>
           </div>
         ) : null}
       </Surface>
 
       {!compact && needsTypedInput ? (
-        <Surface style={{ padding: 14, display: "flex", flexDirection: "column", gap: 8 }}>
+        <Surface style={{ padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
           <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8 }}>
             <text style={{ ...textStyle(type.meta, colors.faint, 600) }}>
-              {t(locale, "SIMPLIFY-ONLY INPUT")}
+              {t(locale, "TEXT TO SIMPLIFY")}
             </text>
             <StatusDot tone="amber" label={statusLabel(language.asrStatus)} />
           </div>
@@ -333,14 +308,22 @@ export function LiveScreen({
         </Surface>
       ) : null}
 
-      <div style={{ display: "flex", flexDirection: "row", gap: 10, alignItems: "center" }}>
-        {state.phase === "paused" ? (
-          <Button label={t(locale, "Resume captions")} onClick={onResume} />
-        ) : (
-          <Button label={t(locale, "Pause captions")} kind="secondary" onClick={onPause} />
-        )}
-        <Button label={t(locale, "Stop")} kind="danger" onClick={onStop} />
-        <div style={{ flexGrow: 1 }} />
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 8,
+        }}
+      >
+        <div style={{ display: "flex", flexDirection: "row", gap: 10 }}>
+          {state.phase === "paused" ? (
+            <Button label={t(locale, "Resume captions")} onClick={onResume} />
+          ) : (
+            <Button label={t(locale, "Pause captions")} kind="secondary" onClick={onPause} />
+          )}
+          <Button label={t(locale, "Stop")} kind="danger" onClick={onStop} />
+        </div>
         <text style={textStyle(type.meta, colors.faint)}>
           {t(locale, "Offline — audio never leaves this device")}
         </text>

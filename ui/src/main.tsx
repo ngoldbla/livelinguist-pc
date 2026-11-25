@@ -17,17 +17,15 @@ const screen = (process.env.LL_SCREEN ?? "").toLowerCase();
 const [defaultWidth, defaultHeight] =
   screen === "overlay"
     ? [780, 250]
-    : screen === "licenses"
-      ? [1020, 820]
-      : screen === "settings"
-        ? [1000, 860]
-        : screen === "summary"
-          ? [1180, 820]
-          : screen === "expanded"
-            ? [1180, 900]
-            : screen === "onboarding"
-              ? [980, 680]
-              : [1100, 700];
+    : screen === "settings"
+      ? [1000, 860]
+      : screen === "summary"
+        ? [960, 700]
+        : screen === "expanded"
+          ? [1180, 900]
+          : screen === "onboarding"
+            ? [960, 680]
+            : [960, 660];
 
 // Fit to the monitor work area so nothing clips at 150% scale. The overlay
 // keeps its fixed size; LL_WIDTH/LL_HEIGHT still override everything.

@@ -28,8 +28,6 @@ describe("ui settings", () => {
       captionSize: 26,
       showTier1: false,
       detection: false,
-      reducedEffects: true,
-      followLearning: false,
       devEnabled: false,
       scenario: "cpu-strict",
     };
