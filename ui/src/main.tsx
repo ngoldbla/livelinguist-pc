@@ -2,9 +2,14 @@ import { prepareEnvironment } from "./bootstrap";
 
 prepareEnvironment();
 
+const { runSelfTest, selfTestArg } = await import("./selfTest");
+const selfTest = selfTestArg(process.argv);
+if (selfTest.enabled) process.exit(await runSelfTest(selfTest.outPath));
+
 const { render } = await import("@gpuix/react");
 const { App } = await import("./App");
-const { readWorkArea, windowTitle } = await import("./bridge/transport");
+const { packagedLoadFailure, readWorkArea, windowTitle } = await import("./bridge/transport");
+const { StartupErrorScreen } = await import("./screens/StartupError");
 const { fitWindow } = await import("./windowSize");
 const { windowKeys } = await import("./captionKeys");
 
@@ -37,7 +42,9 @@ const fitted =
 const width = Number(process.env.LL_WIDTH ?? fitted.width);
 const height = Number(process.env.LL_HEIGHT ?? fitted.height);
 
-render(<App />, {
+const startupFailure = packagedLoadFailure();
+
+render(startupFailure ? <StartupErrorScreen detail={startupFailure} /> : <App />, {
   title: windowTitle,
   width,
   height,

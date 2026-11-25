@@ -1,4 +1,5 @@
 import { createRequire } from "node:module";
+import { isPackaged, packagedPaths } from "../packaged";
 import type { ModelStatus } from "../store/modelStore";
 import type {
   AudioSource,
@@ -130,16 +131,40 @@ export const windowNonce = String(process.pid);
 export const windowTitle = `Live Linguist — ${windowNonce}`;
 
 let nativeAddon: NativeAddon | null | undefined;
+let nativeLoadError: string | null = null;
 
 function loadNative(): NativeAddon | null {
   if (nativeAddon !== undefined) return nativeAddon;
   try {
     const require = createRequire(import.meta.url);
-    nativeAddon = require("../../livelinguist-core.node") as NativeAddon;
-  } catch {
+    // Packaged: the addon sits beside livelinguist.exe (ADR 0021); inside the
+    // compiled exe a relative path would point into Bun's virtual file system.
+    const path = isPackaged()
+      ? packagedPaths(process.execPath).coreAddon
+      : "../../livelinguist-core.node";
+    nativeAddon = require(path) as NativeAddon;
+  } catch (error) {
     nativeAddon = null;
+    nativeLoadError = error instanceof Error ? error.message : String(error);
   }
   return nativeAddon;
+}
+
+/**
+ * Why the shipped app cannot start, or null. A packaged build never falls back
+ * to the demo transport silently (golden rule 7, ADR 0021): main.tsx shows an
+ * error screen instead. Development runs keep the demo fallback.
+ */
+export function packagedLoadFailure(): string | null {
+  if (!isPackaged()) return null;
+  return loadNative() ? null : (nativeLoadError ?? "livelinguist-core.node did not load");
+}
+
+/** Loads the core addon and constructs a client; throws on failure. */
+export function selfTestCore(): void {
+  const addon = loadNative();
+  if (!addon) throw new Error(nativeLoadError ?? "livelinguist-core.node did not load");
+  new addon.CoreClient();
 }
 
 /**

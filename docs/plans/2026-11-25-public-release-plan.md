@@ -9,7 +9,7 @@
 A regular person on Windows 11 who has never used GitHub:
 
 1. Opens the project page or a link, clicks **Download for Windows**.
-2. Opens `LiveLinguist-Setup-1.0.0.exe`. No admin prompt, no choices to make,
+2. Opens `LiveLinguist-1.0.0-setup.exe`. No admin prompt, no choices to make,
    and the app starts on its own when setup finishes.
 3. The app says "Download the language models (1.1 GB)" with one button, a
    progress bar, and resume after a dropped connection. (Done: T16.)
@@ -114,6 +114,9 @@ never a missing-DLL dialog, a silent exit, or a console window.
 6. Apply to SignPath Foundation (ADR 0020).
 
 ## Task cards to cut (agent work)
+
+R1, R2, R3 and R5 were implemented on 2026-11-25 (ADR 0023 "Implemented");
+they still need the first green Windows run of the release workflow.
 
 | Card | What | Folds into |
 |---|---|---|

@@ -11,6 +11,19 @@ native-speed speech and reads the same content rendered into the official
 easy-language register for that language — **FALC**, **Leichte Sprache**,
 **Easy English**, **Lectura Fácil**, and 25 further locales.
 
+## Download for Windows
+
+**[Get the latest Live Linguist for Windows](https://github.com/ngoldbla/livelinguist-pc/releases/latest)**:
+download `LiveLinguist-<version>-setup.exe` under **Assets**, open it, and
+click **Install**. No admin rights needed.
+
+- **"Windows protected your PC"?** The app is not code-signed yet. Click
+  **More info**, then **Run anyway**. Each release lists SHA-256 hashes so you
+  can check the file.
+- **First start:** it downloads the speech and simplification models once
+  (about 1.1 GB), then works offline. Audio never leaves your PC.
+- **Needs:** Windows 11, 64-bit Intel or AMD PC, 8 GB memory, about 2.5 GB disk.
+
 ## Source of truth
 
 - **Docs map:** [`docs/README.md`](docs/README.md) — start here

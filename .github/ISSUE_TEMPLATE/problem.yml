@@ -1,0 +1,45 @@
+name: Something didn't work
+description: Live Linguist would not install, start, download, or show captions.
+labels: ["user report"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for trying Live Linguist. Please **never paste captions, transcripts, or audio** here; this page is public.
+  - type: dropdown
+    id: stage
+    attributes:
+      label: Where did it go wrong?
+      options:
+        - Downloading or opening the installer
+        - Installing
+        - Starting the app
+        - Downloading the models
+        - No captions while a video or call plays
+        - Simplifying a sentence
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What did you do, and what happened?
+      description: For example "I clicked System audio and played a YouTube video, but nothing appeared." A screenshot of an error message helps (check it shows no captions).
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Live Linguist version
+      description: The number in the installer's name, for example 1.0.0.
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+      description: Press Windows + R, type winver, press Enter, and copy the "Version" and "OS Build" line.
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics (optional)
+      description: In the app, open Settings and click "Copy diagnostics", then paste here. It contains no captions or audio, only settings and timings.
+      render: text

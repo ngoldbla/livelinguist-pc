@@ -135,6 +135,12 @@ scale 1.0) and 150% (1707x672 logical; 2560x1008 physical, dpi 144) in
 the Console inside the work area at 150%, with a 13 px centred-position
 overshoot left to T25.
 
+**Release pipeline, 2026-11-25 (owner request; ADR 0023):** MIT only; tag
+`vX.Y.Z` → `release.yml` builds, self-tests, test-installs/uninstalls on a
+clean runner and publishes an unsigned GitHub release with `SHA256SUMS.txt`
+(`packaging/README.md`). This covers the mechanics of T37/T39 ahead of the MVP
+human pass; tagging `v1.0.0` still waits for T36 and the owner (T40).
+
 **Linux work still open (resume here):**
 1. Owner decisions: es-ES
    matrix guard false negative (T22); confirm the ` /no_think` soft switch in
