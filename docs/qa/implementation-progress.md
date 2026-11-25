@@ -86,16 +86,18 @@ decision entry and an ADR update. **For 1.0, D-055/D-056 and
 
 **2026-11-25 UI clarity pass (branch `stage-ui-clarity`):** the shipped UI was
 reviewed with the impeccable design skill (20/40, Acceptable) and rebuilt on the
-macOS build's flow (`ngoldbla/live-linguist` @ `8eecdc4`): a console with two
-decision tiles and one Start cluster, pick-to-advance onboarding, a transcript
-screen with a cadence line, a caption-only overlay, a compact summary sheet and
-three-plus-Developer settings tabs. The surface is quiet and high-contrast (12px
-type floor, flat panels) and UI settings persist to
+macOS/iOS flow (`ngoldbla/live-linguist` @ `8eecdc4`, plus the iOS store listing
+`ngoldbla/live-linguist-ios`): a console with two decision tiles and one Start
+cluster, pick-to-advance onboarding, a captioner with language + timer + cadence
+and confidence bars, a caption-only overlay, a compact summary sheet, and
+settings with an App-language control. The surface is quiet and high-contrast
+(12px type floor, flat panels) and UI settings persist to
 `%LOCALAPPDATA%\LiveLinguist\ui-settings.json`. ADR 0026; evidence
 `docs/qa/2026-11-25-ui-clarity.md` and the rebuilt
 `docs/screenshots/m2-windows/` portfolio. UI: typecheck, 114 tests, Biome and
 13 capture scenarios pass. Pending: PR, the 28-catalog translation pass for 19
-new strings, a PC UI-language menu, and the human Narrator/DPI walk.
+new strings, the input-level meter (no bridge data), and the human
+Narrator/DPI walk.
 
 Checkpoint 2026-11-24 (Linux cloud session; PRs #24-#31). Card statuses are in
 `docs/tasks/README.md` (`linux-done` = only the Windows part remains).
