@@ -24,7 +24,7 @@ export interface StartOptions {
 export interface SimplifyResult {
   id: string;
   text: string | null;
-  status: SimplifiedStatus;
+  status: SimplifiedStatus | "queued";
   flags: string[];
 }
 

@@ -72,7 +72,7 @@ impl Default for AsrWerArgs {
             cache: None,
             all: false,
             asr_threads: 2,
-            chunk_ms: 1100,
+            chunk_ms: 560,
         }
     }
 }

@@ -525,6 +525,7 @@ truth.** Rows marked "superseded for 1.0 by D-055" remain the post-1.0 design.
 | **D-059** | **Link sherpa-onnx shared on Linux:** isolate onnxruntime's C++ runtime from llama.cpp; Windows stays static `/MT`. ADR 0022. | accepted | Fixes the Linux static `std::regex` clash without changing Windows | Linux dev binaries need the two `.so` files beside them |
 | **D-060** | **Open source under MIT; public GitHub Releases:** tag-driven unsigned Windows builds with a clean-runner install test, SHA-256 sums and build provenance; public release waits on the pack-rights question. ADR 0023. | accepted | One repeatable release path for non-technical users | Pack rights for `assets/packs/` must be confirmed before going public |
 | **D-061** | **Caption-latency benchmark and CPU-first autoresearch loop:** media-clock → UIA-visible caption alignment, content-free JSON, quality-gated parameter search; GPU is a later separate track. ADR 0024. | accepted | Gives a reproducible product-level baseline before model/backend changes | UIA is a visibility proxy; add native present timing if it proves too coarse |
+| **D-062** | **Run click simplification outside the bridge lock:** borrow the engine to a single-flight worker, keep audio feeding, and deliver the result as a `simplified` event; the synchronous call only acknowledges. ADR 0025. | accepted | A click no longer freezes live captions or the UI for the backend duration | Accepted clicks are observed through the event/snapshot, not the return value |
 
 ---
 

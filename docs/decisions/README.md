@@ -34,6 +34,7 @@ Status labels: `proposed`, `accepted`, `baseline` (working default), `superseded
 | [0022](0022.md) | Link sherpa-onnx as a shared library on Linux | D-059 | accepted |
 | [0023](0023.md) | Open source under MIT; public GitHub Releases for non-technical users | D-060 | accepted |
 | [0024](0024.md) | Caption-latency benchmark and CPU-first autoresearch loop | D-061 | accepted |
+| [0025](0025.md) | Run click simplification outside the bridge lock | D-062 | accepted |
 
 ## Superseded
 

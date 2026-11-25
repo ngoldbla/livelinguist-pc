@@ -45,6 +45,21 @@ function Find-Button {
     return $Root.FindFirst([System.Windows.Automation.TreeScope]::Descendants, $condition)
 }
 
+function Find-ButtonContaining {
+    param($Root, [string]$Text)
+    $buttons = $Root.FindAll(
+        [System.Windows.Automation.TreeScope]::Descendants,
+        [System.Windows.Automation.PropertyCondition]::new(
+            [System.Windows.Automation.AutomationElement]::ControlTypeProperty,
+            [System.Windows.Automation.ControlType]::Button
+        )
+    )
+    foreach ($button in $buttons) {
+        if ($button.Current.Name -like "$Text*") { return $button }
+    }
+    return $null
+}
+
 function Wait-Button {
     param($Name, [int]$TimeoutMs = 15000)
     $deadline = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds() + $TimeoutMs
@@ -186,7 +201,11 @@ try {
                 $lastFinalText -ne "" -and
                 ($stamp - $readyAt) -ge $ClickAtMs
             ) {
-                $button = Find-Button -Root $root -Name $lastFinalText
+                $button = if ($Mode -eq "live") {
+                    Find-ButtonContaining -Root $root -Text $lastFinalText
+                } else {
+                    Find-Button -Root $root -Name $lastFinalText
+                }
                 if ($null -ne $button) {
                     Click-Element $button
                     $clicked = $true

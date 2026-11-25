@@ -220,7 +220,7 @@ impl Default for RuntimeConfig {
             asr: AsrMode::Mock,
             asr_model: AsrModel::Nemotron,
             asr_threads: 2,
-            asr_chunk_ms: 1100,
+            asr_chunk_ms: 560,
             asr_rule1_trailing_ms: 2400,
             asr_rule2_trailing_ms: 1200,
             asr_rule3_utterance_ms: 20_000,
@@ -865,7 +865,7 @@ mod tests {
         assert_eq!(config.backend, Backend::Auto);
         assert_eq!(config.llm_model, LlmModel::Qwen06b);
         assert_eq!(config.pipeline, PipelineMode::OnDemand);
-        assert_eq!(config.asr_chunk_ms, 1100);
+        assert_eq!(config.asr_chunk_ms, 560);
         assert!(!config.strict);
         assert!(config.threads >= 1 && config.threads <= DEFAULT_LLM_THREADS);
         assert_eq!(default_threads_for(4), 3);
@@ -909,7 +909,7 @@ mod tests {
         env.insert("LL_GPU_LAYERS".to_string(), "24".to_string());
         env.insert("LL_THREADS".to_string(), "6".to_string());
         env.insert("LL_ASR_THREADS".to_string(), "4".to_string());
-        env.insert("LL_ASR_CHUNK_MS".to_string(), "560".to_string());
+        env.insert("LL_ASR_CHUNK_MS".to_string(), "160".to_string());
         env.insert("LL_ASR_RULE1_MS".to_string(), "1600".to_string());
         env.insert("LL_ASR_RULE2_MS".to_string(), "600".to_string());
         env.insert("LL_ASR_RULE3_MS".to_string(), "12000".to_string());
@@ -923,7 +923,7 @@ mod tests {
         assert_eq!(config.gpu_layers, GpuLayers::Count(24));
         assert_eq!(config.threads, 6);
         assert_eq!(config.asr_threads, 4);
-        assert_eq!(config.asr_chunk_ms, 560);
+        assert_eq!(config.asr_chunk_ms, 160);
         assert_eq!(config.asr_rule1_trailing_ms, 1600);
         assert_eq!(config.asr_rule2_trailing_ms, 600);
         assert_eq!(config.asr_rule3_utterance_ms, 12_000);

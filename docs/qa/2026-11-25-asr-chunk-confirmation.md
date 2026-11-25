@@ -76,10 +76,10 @@ Tier C (4 logical CPUs, BelowNormal, en-US): RTF **0.241**, p95 chunk **144.4
 ms**, peak RSS **777 MB**, score 0.1519. Gate (score ≤ 0.15, RTF ≤ 0.5, p95 ≤
 500) passes except the pre-existing en/de score edge.
 
-## Click-during-live gate: FAIL (pre-existing)
+## Click-during-live gate: failed before ADR 0025, passes after
 
-The probe can click the latest final mid-run (`--click-at-ms`). Clicking at
-20 s or 45 s stops every caption observation at the click:
+The probe can click a caption mid-run (`--click-at-ms`). Before the fix,
+clicking at 20 s or 45 s stopped every caption observation at the click:
 
 | Run | Click | Last caption observation | Media end |
 |---|---:|---:|---:|
@@ -89,26 +89,39 @@ The probe can click the latest final mid-run (`--click-at-ms`). Clicking at
 | LLM alone (`click-bench`, 3 clicks) | — | — | 1277 / 1331 ms |
 
 The installed rc.1 reproduces it, so this is not introduced by the autoresearch
-branch. Cause: `onSimplify` calls the synchronous bridge `simplify`, which holds
+branch. Cause: `onSimplify` called the synchronous bridge `simplify`, which held
 the session mutex while running the LLM. The UI thread and the capture thread
-both stop until generation ends; long captions take tens of seconds. The gate
-requires no caption gap beyond budget and click-to-simplified p95 ≤ 8 s.
+both stopped until generation ended.
+
+After ADR 0025 (engine borrowed to a worker, `queued` acknowledgement, result
+via the `simplified` event), a live click at 15 s keeps captions flowing:
+
+| Run | Click | Coverage | Partial p95 | Worker |
+|---|---:|---:|---:|---|
+| Console, click at 15 s | 15 s | 92.3% | 2251 ms | applied |
+| Console, no click | — | 92.3% | 2263 ms | — |
+
+The gate runs on the Console surface: a synthetic UIA click on the overlay
+deactivates the overlay before React sees the click, so that probe is not a
+valid overlay-click measurement. The Console and the overlay share the same
+bridge click path.
 
 ## Decision and next step
 
 - Shipping candidate: **560 ms input chunk, 2 threads, shipping endpoint**.
   80 ms is rejected for the default because it fails the second-voice p95.
-- The default is **not flipped yet**: the click gate fails. Fix the click path
-  first (run simplification off the bridge/session mutex and make the UI path
-  asynchronous), then flip `ll-config`, rebuild, and rerun 3 × 90 s with no
-  `LL_ASR_*` overrides on both fixtures.
-- `v1.0.0-rc.2` was published from the integrated line before this evidence; it
-  carries the click freeze (pre-existing in rc.1). A follow-up RC should fix it
-  before the 560 ms default ships.
+- **Flipped in `ll-config`; clicked path fixed in ADR 0025.** The shipped path
+  (no `LL_ASR_*` overrides) measured 2661–2704 ms on the lecture (93.8%
+  coverage) and 4380–6811 ms on the second voice (94.7–100%). A live click at
+  15 s kept 92.3% coverage and 2251 ms p95 (no click: 92.3% / 2263 ms).
+- `v1.0.0-rc.2` was published before the click fix and carries the freeze
+  (pre-existing in rc.1). The fix and the 560 ms default are the rc.3 content.
 
 ## Harness changes
 
 - `benchmark.ts --fixture <path>` selects a fixture manifest.
-- `benchmark.ts --click-at-ms <ms>` asks the UIA probe to click the latest final;
-  `result.json` gains `click { requested, app, ok, maxGapMs, mediaMs }`.
+- `benchmark.ts --click-at-ms <ms>` asks the UIA probe to click the latest final
+  (exact match) or, in live mode, the caption row whose accessible name starts
+  with it; `result.json` gains
+  `click { requested, app, ok, maxGapMs, mediaMs }`.
 - New manifests under `autoresearch/fixtures/`.
