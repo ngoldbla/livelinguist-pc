@@ -4,7 +4,8 @@ param(
     [Parameter(Mandatory = $true)][ValidateSet("live", "overlay")][string]$Mode,
     [Parameter(Mandatory = $true)][string]$StopFile,
     [Parameter(Mandatory = $true)][string]$ReadyUrl,
-    [int]$PollMs = 20
+    [int]$PollMs = 20,
+    [int]$ClickAtMs = 0
 )
 
 $ErrorActionPreference = "Stop"
@@ -111,6 +112,9 @@ try {
 
     $previousPartial = [System.Collections.Generic.HashSet[string]]::new()
     $previousFinal = [System.Collections.Generic.HashSet[string]]::new()
+    $readyAt = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()
+    $clicked = $false
+    $lastFinalText = ""
 
     while (-not (Test-Path -LiteralPath $StopFile)) {
         $scanStart = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()
@@ -162,6 +166,7 @@ try {
                     }
                 } elseif ($previous -eq "verbatim" -or $next -match "^Tap a sentence") {
                     [void]$currentFinal.Add($text)
+                    $lastFinalText = $text
                     if (-not $previousFinal.Contains($text)) {
                         $newItems.Add([ordered]@{
                             t = $stamp; kind = "final"; text = $text; scan_ms = $scanMs
@@ -173,6 +178,24 @@ try {
             foreach ($item in $newItems) {
                 [Console]::Out.WriteLine(($item | ConvertTo-Json -Compress))
                 [Console]::Out.Flush()
+            }
+
+            if (
+                -not $clicked -and
+                $ClickAtMs -gt 0 -and
+                $lastFinalText -ne "" -and
+                ($stamp - $readyAt) -ge $ClickAtMs
+            ) {
+                $button = Find-Button -Root $root -Name $lastFinalText
+                if ($null -ne $button) {
+                    Click-Element $button
+                    $clicked = $true
+                    [Console]::Out.WriteLine((
+                        [ordered]@{ t = $stamp; kind = "click"; ok = $true; scan_ms = $scanMs } |
+                        ConvertTo-Json -Compress
+                    ))
+                    [Console]::Out.Flush()
+                }
             }
             $previousPartial = $currentPartial
             $previousFinal = $currentFinal

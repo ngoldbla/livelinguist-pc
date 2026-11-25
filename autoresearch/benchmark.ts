@@ -37,8 +37,10 @@ interface BenchmarkOptions {
   asrRule2Ms?: number;
   asrRule3Ms?: number;
   out: string;
+  fixture: string;
   fixtureDir: string;
   pollMs: number;
+  clickAtMs: number;
   commit?: string;
 }
 
@@ -76,6 +78,13 @@ interface TrialResult {
   };
   alignment: ReturnType<typeof alignCaptions>["summary"];
   cues: ReturnType<typeof alignCaptions>["matches"];
+  click: {
+    requested: boolean;
+    app: number;
+    ok: boolean;
+    maxGapMs: number | null;
+    mediaMs: number | null;
+  } | null;
   valid: boolean;
   contentFree: true;
 }
@@ -160,8 +169,10 @@ async function options(): Promise<BenchmarkOptions> {
     asrRule2Ms,
     asrRule3Ms,
     out: resolve(argument("--out") ?? join(ROOT, "target", "autoresearch", "runs", stamp())),
+    fixture: resolve(argument("--fixture") ?? FIXTURE_PATH),
     fixtureDir: resolve(argument("--fixture-dir") ?? join(ROOT, "target", "autoresearch", "media")),
     pollMs: numberArgument("--poll-ms", 20),
+    clickAtMs: numberArgument("--click-at-ms", 0),
     commit: argument("--commit") ?? undefined,
   };
 }
@@ -280,6 +291,24 @@ function edgePath(): string {
   return found;
 }
 
+function clickMaxGapMs(
+  observations: Array<{ t: number }>,
+  clicks: Array<{ t: number }>,
+): number | null {
+  let max: number | null = null;
+  for (const click of clicks) {
+    const times = observations
+      .map((observation) => observation.t)
+      .filter((t) => t >= click.t - 2000 && t <= click.t + 8000)
+      .sort((a, b) => a - b);
+    for (let index = 1; index < times.length; index += 1) {
+      const gap = times[index] - times[index - 1];
+      if (max === null || gap > max) max = gap;
+    }
+  }
+  return max;
+}
+
 async function runTrial(
   config: BenchmarkOptions,
   manifest: FixtureManifest,
@@ -388,6 +417,7 @@ async function runTrial(
     void readLines(app.stderr, (line) => console.error(`app: ${line}`)).catch(() => {});
   }
   const observations: Array<Omit<CaptionObservation, "mediaMs" | "tokens">> = [];
+  const clicks: Array<{ t: number; ok: boolean }> = [];
   let probeError: string | null = null;
   const probe = Bun.spawn(
     [
@@ -405,6 +435,8 @@ async function runTrial(
       `${baseUrl}/ready`,
       "-PollMs",
       String(config.pollMs),
+      "-ClickAtMs",
+      String(config.clickAtMs),
     ],
     { stdout: "pipe", stderr: "pipe" },
   );
@@ -418,10 +450,13 @@ async function runTrial(
         kind?: "partial" | "final";
         text?: string;
         scan_ms?: number;
+        ok?: boolean;
       };
       if (value.error) probeError = "ui probe failed";
       if (value.ready) markReady();
-      if (value.t && value.kind && value.text) {
+      if (value.t && value.kind === "click") {
+        clicks.push({ t: value.t, ok: value.ok === true });
+      } else if (value.t && value.kind && value.text) {
         observations.push({
           t: value.t,
           kind: value.kind,
@@ -550,6 +585,16 @@ async function runTrial(
     },
     alignment: alignment.summary,
     cues: alignment.matches,
+    click:
+      config.clickAtMs > 0
+        ? {
+            requested: true,
+            app: clicks.length,
+            ok: clicks.length > 0 && clicks.every((click) => click.ok),
+            maxGapMs: clickMaxGapMs(observations, clicks),
+            mediaMs: clicks.length > 0 ? clock.at(clicks[0].t) : null,
+          }
+        : null,
     valid: media.clock.length >= 2 && targetCoverage >= 0.8,
     contentFree: true,
   };
@@ -563,7 +608,7 @@ async function main(): Promise<void> {
   if (config.seconds <= 0 || config.repeat <= 0 || config.pollMs < 0) {
     throw new Error("seconds, repeat, and poll-ms must be positive");
   }
-  const manifest = JSON.parse(await readFile(FIXTURE_PATH, "utf8")) as FixtureManifest;
+  const manifest = JSON.parse(await readFile(config.fixture, "utf8")) as FixtureManifest;
   await ensureFixture(manifest, config.fixtureDir);
   const srt = await readFile(join(config.fixtureDir, manifest.captions.file), "utf8");
   const cues = parseSrt(srt).filter(
