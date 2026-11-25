@@ -65,7 +65,7 @@ A11y counts from the capture run (unlabeled controls = 0 in every scenario):
 | onboarding-models | 27 | Label 20, Button 4, ProgressIndicator 2 |
 | console | 38 | Label 25, Button 7, Tab 2, TabList, Switch 2 |
 | live | 64 | Label 43, Button 13, Tab 5, TabList 2 |
-| overlay | 21 | Label 13, Button 6, Group |
+| overlay | 20 | Label 12, Button 6, Group |
 | settings | 40 | Label 26, Button 3, Tab 4, TabList, Slider, Switch 4 |
 | settings-developer | 90 | Label 65, Button 17, Tab 4, TabList, Switch 2 |
 | summary | 66 | Label 51, Button 14 |
