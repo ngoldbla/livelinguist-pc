@@ -15,7 +15,8 @@ UI table (`ui/src/i18n/languages.ts`) now follow this table: 12 locales `ok`,
 17 `simplify_only`, none `tbd` (T33, 2026-11-24). The Windows tier C re-check
 (`## Windows tier C re-check` below) measured all 12 `ok` rows plus ja-JP:
 timing passes everywhere, but **de-DE scores 0.157 there (Linux 0.141) and
-misses the score gate** — an open owner decision; en-US sits exactly on the
+misses the score gate**; the owner kept it `ok` on 2026-11-24 with the number
+recorded here. en-US sits exactly on the
 gate (0.149). Captions on Windows were confirmed by the owner retest
 (`docs/qa/2026-11-24-windows-retest.md`).
 
@@ -112,8 +113,10 @@ Reading it:
 - ja-JP would still fail after a Windows re-score (0.1597), so no
   `simplify_only` row is promoted.
 
-**This leaves one owner decision:** the plan's stop rule says the minimum live
-set must pass, and on this host German misses the score gate by 0.007 while
-captions themselves work. Recorded in `docs/tasks/BLOCKED.md`; the matrix is
-unchanged until the owner picks (keep de-DE `ok` with this note, demote de-DE
-to `simplify_only`, or re-pin a model for German).
+**Owner decision (2026-11-24): de-DE stays `ok`.** The plan's stop rule says
+the minimum live set must pass, and on this host German misses the score gate by
+0.007 while captions themselves work. The owner chose to keep the row `ok`,
+record the Windows number here, and treat a tighter German score as a
+model-card question (re-pin or fine-tune) rather than a coverage change. No
+other row moves: every other `ok` locale passes, and ja-JP would still fail
+after a Windows re-score.
