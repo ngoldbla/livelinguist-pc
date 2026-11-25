@@ -83,14 +83,17 @@ $Artifacts = @()
 
 if (-not $SkipInstaller) {
   Write-Host "==> installer"
-  $Makensis = Get-Command makensis -ErrorAction SilentlyContinue
-  if (-not $Makensis) {
-    $Candidate = Join-Path ${env:ProgramFiles(x86)} "NSIS\makensis.exe"
-    if (Test-Path $Candidate) { $Makensis = Get-Item $Candidate }
+  $Makensis = $null
+  $OnPath = Get-Command makensis -ErrorAction SilentlyContinue
+  if ($OnPath) { $Makensis = $OnPath.Source }
+  foreach ($Base in @(${env:ProgramFiles(x86)}, $env:ProgramFiles)) {
+    if (-not $Makensis -and $Base -and (Test-Path (Join-Path $Base "NSIS\makensis.exe"))) {
+      $Makensis = Join-Path $Base "NSIS\makensis.exe"
+    }
   }
   if (-not $Makensis) { throw "makensis not found; install NSIS (or pass -SkipInstaller)" }
   $Setup = Join-Path $Out "LiveLinguist-$Version-setup.exe"
-  & $Makensis.Source /V2 /WX "/DVERSION=$Version" "/DNUMVERSION=$NumericVersion" `
+  & $Makensis /V2 /WX "/DVERSION=$Version" "/DNUMVERSION=$NumericVersion" `
     "/DSRCDIR=$Dist" "/DOUTFILE=$Setup" (Join-Path $Root "packaging\nsis\livelinguist.nsi")
   if ($LASTEXITCODE -ne 0) { throw "makensis failed" }
   $Artifacts += $Setup
