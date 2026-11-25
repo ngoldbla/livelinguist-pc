@@ -34,7 +34,6 @@ export function LanguagePicker({
     <div style={{ display: "flex", flexDirection: "column", gap: 12, flexGrow: 1, minHeight: 0 }}>
       {showHeader ? (
         <SectionHeader
-          eyebrow={t(locale, "LANGUAGE")}
           title={t(locale, "Choose your language")}
           subtitle={t(
             locale,
@@ -58,7 +57,6 @@ export function LanguagePicker({
           borderColor: colors.border,
         }}
       >
-        <text style={textStyle(type.body, colors.faint, 700)}>⌕</text>
         <input
           value={query}
           placeholder={t(locale, "Search languages")}

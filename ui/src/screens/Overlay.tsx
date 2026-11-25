@@ -83,7 +83,7 @@ export function OverlayScreen({
             style={{ height: 28, paddingLeft: 8, paddingRight: 8 }}
           />
           <Button
-            label={t(locale, "Console")}
+            label={t(locale, "Console window")}
             kind="ghost"
             onClick={onConsole}
             style={{ height: 28, paddingLeft: 8, paddingRight: 8 }}

@@ -46,6 +46,10 @@ on switches, missing `tablist` role, and slider min/max/now attributes.
 Opening Settings or Licenses from the overlay now restores a console window
 first instead of rendering the page into a 780x250 overlay.
 
+Craft pass: every eyebrow/kicker above a heading is gone (the heading carries
+itself), the search and model unicode glyphs are gone, and caption rows cap at
+960px so a long sentence stays inside a readable measure on a wide window.
+
 ## Evidence
 
 ```text
@@ -61,13 +65,13 @@ A11y counts from the capture run (unlabeled controls = 0 in every scenario):
 | Scenario | Nodes | Roles |
 |---|---|---|
 | onboarding-welcome | 19 | Label, Button |
-| onboarding-language | 122 | Label 88, Button 32, TextInput |
+| onboarding-language | 120 | Label 86, Button 32, TextInput |
 | onboarding-models | 27 | Label 20, Button 4, ProgressIndicator 2 |
 | console | 38 | Label 25, Button 7, Tab 2, TabList, Switch 2 |
 | live | 64 | Label 43, Button 13, Tab 5, TabList 2 |
 | overlay | 20 | Label 12, Button 6, Group |
 | settings | 40 | Label 26, Button 3, Tab 4, TabList, Slider, Switch 4 |
-| settings-developer | 90 | Label 65, Button 17, Tab 4, TabList, Switch 2 |
+| settings-developer | 89 | Label 64, Button 17, Tab 4, TabList, Switch 2 |
 | summary | 66 | Label 51, Button 14 |
 | licenses | 53 | Label 51, Button |
 

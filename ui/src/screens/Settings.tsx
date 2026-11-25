@@ -350,20 +350,6 @@ function ModelCard({
         borderColor: colors.border,
       }}
     >
-      <div
-        style={{
-          width: 34,
-          height: 34,
-          borderRadius: 8,
-          backgroundColor: ready ? colors.mintSoft : "#FFFFFF0A",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexShrink: 0,
-        }}
-      >
-        <text style={textStyle(type.meta, ready ? colors.mint : colors.faint, 800)}>◇</text>
-      </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 2, flexGrow: 1, minWidth: 0 }}>
         <text style={textStyle(type.body, colors.text, 600)}>{name}</text>
         <text style={textStyle(type.meta, colors.faint)}>{detail}</text>

@@ -94,12 +94,10 @@ export function BrandMark({ size = 34 }: { size?: number }) {
 }
 
 export function SectionHeader({
-  eyebrow,
   title,
   subtitle,
   trailing,
 }: {
-  eyebrow?: string;
   title: string;
   subtitle?: string;
   trailing?: ReactNode;
@@ -107,11 +105,6 @@ export function SectionHeader({
   return (
     <div style={{ display: "flex", flexDirection: "row", alignItems: "flex-end", gap: 16 }}>
       <div style={{ display: "flex", flexDirection: "column", gap: 6, flexGrow: 1, minWidth: 0 }}>
-        {eyebrow ? (
-          <text style={{ ...textStyle(type.meta, colors.accent, 700) }}>
-            {eyebrow.toUpperCase()}
-          </text>
-        ) : null}
         <text style={{ ...textStyle(type.title, colors.text, 600), lineHeight: 26 }}>{title}</text>
         {subtitle ? (
           <text style={{ ...textStyle(type.body, colors.muted), lineHeight: 20 }}>{subtitle}</text>
@@ -125,14 +118,12 @@ export function SectionHeader({
 /** Top bar for a full-screen page: back affordance, title, trailing controls. */
 export function PageHeader({
   backLabel,
-  eyebrow,
   title,
   subtitle,
   onBack,
   trailing,
 }: {
   backLabel?: string;
-  eyebrow?: string;
   title: string;
   subtitle?: string;
   onBack?: () => void;
@@ -142,11 +133,6 @@ export function PageHeader({
     <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 14 }}>
       {onBack ? <Button label={backLabel ?? "Back"} kind="secondary" onClick={onBack} /> : null}
       <div style={{ display: "flex", flexDirection: "column", gap: 3, flexGrow: 1, minWidth: 0 }}>
-        {eyebrow ? (
-          <text style={{ ...textStyle(type.meta, colors.accent, 700) }}>
-            {eyebrow.toUpperCase()}
-          </text>
-        ) : null}
         <text style={{ ...textStyle(type.page, colors.text, 600), lineHeight: 34 }}>{title}</text>
         {subtitle ? <text style={textStyle(type.body, colors.muted)}>{subtitle}</text> : null}
       </div>
@@ -574,6 +560,9 @@ export function CaptionRow({
         flexDirection: "column",
         gap: compact ? 4 : 8,
         padding: compact ? 10 : 14,
+        width: "100%",
+        maxWidth: 960,
+        alignSelf: "center",
         borderRadius: 10,
         backgroundColor: "#FFFFFF07",
         borderWidth: 1,

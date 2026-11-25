@@ -60,7 +60,6 @@ export function DevPanel({
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <SectionHeader
-        eyebrow={t(locale, "DEVELOPER")}
         title={t(locale, "Runtime health")}
         subtitle={t(
           locale,
