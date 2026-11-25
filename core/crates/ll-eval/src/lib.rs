@@ -211,7 +211,7 @@ impl EvalOptions {
                     }
                     index += 2;
                 }
-                "--locale" | "--manifest" | "--cache" | "--asr-threads" => {
+                "--locale" | "--manifest" | "--cache" | "--asr-threads" | "--asr-chunk-ms" => {
                     let flag = args[index].clone();
                     let value = args
                         .get(index + 1)
@@ -228,7 +228,7 @@ impl EvalOptions {
                         }
                         "--manifest" => wer.manifest = Some(PathBuf::from(value)),
                         "--cache" => wer.cache = Some(PathBuf::from(value)),
-                        _ => {
+                        "--asr-threads" => {
                             wer.asr_threads = value
                                 .parse::<i32>()
                                 .ok()
@@ -239,6 +239,18 @@ impl EvalOptions {
                                     ))
                                 })?;
                         }
+                        "--asr-chunk-ms" => {
+                            wer.chunk_ms = value
+                                .parse::<usize>()
+                                .ok()
+                                .filter(|chunk_ms| (80..=2000).contains(chunk_ms))
+                                .ok_or_else(|| {
+                                    EvalError::Argument(format!(
+                                        "--asr-chunk-ms needs 80..=2000, got {value}"
+                                    ))
+                                })?;
+                        }
+                        _ => unreachable!("matched ASR WER flag above"),
                     }
                     index += 2;
                 }
@@ -350,7 +362,7 @@ pub fn help_text() -> String {
         "          [--language de-DE] [--wav tests/fixtures/sample.wav] [--out DIR] [--text TEXT]",
         "          [--source loopback] [--seconds 60]  (loopback needs --features capture)",
         "          [--asr mock|sherpa]  (sherpa needs --features sherpa + downloaded models)",
-        "          --scenario asr-wer --asr sherpa --cache DIR [--locale xx-XX|--all] [--manifest tests/asr-eval/manifest.json] [--asr-threads 2]",
+        "          --scenario asr-wer --asr sherpa --cache DIR [--locale xx-XX|--all] [--manifest tests/asr-eval/manifest.json] [--asr-threads 2] [--asr-chunk-ms 1100]",
         "          [--click-all]  (click every segment after an audio run)",
         "          [--llm demo|llama] [--threads 3]  (llama needs --features llama + downloaded models)",
         "",
@@ -444,13 +456,14 @@ fn run_asr_wer_sherpa(
     args: &asr_wer::AsrWerArgs,
 ) -> Result<serde_json::Value, EvalError> {
     let threads = args.asr_threads;
+    let chunk_ms = args.chunk_ms;
     asr_wer::run(&options.out, options.language.locale(), args, || {
         let mut engine =
             ll_asr::SherpaAsr::with_threads(asr_model_dir(), options.language, threads).map_err(
                 |error| EvalError::ScenarioUnavailable("asr-wer".into(), error.to_string()),
             )?;
         Ok(Box::new(move |samples: &[f32]| {
-            asr_wer::sherpa_transcribe(&mut engine, samples)
+            asr_wer::sherpa_transcribe(&mut engine, samples, chunk_ms)
         }))
     })
 }
@@ -564,19 +577,24 @@ pub fn asr_model_dir() -> PathBuf {
 }
 
 #[cfg(feature = "sherpa")]
-fn sherpa_engine(language: Language) -> Result<Box<dyn AsrEngine>, EvalError> {
-    let engine = ll_asr::SherpaAsr::new(asr_model_dir(), language).map_err(|error| {
-        let code = match error {
-            ll_asr::AsrError::ModelMissing { .. } => "ASR_MODEL_MISSING",
-            _ => "ASR_INIT_FAILED",
-        };
-        EvalError::ScenarioUnavailable("asr sherpa".into(), format!("{code}: {error}"))
-    })?;
+fn sherpa_engine(language: Language, num_threads: usize) -> Result<Box<dyn AsrEngine>, EvalError> {
+    let engine =
+        ll_asr::SherpaAsr::with_threads(asr_model_dir(), language, num_threads.clamp(1, 64) as i32)
+            .map_err(|error| {
+                let code = match error {
+                    ll_asr::AsrError::ModelMissing { .. } => "ASR_MODEL_MISSING",
+                    _ => "ASR_INIT_FAILED",
+                };
+                EvalError::ScenarioUnavailable("asr sherpa".into(), format!("{code}: {error}"))
+            })?;
     Ok(Box::new(engine))
 }
 
 #[cfg(not(feature = "sherpa"))]
-fn sherpa_engine(_language: Language) -> Result<Box<dyn AsrEngine>, EvalError> {
+fn sherpa_engine(
+    _language: Language,
+    _num_threads: usize,
+) -> Result<Box<dyn AsrEngine>, EvalError> {
     Err(EvalError::Argument(
         "--asr sherpa: not built with sherpa; rebuild with --features sherpa".into(),
     ))
@@ -607,9 +625,11 @@ fn build_pipeline(
     config.dev_automatic = runtime.pipeline == ll_config::PipelineMode::Live;
     config.detection = runtime.reversion;
     config.audio_fault = runtime.fault_audio;
+    config.asr_chunk_samples =
+        runtime.asr_chunk_ms.clamp(80, 2000) * ll_audio::TARGET_SAMPLE_RATE as usize / 1000;
 
     let asr: Box<dyn AsrEngine> = if options.sherpa {
-        sherpa_engine(options.language)?
+        sherpa_engine(options.language, runtime.asr_threads)?
     } else {
         match runtime.asr {
             ll_config::AsrMode::Off => Box::new(OffAsr),
@@ -876,6 +896,8 @@ mod tests {
             "target/fleurs".into(),
             "--asr-threads".into(),
             "3".into(),
+            "--asr-chunk-ms".into(),
+            "80".into(),
             "--all".into(),
         ])
         .unwrap();
@@ -884,6 +906,7 @@ mod tests {
         assert_eq!(args.manifest, Some(PathBuf::from("m.json")));
         assert_eq!(args.cache, Some(PathBuf::from("target/fleurs")));
         assert_eq!(args.asr_threads, 3);
+        assert_eq!(args.chunk_ms, 80);
         assert!(args.all);
         assert!(EvalOptions::parse(&["--cache".into(), "x".into()]).is_err());
         assert!(EvalOptions::parse(&[

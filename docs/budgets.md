@@ -27,6 +27,24 @@ to be measured.
 - LLM: `llm.prefill_start` -> `llm.first_token` (TTFT), first -> last token.
 - UI frame: GPUIX frame stats p95.
 
+## Product-level end-to-end baseline
+
+The Rust-side Tier 1 stamp is a diagnostic approximation, not proof of paint.
+The Windows product baseline is the media-clock → UIA-visible-caption benchmark
+in `autoresearch/` (D-061). It reports partial/final p50/p95, cue coverage,
+token similarity, and polling quantization. See
+`docs/qa/2026-11-24-caption-latency-baseline.md` for measured numbers.
+
+Measured on the Windows reference PC (2026-11-24/25):
+
+| Path | Partial p95 | Final p95 | Coverage |
+|---|---:|---:|---:|
+| Installed RC, live view | 3657 ms | 12671 ms | 82.6% partial |
+| Installed RC, overlay (final-only) | — | 12658 ms | 78.3% final |
+| Overlay partial + 80 ms input chunk | 2278 ms | 12523 ms | 93.8% partial |
+
+These are benchmark results, not yet shipping-default budget changes.
+
 ## Current Linux dev evidence (demo backend, not product claims)
 
 - Tier 1 p50/p95 = 1.1 s (1.1 s chunk floor).

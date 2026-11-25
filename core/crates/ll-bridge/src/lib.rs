@@ -148,6 +148,7 @@ impl CoreClient {
         let scenario = Scenario::parse(&request.scenario).unwrap_or(Scenario::Mock);
         let mut runtime = RuntimeConfig::default();
         scenario.apply(&mut runtime);
+        ConfigLayer::from_process_env().apply(&mut runtime);
         if request.mode == "live" {
             runtime.pipeline = ll_config::PipelineMode::Live;
         }
@@ -166,7 +167,7 @@ impl CoreClient {
         let real_asr = use_real_asr(&request.source, scenario);
         #[cfg(feature = "sherpa")]
         let sherpa_asr: Option<Box<dyn AsrEngine>> = if real_asr {
-            match sherpa_engine(language) {
+            match sherpa_engine(language, &runtime) {
                 Ok(engine) => Some(engine),
                 Err((code, message)) => {
                     emit_error_code(&callback, code, &message, code == "ASR_MODEL_MISSING");
@@ -205,6 +206,8 @@ impl CoreClient {
             request.mode == "live" && matches!(std::env::var("LL_MODE").as_deref(), Ok("live"));
         pipeline_config.detection = request.detection;
         pipeline_config.audio_fault = runtime.fault_audio;
+        pipeline_config.asr_chunk_samples =
+            runtime.asr_chunk_ms.clamp(80, 2000) * ll_audio::TARGET_SAMPLE_RATE as usize / 1000;
         let asr: Box<dyn AsrEngine> = match (sherpa_asr, runtime.asr) {
             (Some(engine), _) => engine,
             (None, ll_config::AsrMode::Off) => Box::new(OffAsr),
@@ -1061,6 +1064,7 @@ fn use_real_asr(source: &str, scenario: Scenario) -> bool {
 #[cfg(feature = "sherpa")]
 fn sherpa_engine(
     language: Language,
+    runtime: &RuntimeConfig,
 ) -> std::result::Result<Box<dyn AsrEngine>, (&'static str, String)> {
     let catalog = ll_models::ModelCatalog::plan_default();
     let Some(asr) = catalog
@@ -1071,7 +1075,16 @@ fn sherpa_engine(
         return Err(("ASR_INIT_FAILED", "no ASR model in the catalog".to_string()));
     };
     let dir = ll_models::model_dir(&ll_models::cache_root(), &asr.repo, &asr.revision);
-    match ll_asr::SherpaAsr::new(dir, language) {
+    let options = ll_asr::SherpaOptions {
+        num_threads: runtime.asr_threads.clamp(1, 64) as i32,
+        rule1_min_trailing_silence: runtime.asr_rule1_trailing_ms.clamp(100, 10_000) as f32
+            / 1000.0,
+        rule2_min_trailing_silence: runtime.asr_rule2_trailing_ms.clamp(100, 10_000) as f32
+            / 1000.0,
+        rule3_min_utterance_length: runtime.asr_rule3_utterance_ms.clamp(1000, 60_000) as f32
+            / 1000.0,
+    };
+    match ll_asr::SherpaAsr::with_options(dir, language, options) {
         Ok(engine) => Ok(Box::new(engine)),
         Err(error @ ll_asr::AsrError::ModelMissing { .. }) => {
             Err(("ASR_MODEL_MISSING", error.to_string()))

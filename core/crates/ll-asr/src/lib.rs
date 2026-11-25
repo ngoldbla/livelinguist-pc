@@ -28,7 +28,8 @@ pub struct AsrEvent {
     pub detected_language: Option<String>,
 }
 
-/// A streaming ASR engine. Chunks are 1.1 s (17,600 samples) at 16 kHz.
+/// A streaming ASR engine. The default pipeline chunk is 1.1 s (17,600
+/// samples) at 16 kHz; latency experiments may select a smaller chunk.
 pub trait AsrEngine: Send {
     fn process(&mut self, chunk: &[f32], audio_time: f64) -> Result<Option<AsrEvent>, AsrError>;
     fn reset(&mut self);
@@ -169,15 +170,49 @@ pub fn sherpa_recognizer_config(
     model_dir: &std::path::Path,
     num_threads: i32,
 ) -> sherpa_onnx::OnlineRecognizerConfig {
+    sherpa_recognizer_config_with_options(model_dir, SherpaOptions::with_threads(num_threads))
+}
+
+/// Tunable streaming-recognizer settings. Defaults match sherpa-onnx's C API
+/// defaults; the autoresearch loop may lower endpoint silence thresholds.
+#[cfg(feature = "sherpa")]
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct SherpaOptions {
+    pub num_threads: i32,
+    pub rule1_min_trailing_silence: f32,
+    pub rule2_min_trailing_silence: f32,
+    pub rule3_min_utterance_length: f32,
+}
+
+#[cfg(feature = "sherpa")]
+impl SherpaOptions {
+    pub fn with_threads(num_threads: i32) -> Self {
+        Self {
+            num_threads,
+            rule1_min_trailing_silence: 2.4,
+            rule2_min_trailing_silence: 1.2,
+            rule3_min_utterance_length: 20.0,
+        }
+    }
+}
+
+#[cfg(feature = "sherpa")]
+pub fn sherpa_recognizer_config_with_options(
+    model_dir: &std::path::Path,
+    options: SherpaOptions,
+) -> sherpa_onnx::OnlineRecognizerConfig {
     let path = |name: &str| Some(model_dir.join(name).display().to_string());
     let mut config = sherpa_onnx::OnlineRecognizerConfig::default();
     config.model_config.transducer.encoder = path(SHERPA_MODEL_FILES[0]);
     config.model_config.transducer.decoder = path(SHERPA_MODEL_FILES[1]);
     config.model_config.transducer.joiner = path(SHERPA_MODEL_FILES[2]);
     config.model_config.tokens = path(SHERPA_MODEL_FILES[3]);
-    config.model_config.num_threads = num_threads;
+    config.model_config.num_threads = options.num_threads;
     config.model_config.provider = Some("cpu".to_string());
     config.enable_endpoint = true;
+    config.rule1_min_trailing_silence = options.rule1_min_trailing_silence;
+    config.rule2_min_trailing_silence = options.rule2_min_trailing_silence;
+    config.rule3_min_utterance_length = options.rule3_min_utterance_length;
     config
 }
 
@@ -223,6 +258,18 @@ impl SherpaAsr {
         language: Language,
         num_threads: i32,
     ) -> Result<Self, AsrError> {
+        Self::with_options(
+            model_dir,
+            language,
+            SherpaOptions::with_threads(num_threads),
+        )
+    }
+
+    pub fn with_options(
+        model_dir: impl AsRef<std::path::Path>,
+        language: Language,
+        options: SherpaOptions,
+    ) -> Result<Self, AsrError> {
         let model_dir = model_dir.as_ref();
         if SHERPA_MODEL_FILES
             .iter()
@@ -233,7 +280,7 @@ impl SherpaAsr {
                 size_mb: SHERPA_MODEL_SIZE_MB,
             });
         }
-        let config = sherpa_recognizer_config(model_dir, num_threads);
+        let config = sherpa_recognizer_config_with_options(model_dir, options);
         let recognizer = sherpa_onnx::OnlineRecognizer::create(&config)
             .ok_or_else(|| AsrError::Unavailable("sherpa recognizer failed to load".to_string()))?;
         let stream = recognizer.create_stream();
@@ -323,6 +370,22 @@ pub fn can_promise_live_listening(language: Language, coverage: &CoverageMatrix)
 #[cfg(all(test, feature = "sherpa"))]
 mod sherpa_tests {
     use super::*;
+
+    #[test]
+    fn recognizer_options_override_endpoint_thresholds() {
+        let options = SherpaOptions {
+            num_threads: 3,
+            rule1_min_trailing_silence: 1.6,
+            rule2_min_trailing_silence: 0.6,
+            rule3_min_utterance_length: 12.0,
+        };
+        let config = sherpa_recognizer_config_with_options(std::path::Path::new("model"), options);
+        assert_eq!(config.model_config.num_threads, 3);
+        assert!(config.enable_endpoint);
+        assert_eq!(config.rule1_min_trailing_silence, 1.6);
+        assert_eq!(config.rule2_min_trailing_silence, 0.6);
+        assert_eq!(config.rule3_min_utterance_length, 12.0);
+    }
 
     #[test]
     fn missing_model_dir_is_model_missing() {

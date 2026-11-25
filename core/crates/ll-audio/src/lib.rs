@@ -338,10 +338,18 @@ impl AudioSource for FileSource {
     }
 }
 
-/// Fixed-size chunker for the streaming ASR encoder (1.1 s = 17,600 samples).
-#[derive(Debug, Default)]
+/// Fixed-size chunker for the streaming ASR encoder. The default remains the
+/// original 1.1 s (17,600 samples); experiments may select a smaller chunk.
+#[derive(Debug)]
 pub struct AudioChunker {
     buffer: Vec<f32>,
+    chunk_samples: usize,
+}
+
+impl Default for AudioChunker {
+    fn default() -> Self {
+        Self::with_chunk_samples(CHUNK_SAMPLES)
+    }
 }
 
 impl AudioChunker {
@@ -349,11 +357,30 @@ impl AudioChunker {
         Self::default()
     }
 
+    pub fn with_chunk_samples(chunk_samples: usize) -> Self {
+        assert!(
+            chunk_samples > 0,
+            "ASR chunk must contain at least one sample"
+        );
+        Self {
+            buffer: Vec::new(),
+            chunk_samples,
+        }
+    }
+
+    pub fn chunk_samples(&self) -> usize {
+        self.chunk_samples
+    }
+
+    pub fn chunk_duration(&self) -> f64 {
+        self.chunk_samples as f64 / TARGET_SAMPLE_RATE as f64
+    }
+
     pub fn append(&mut self, samples: &[f32]) -> Vec<Vec<f32>> {
         self.buffer.extend_from_slice(samples);
         let mut chunks = Vec::new();
-        while self.buffer.len() >= CHUNK_SAMPLES {
-            chunks.push(self.buffer.drain(..CHUNK_SAMPLES).collect());
+        while self.buffer.len() >= self.chunk_samples {
+            chunks.push(self.buffer.drain(..self.chunk_samples).collect());
         }
         chunks
     }
@@ -364,7 +391,7 @@ impl AudioChunker {
             return None;
         }
         let mut chunk = std::mem::take(&mut self.buffer);
-        chunk.resize(CHUNK_SAMPLES, 0.0);
+        chunk.resize(self.chunk_samples, 0.0);
         Some(chunk)
     }
 
@@ -750,6 +777,19 @@ mod tests {
         let flush = chunker.flush().unwrap();
         assert_eq!(flush.len(), CHUNK_SAMPLES);
         assert_eq!(flush[500], 0.0);
+    }
+
+    #[test]
+    fn chunker_supports_experimental_sizes() {
+        let mut chunker = AudioChunker::with_chunk_samples(8_960);
+        assert_eq!(chunker.chunk_duration(), 0.56);
+        let chunks = chunker.append(&vec![0.1; 9_000]);
+        assert_eq!(chunks.len(), 1);
+        assert_eq!(chunks[0].len(), 8_960);
+        assert_eq!(chunker.pending(), 40);
+        let flush = chunker.flush().unwrap();
+        assert_eq!(flush.len(), 8_960);
+        assert_eq!(flush[100], 0.0);
     }
 
     #[test]

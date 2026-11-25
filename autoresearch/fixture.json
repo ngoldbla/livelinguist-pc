@@ -1,0 +1,25 @@
+{
+  "id": "commons-welcome-to-class",
+  "title": "Welcome to Class - Python for Informatics",
+  "author": "Charles Severance, University of Michigan",
+  "sourcePage": "https://commons.wikimedia.org/wiki/File:1_-_2_-_Welcome_to_Class_(19_54).webm",
+  "license": "CC BY 3.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+  "media": {
+    "file": "welcome-to-class.webm",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/2/27/1_-_2_-_Welcome_to_Class_%2819_54%29.webm",
+    "sha256": "1e59af49d4799484020ccfc93235df6b9fb0a5fdbc4fd5c70b0ad3dc64d9dbba",
+    "bytes": 36751333,
+    "durationSeconds": 1194.03
+  },
+  "captions": {
+    "file": "welcome-to-class.en.srt",
+    "url": "https://commons.wikimedia.org/w/index.php?title=TimedText:1_-_2_-_Welcome_to_Class_(19_54).webm.en.srt&action=raw",
+    "sha256": "8a810404bb516fd8db98361cc43f952df8f58cc911d0ede899bd1d67a01784e9",
+    "language": "en"
+  },
+  "benchmarkWindow": {
+    "startSeconds": 0,
+    "seconds": 90
+  }
+}

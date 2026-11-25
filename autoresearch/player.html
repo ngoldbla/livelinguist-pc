@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Live Linguist latency fixture</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        background: #0b0b12;
+        color: #f4f2ff;
+        font: 16px system-ui, sans-serif;
+      }
+      main {
+        width: min(960px, 100vw);
+        margin: 0 auto;
+        padding: 16px;
+      }
+      video {
+        display: block;
+        width: 100%;
+        max-height: 70vh;
+        background: #000;
+      }
+      .reference {
+        min-height: 3.5em;
+        margin-top: 12px;
+        padding: 12px;
+        border: 1px solid #3a3652;
+        border-radius: 10px;
+        background: #15122a;
+        font-size: 1.25rem;
+        line-height: 1.45;
+      }
+      .meta {
+        color: #aaa6bd;
+        font-size: 0.85rem;
+        margin-top: 10px;
+      }
+      video::-webkit-media-text-track-container {
+        font-size: 125%;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <video id="video" src="/media.webm" preload="auto" playsinline>
+        <track kind="captions" src="/captions.vtt" srclang="en" label="English" default />
+      </video>
+      <div id="reference" class="reference" aria-live="off">Waiting for the first caption…</div>
+      <div class="meta">
+        “Welcome to Class - Python for Informatics” — Charles Severance, University of Michigan.
+        <a href="https://commons.wikimedia.org/wiki/File:1_-_2_-_Welcome_to_Class_(19_54).webm">Wikimedia Commons</a>,
+        <a href="https://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>.
+      </div>
+    </main>
+    <script>
+      const params = new URLSearchParams(location.search);
+      const start = Number(params.get("start") ?? 0);
+      const seconds = Number(params.get("seconds") ?? 90);
+      const trial = params.get("trial") ?? "trial";
+      const video = document.getElementById("video");
+      const reference = document.getElementById("reference");
+      let started = false;
+      let stopped = false;
+      let lastTick = 0;
+
+      async function post(path, body) {
+        try {
+          await fetch(path, {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ trial, ...body }),
+            keepalive: true,
+          });
+        } catch {
+          // A missed beacon must not stop playback.
+        }
+      }
+
+      function tick(force = false) {
+        const now = Date.now();
+        if (!force && now - lastTick < 250) return;
+        lastTick = now;
+        void post("/media/tick", {
+          wallMs: now,
+          mediaMs: video.currentTime * 1000,
+          paused: video.paused,
+          readyState: video.readyState,
+          ended: video.ended,
+        });
+      }
+
+      video.addEventListener("loadedmetadata", async () => {
+        video.currentTime = start;
+        try {
+          await video.play();
+        } catch (error) {
+          await post("/media/error", { message: String(error) });
+        }
+      });
+
+      video.addEventListener("play", () => {
+        if (started) return;
+        started = true;
+        void post("/media/start", {
+          wallMs: Date.now(),
+          mediaMs: video.currentTime * 1000,
+        });
+        tick(true);
+      });
+
+      video.addEventListener("timeupdate", () => tick());
+      video.addEventListener("cuechange", () => {
+        const cues = video.textTracks[0]?.activeCues ?? [];
+        reference.textContent = cues.length
+          ? Array.from(cues)
+              .map((cue) => cue.text)
+              .join(" ")
+          : "";
+        tick(true);
+      });
+      setInterval(() => tick(), 250);
+
+      const deadline = performance.now() + (seconds + 2) * 1000;
+      const timer = setInterval(() => {
+        tick(true);
+        if (stopped) return;
+        if (video.currentTime >= start + seconds || performance.now() >= deadline) {
+          stopped = true;
+          video.pause();
+          void post("/media/stop", {
+            wallMs: Date.now(),
+            mediaMs: video.currentTime * 1000,
+            reason: video.currentTime >= start + seconds ? "window-complete" : "deadline",
+          });
+          clearInterval(timer);
+        }
+      }, 100);
+    </script>
+  </body>
+</html>
