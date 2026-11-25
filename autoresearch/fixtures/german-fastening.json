@@ -1,0 +1,27 @@
+{
+  "id": "terra-x-fasting-de",
+  "title": "Wie Fasten den Stoffwechsel verändert",
+  "author": "3sat/nano, Spiegel TV, Liz Wieskerstrauch, O. Gurr, R. Heinze, D. Ritter, J. Staiger, Jan Cords, tricky GbR",
+  "sourcePage": "https://commons.wikimedia.org/wiki/File:Wie_Fasten_den_Stoffwechsel_ver%C3%A4ndert_(CC_BY_4.0).webm",
+  "license": "CC BY 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "language": "de-DE",
+  "uiLocale": "en",
+  "media": {
+    "file": "fasten-stoffwechsel.webm",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/4/46/Wie_Fasten_den_Stoffwechsel_ver%C3%A4ndert_%28CC_BY_4.0%29.webm",
+    "sha256": "c526c44e0064c737c7e66b79a20216a9f505e5ae331f06c2495ad0983d466950",
+    "bytes": 19445364,
+    "durationSeconds": 79.967
+  },
+  "captions": {
+    "file": "fasten-stoffwechsel.de.srt",
+    "url": "https://commons.wikimedia.org/w/index.php?title=TimedText:Wie_Fasten_den_Stoffwechsel_ver%C3%A4ndert_(CC_BY_4.0).webm.de.srt&action=raw",
+    "sha256": "e63470f6d383276bcbffde4fd821ea75e59a39a6968d853e9a1363de403d5282",
+    "language": "de"
+  },
+  "benchmarkWindow": {
+    "startSeconds": 3,
+    "seconds": 60
+  }
+}

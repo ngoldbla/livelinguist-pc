@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
-import { existsSync } from "node:fs";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { existsSync, readdirSync, writeFileSync } from "node:fs";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import {
   alignCaptions,
@@ -22,6 +22,22 @@ interface FixtureManifest {
   media: { file: string; url: string; sha256: string; bytes: number; durationSeconds: number };
   captions: { file: string; url: string; sha256: string; language: string };
   benchmarkWindow: { startSeconds: number; seconds: number };
+  /** App language for a spoken fixture; defaults to en-US. */
+  language?: string;
+  /** App UI locale; defaults to en so the UIA probe's labels stay stable. */
+  uiLocale?: string;
+}
+
+interface ClickEvent {
+  index: number;
+  t: number;
+  ok: boolean;
+  inWindow: boolean;
+}
+
+interface SimplifiedEvent {
+  index: number;
+  t: number;
 }
 
 interface BenchmarkOptions {
@@ -41,6 +57,9 @@ interface BenchmarkOptions {
   fixtureDir: string;
   pollMs: number;
   clickAtMs: number;
+  clickEveryN: number;
+  record?: string;
+  ffmpeg?: string;
   commit?: string;
 }
 
@@ -67,6 +86,7 @@ interface TrialResult {
     asrRule2Ms: number | null;
     asrRule3Ms: number | null;
     pollMs: number;
+    clickEveryN: number;
   };
   media: {
     tickCount: number;
@@ -84,6 +104,32 @@ interface TrialResult {
     ok: boolean;
     maxGapMs: number | null;
     mediaMs: number | null;
+  } | null;
+  clickSeries: {
+    requested: number;
+    clicked: number;
+    simplified: number;
+    failed: number;
+    maxGapMs: number | null;
+    p50Ms: number | null;
+    p95Ms: number | null;
+    events: Array<{
+      index: number;
+      mediaMs: number | null;
+      latencyMs: number | null;
+      ok: boolean;
+    }>;
+  } | null;
+  recording: {
+    file: string;
+    seconds: number;
+    width: number;
+    height: number;
+    fps: number;
+    trimMs: number;
+    mediaStartWallMs: number;
+    firstFrameWallMs: number;
+    audioSource: string;
   } | null;
   valid: boolean;
   contentFree: true;
@@ -154,6 +200,10 @@ async function options(): Promise<BenchmarkOptions> {
   if (asrRule3Ms !== undefined && (asrRule3Ms < 1000 || asrRule3Ms > 60_000)) {
     throw new Error("--asr-rule3-ms must be 1000..60000");
   }
+  const clickEveryN = numberArgument("--click-every-n", 0);
+  if (clickEveryN < 0 || clickEveryN > 100) {
+    throw new Error("--click-every-n must be 0..100");
+  }
   return {
     app: resolve(
       argument("--app") ?? (sourceUi ? join(ROOT, "ui", "src", "main.tsx") : defaultApp()),
@@ -173,6 +223,9 @@ async function options(): Promise<BenchmarkOptions> {
     fixtureDir: resolve(argument("--fixture-dir") ?? join(ROOT, "target", "autoresearch", "media")),
     pollMs: numberArgument("--poll-ms", 20),
     clickAtMs: numberArgument("--click-at-ms", 0),
+    clickEveryN,
+    record: argument("--record") ? resolve(argument("--record") as string) : undefined,
+    ffmpeg: argument("--ffmpeg") ?? process.env.FFMPEG ?? undefined,
     commit: argument("--commit") ?? undefined,
   };
 }
@@ -291,6 +344,62 @@ function edgePath(): string {
   return found;
 }
 
+/** Resolve ffmpeg: explicit flag, FFMPEG env, target/tools, then PATH. */
+function ffmpegPath(explicit?: string): string {
+  if (explicit) {
+    if (!existsSync(explicit)) throw new Error(`ffmpeg not found: ${explicit}`);
+    return explicit;
+  }
+  const local = join(ROOT, "target", "tools", "ffmpeg");
+  if (existsSync(local)) {
+    const found = readdirSync(local, { recursive: true })
+      .map((entry) => join(local, String(entry)))
+      .find((path) => path.toLowerCase().endsWith("ffmpeg.exe"));
+    if (found) return found;
+  }
+  const probe = Bun.spawnSync(["where.exe", "ffmpeg"], { stdout: "pipe", stderr: "ignore" });
+  const line = probe.stdout.toString().split(/\r?\n/).find((value) => value.trim());
+  if (line) return line.trim();
+  throw new Error("ffmpeg not found; pass --ffmpeg or install it under target/tools/ffmpeg");
+}
+
+function summarizeClicks(
+  clicks: ClickEvent[],
+  simplified: SimplifiedEvent[],
+  clock: MediaClock,
+  observations: Array<{ t: number }>,
+): NonNullable<TrialResult["clickSeries"]> {
+  const done = new Map<number, number>();
+  for (const event of simplified) {
+    if (!done.has(event.index) || (done.get(event.index) ?? 0) > event.t) {
+      done.set(event.index, event.t);
+    }
+  }
+  const latencies: number[] = [];
+  const events = clicks.map((click) => {
+    const finished = done.get(click.index);
+    const latencyMs =
+      click.ok && finished !== undefined && finished >= click.t ? finished - click.t : null;
+    if (latencyMs !== null) latencies.push(latencyMs);
+    return {
+      index: click.index,
+      mediaMs: clock.at(click.t),
+      latencyMs,
+      ok: click.ok,
+    };
+  });
+  return {
+    requested: clicks.length,
+    clicked: clicks.filter((click) => click.ok).length,
+    simplified: latencies.length,
+    failed: clicks.filter((click) => !click.ok).length,
+    maxGapMs: clickMaxGapMs(observations, clicks),
+    p50Ms: percentile(latencies, 50),
+    p95Ms: percentile(latencies, 95),
+    events,
+  };
+}
+
 function clickMaxGapMs(
   observations: Array<{ t: number }>,
   clicks: Array<{ t: number }>,
@@ -309,6 +418,161 @@ function clickMaxGapMs(
   return max;
 }
 
+interface Recording {
+  raw: string;
+  final: string;
+  proc: ReturnType<typeof Bun.spawn>;
+  firstFrame: Promise<number>;
+  width: number;
+  height: number;
+}
+
+function startRecording(
+  ffmpeg: string,
+  raw: string,
+  final: string,
+  rect: { x: number; y: number; width: number; height: number },
+  seconds: number,
+): Recording {
+  const even = (value: number) => Math.max(2, Math.floor(value / 2) * 2);
+  const x = Math.max(0, even(rect.x));
+  const y = Math.max(0, even(rect.y));
+  const width = even(rect.width);
+  const height = even(rect.height);
+  const progressPath = `${raw}.progress.txt`;
+  // Truncate synchronously before ffmpeg opens it; a stale progress file would
+  // resolve the first-frame promise immediately.
+  writeFileSync(progressPath, "");
+  const proc = Bun.spawn(
+    [
+      ffmpeg,
+      "-y",
+      "-hide_banner",
+      "-loglevel",
+      "warning",
+      "-nostats",
+      "-progress",
+      progressPath,
+      "-f",
+      "gdigrab",
+      "-framerate",
+      "20",
+      "-draw_mouse",
+      "1",
+      "-offset_x",
+      String(x),
+      "-offset_y",
+      String(y),
+      "-video_size",
+      `${width}x${height}`,
+      "-i",
+      "desktop",
+      "-t",
+      String(seconds + 15),
+      "-an",
+      "-c:v",
+      "libx264",
+      "-preset",
+      "ultrafast",
+      "-crf",
+      "20",
+      "-pix_fmt",
+      "yuv420p",
+      raw,
+    ],
+    { stdout: "ignore", stderr: "pipe", stdin: "pipe" },
+  );
+  const firstFrame = (async () => {
+    for (let attempt = 0; attempt < 100; attempt += 1) {
+      await new Promise((done) => setTimeout(done, 50));
+      if (proc.exitCode !== null) break;
+      try {
+        const text = await readFile(progressPath, "utf8");
+        if (text.includes("progress=continue") || text.includes("frame=")) {
+          // The first progress block lands about 0.5 s in; the first frame was
+          // captured a little earlier. A quarter second keeps the trim inside
+          // one polling quantum.
+          return Date.now() - 250;
+        }
+      } catch {
+        // The progress file is created on the first write.
+      }
+    }
+    throw new Error("screen capture did not start");
+  })();
+  void new Response(proc.stderr).text().catch(() => {});
+  return { raw, final, proc, firstFrame, width, height };
+}
+
+async function stopRecording(recording: Recording): Promise<void> {
+  try {
+    recording.proc.stdin.write("q\n");
+    recording.proc.stdin.end();
+  } catch {
+    // Fall through to the exit race; the capture may already be gone.
+  }
+  await Promise.race([recording.proc.exited, new Promise((done) => setTimeout(done, 10_000))]);
+  if (recording.proc.exitCode === null) await killTree(recording.proc.pid).catch(() => {});
+}
+
+async function finalizeRecording(
+  ffmpeg: string,
+  recording: Recording,
+  mediaPath: string,
+  startSeconds: number,
+  seconds: number,
+  firstFrameWallMs: number,
+  mediaStartWallMs: number,
+): Promise<{ trimMs: number }> {
+  const trimSeconds = Math.max(0, (mediaStartWallMs - firstFrameWallMs) / 1000);
+  const proc = Bun.spawn(
+    [
+      ffmpeg,
+      "-y",
+      "-hide_banner",
+      "-loglevel",
+      "error",
+      "-ss",
+      trimSeconds.toFixed(3),
+      "-i",
+      recording.raw,
+      "-ss",
+      String(startSeconds),
+      "-i",
+      mediaPath,
+      "-map",
+      "0:v:0",
+      "-map",
+      "1:a:0",
+      "-t",
+      String(seconds),
+      "-c:v",
+      "libx264",
+      "-preset",
+      "ultrafast",
+      "-crf",
+      "20",
+      "-pix_fmt",
+      "yuv420p",
+      "-c:a",
+      "aac",
+      "-b:a",
+      "160k",
+      "-movflags",
+      "+faststart",
+      recording.final,
+    ],
+    { stdout: "pipe", stderr: "pipe" },
+  );
+  const stderr = new Response(proc.stderr).text();
+  await proc.exited;
+  const message = (await stderr).trim();
+  if (proc.exitCode !== 0) {
+    throw new Error(`recording mux failed: ${message || proc.exitCode}`);
+  }
+  return { trimMs: Math.round(trimSeconds * 1000) };
+}
+
 async function runTrial(
   config: BenchmarkOptions,
   manifest: FixtureManifest,
@@ -320,9 +584,12 @@ async function runTrial(
   const trialDir = join(config.out, `trial-${trial}`);
   await mkdir(trialDir, { recursive: true });
   const stopFile = join(trialDir, "stop");
+  await rm(stopFile, { force: true }).catch(() => {});
   const trialId = `trial-${trial}-${Date.now()}`;
   const media: TrialMedia = { clock: [], start: null, stop: null, error: null };
   const debug = process.env.LL_BENCH_DEBUG === "1";
+  let readyInfo: { title?: string; rect?: { x: number; y: number; width: number; height: number } } | null =
+    null;
   let markReady: () => void = () => {};
   let markStop: () => void = () => {};
   const ready = new Promise<void>((done) => {
@@ -389,8 +656,8 @@ async function runTrial(
   const env: Record<string, string> = {
     ...process.env,
     LL_SCREEN: "console",
-    LL_LANGUAGE: "en-US",
-    LL_UI_LOCALE: "en",
+    LL_LANGUAGE: manifest.language ?? "en-US",
+    LL_UI_LOCALE: manifest.uiLocale ?? "en",
     LL_MODE: "on_demand",
   };
   delete env.GPUIX_BACKGROUND;
@@ -417,46 +684,64 @@ async function runTrial(
     void readLines(app.stderr, (line) => console.error(`app: ${line}`)).catch(() => {});
   }
   const observations: Array<Omit<CaptionObservation, "mediaMs" | "tokens">> = [];
-  const clicks: Array<{ t: number; ok: boolean }> = [];
+  const clickEvents: ClickEvent[] = [];
+  const simplifiedEvents: SimplifiedEvent[] = [];
   let probeError: string | null = null;
-  const probe = Bun.spawn(
-    [
-      "pwsh",
-      "-NoProfile",
-      "-File",
-      UIA_PATH,
-      "-ProcessId",
-      String(app.pid),
-      "-Mode",
-      config.mode,
-      "-StopFile",
-      stopFile,
-      "-ReadyUrl",
-      `${baseUrl}/ready`,
-      "-PollMs",
-      String(config.pollMs),
-      "-ClickAtMs",
-      String(config.clickAtMs),
-    ],
-    { stdout: "pipe", stderr: "pipe" },
-  );
+  const probeArgs = [
+    "pwsh",
+    "-NoProfile",
+    "-File",
+    UIA_PATH,
+    "-ProcessId",
+    String(app.pid),
+    "-Mode",
+    config.mode,
+    "-StopFile",
+    stopFile,
+    "-ReadyUrl",
+    `${baseUrl}/ready`,
+    "-PollMs",
+    String(config.pollMs),
+    "-ClickAtMs",
+    String(config.clickAtMs),
+    "-ClickEveryN",
+    String(config.clickEveryN),
+  ];
+  if (config.record) {
+    probeArgs.push("-PlaceX", "1300", "-PlaceY", "60");
+  }
+  const probe = Bun.spawn(probeArgs, { stdout: "pipe", stderr: "pipe" });
   const probeReader = readLines(probe.stdout, (line) => {
     if (!line.trim()) return;
     try {
       const value = JSON.parse(line) as {
         ready?: boolean;
+        title?: string;
+        rect?: { x: number; y: number; width: number; height: number };
         error?: string;
         t?: number;
-        kind?: "partial" | "final";
+        kind?: "partial" | "final" | "click" | "simplified" | "click_timeout";
+        index?: number;
         text?: string;
         scan_ms?: number;
         ok?: boolean;
+        in_window?: boolean;
       };
       if (value.error) probeError = "ui probe failed";
-      if (value.ready) markReady();
-      if (value.t && value.kind === "click") {
-        clicks.push({ t: value.t, ok: value.ok === true });
-      } else if (value.t && value.kind && value.text) {
+      if (value.ready) {
+        readyInfo = { title: value.title, rect: value.rect };
+        markReady();
+      }
+      if (value.t && value.kind === "click" && typeof value.index === "number") {
+        clickEvents.push({
+          index: value.index,
+          t: value.t,
+          ok: value.ok === true,
+          inWindow: value.in_window !== false,
+        });
+      } else if (value.t && value.kind === "simplified" && typeof value.index === "number") {
+        simplifiedEvents.push({ index: value.index, t: value.t });
+      } else if (value.t && (value.kind === "partial" || value.kind === "final") && value.text) {
         observations.push({
           t: value.t,
           kind: value.kind,
@@ -470,6 +755,8 @@ async function runTrial(
   });
   const probeStderr = new Response(probe.stderr).text();
   let edge: ReturnType<typeof Bun.spawn> | null = null;
+  let recording: Recording | null = null;
+  let firstFrameWallMs = 0;
   if (debug) console.error(`player: ${baseUrl}/player?start=${config.startSeconds}&seconds=${config.seconds}&trial=${trialId}`);
 
   try {
@@ -479,19 +766,37 @@ async function runTrial(
         setTimeout(() => reject(new Error("app did not become ready")), 45_000),
       ),
     ]);
+    if (config.record) {
+      const rect = readyInfo?.rect;
+      if (!rect) throw new Error("recording needs the app window rect from the probe");
+      await mkdir(dirname(config.record), { recursive: true });
+      recording = startRecording(
+        ffmpegPath(config.ffmpeg),
+        config.record.replace(/\.mp4$/i, "") + ".raw.mp4",
+        config.record,
+        rect,
+        config.seconds,
+      );
+      firstFrameWallMs = await Promise.race([
+        recording.firstFrame,
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("screen capture did not start")), 15_000),
+        ),
+      ]);
+      if (debug) console.error(`recording: first frame at ${firstFrameWallMs}`);
+    }
     const playerUrl = `${baseUrl}/player?start=${config.startSeconds}&seconds=${config.seconds}&trial=${trialId}`;
-    edge = Bun.spawn(
-      [
-        edgePath(),
-        `--user-data-dir=${join(trialDir, "edge-profile")}`,
-        "--autoplay-policy=no-user-gesture-required",
-        "--no-first-run",
-        "--no-default-browser-check",
-        "--disable-extensions",
-        `--app=${playerUrl}`,
-      ],
-      { stdout: "ignore", stderr: debug ? "pipe" : "ignore" },
-    );
+    const edgeArgs = [
+      edgePath(),
+      `--user-data-dir=${join(trialDir, "edge-profile")}`,
+      "--autoplay-policy=no-user-gesture-required",
+      "--no-first-run",
+      "--no-default-browser-check",
+      "--disable-extensions",
+    ];
+    if (config.record) edgeArgs.push("--window-position=0,0", "--window-size=1240,900");
+    edgeArgs.push(`--app=${playerUrl}`);
+    edge = Bun.spawn(edgeArgs, { stdout: "ignore", stderr: debug ? "pipe" : "ignore" });
     if (debug && edge) {
       void readLines(edge.stderr, (line) => console.error(`edge: ${line}`)).catch(() => {});
     }
@@ -503,7 +808,11 @@ async function runTrial(
     ]);
     if (media.error) throw new Error(media.error);
     await new Promise((done) => setTimeout(done, 1500));
+    if (recording) await stopRecording(recording);
   } finally {
+    if (recording && recording.proc.exitCode === null) {
+      await stopRecording(recording).catch(() => {});
+    }
     await writeFile(stopFile, "stop").catch(() => {});
     await Promise.race([
       probe.exited,
@@ -548,6 +857,29 @@ async function runTrial(
     config.mode === "live"
       ? alignment.summary.partialCoverage
       : Math.max(alignment.summary.partialCoverage, alignment.summary.finalCoverage);
+  let recordingMeta: TrialResult["recording"] = null;
+  if (config.record && recording && media.start && firstFrameWallMs > 0) {
+    const { trimMs } = await finalizeRecording(
+      ffmpegPath(config.ffmpeg),
+      recording,
+      join(config.fixtureDir, manifest.media.file),
+      config.startSeconds,
+      config.seconds,
+      firstFrameWallMs,
+      media.start.wallMs,
+    );
+    recordingMeta = {
+      file: recording.final,
+      seconds: config.seconds,
+      width: recording.width,
+      height: recording.height,
+      fps: 20,
+      trimMs,
+      mediaStartWallMs: media.start.wallMs,
+      firstFrameWallMs,
+      audioSource: "fixture track (what playback heard)",
+    };
+  }
   const result: TrialResult = {
     schemaVersion: 1,
     fixtureId: manifest.id,
@@ -571,6 +903,7 @@ async function runTrial(
       asrRule2Ms: config.asrRule2Ms ?? null,
       asrRule3Ms: config.asrRule3Ms ?? null,
       pollMs: config.pollMs,
+      clickEveryN: config.clickEveryN,
     },
     media: {
       tickCount: media.clock.length,
@@ -589,12 +922,17 @@ async function runTrial(
       config.clickAtMs > 0
         ? {
             requested: true,
-            app: clicks.length,
-            ok: clicks.length > 0 && clicks.every((click) => click.ok),
-            maxGapMs: clickMaxGapMs(observations, clicks),
-            mediaMs: clicks.length > 0 ? clock.at(clicks[0].t) : null,
+            app: clickEvents.length,
+            ok: clickEvents.length > 0 && clickEvents.every((click) => click.ok),
+            maxGapMs: clickMaxGapMs(observations, clickEvents),
+            mediaMs: clickEvents.length > 0 ? clock.at(clickEvents[0].t) : null,
           }
         : null,
+    clickSeries:
+      config.clickEveryN > 0
+        ? summarizeClicks(clickEvents, simplifiedEvents, clock, observations)
+        : null,
+    recording: recordingMeta,
     valid: media.clock.length >= 2 && targetCoverage >= 0.8,
     contentFree: true,
   };
@@ -625,14 +963,20 @@ async function main(): Promise<void> {
   for (let trial = 1; trial <= config.repeat; trial += 1) {
     const result = await runTrial(config, manifest, cues, playerHtml, vtt, trial);
     results.push(result);
+    const clickText = result.clickSeries
+      ? `; clicks ${result.clickSeries.clicked}/${result.clickSeries.requested} ` +
+        `simplified=${result.clickSeries.simplified} p95=${result.clickSeries.p95Ms?.toFixed(0) ?? "n/a"} ms`
+      : "";
     console.log(
       `trial ${trial}: partial p50=${result.alignment.partialP50Ms?.toFixed(0) ?? "n/a"} ms ` +
         `p95=${result.alignment.partialP95Ms?.toFixed(0) ?? "n/a"} ms ` +
         `coverage=${(result.alignment.partialCoverage * 100).toFixed(1)}%; ` +
         `final p50=${result.alignment.finalP50Ms?.toFixed(0) ?? "n/a"} ms ` +
         `p95=${result.alignment.finalP95Ms?.toFixed(0) ?? "n/a"} ms ` +
-        `coverage=${(result.alignment.finalCoverage * 100).toFixed(1)}%; valid=${result.valid}`,
+        `coverage=${(result.alignment.finalCoverage * 100).toFixed(1)}%${clickText}; ` +
+        `valid=${result.valid}`,
     );
+    if (result.recording) console.log(`recording: ${result.recording.file} (${result.recording.seconds}s)`);
   }
 
   const summary = {
@@ -646,6 +990,8 @@ async function main(): Promise<void> {
       valid: result.valid,
       alignment: result.alignment,
       media: result.media,
+      clickSeries: result.clickSeries,
+      recording: result.recording,
     })),
     contentFree: true,
   };
