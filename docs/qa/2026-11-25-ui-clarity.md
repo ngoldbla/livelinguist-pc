@@ -117,11 +117,11 @@ tone against every surface with the palette.
 - **Finished transcript:** the summary no longer lists it (Mac parity). Export
   is the only way to keep a session.
 - **Fonts:** Windows uses Segoe UI/Consolas for chrome; the bundled M PLUS
-  Rounded 1c covers Latin/Cyrillic/Kana captions and falls back to the system
+  Rounded 1c covers Latin and Japanese captions and falls back to the system
   face for other scripts. Bundling Noto Sans remains a packaging task.
-- **Rounded coverage:** M PLUS Rounded 1c has no Arabic/Devanagari/Chinese
-  coverage; those captions fall back to the platform face, as SF Rounded does
-  on Apple platforms.
+- **Rounded coverage:** M PLUS Rounded 1c has no Arabic or Devanagari coverage;
+  those captions fall back to the platform face, as SF Rounded does on Apple
+  platforms.
 - **Icons:** 21 Lucide paths, not the full SF Symbols set; the language menu is
   a native Select popover, not searchable (the onboarding picker still is).
 - **Capture canvas:** the GPUIX test renderer is fixed at 1536x1061 physical
