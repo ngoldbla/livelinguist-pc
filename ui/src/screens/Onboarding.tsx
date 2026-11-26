@@ -1,5 +1,13 @@
 import { useState } from "react";
-import { BrandMark, Button, ProgressBar, StatusDot, Surface, Toast } from "../aurora/components";
+import {
+  BrandMark,
+  Button,
+  Icon,
+  ProgressBar,
+  StatusDot,
+  Surface,
+  Toast,
+} from "../aurora/components";
 import { LanguagePicker } from "../aurora/LanguagePicker";
 import { colors, textStyle, type } from "../aurora/theme";
 import { languageByCode, statusLabel } from "../i18n/languages";
@@ -39,7 +47,12 @@ export function Onboarding({
 
   const back =
     beat > 0 ? (
-      <Button label={t(locale, "Back")} kind="secondary" onClick={() => setBeat(beat - 1)} />
+      <Button
+        label={t(locale, "Back")}
+        icon="arrow-left"
+        kind="secondary"
+        onClick={() => setBeat(beat - 1)}
+      />
     ) : null;
 
   return (
@@ -78,9 +91,19 @@ export function Onboarding({
                 {t(locale, "Welcome to Live Linguist")}
               </text>
               <Surface style={{ padding: 18, display: "flex", flexDirection: "column", gap: 8 }}>
-                <text style={{ ...textStyle(type.meta, colors.mint, 700) }}>
-                  {t(locale, "PRIVACY BY CONSTRUCTION")}
-                </text>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 6,
+                  }}
+                >
+                  <Icon name="lock" size={14} color={colors.mint} />
+                  <text style={{ ...textStyle(type.meta, colors.mint, 700) }}>
+                    {t(locale, "PRIVACY BY CONSTRUCTION")}
+                  </text>
+                </div>
                 <text style={{ ...textStyle(type.body, colors.muted), lineHeight: 21 }}>
                   {t(
                     locale,
@@ -92,10 +115,16 @@ export function Onboarding({
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               <Button
                 label={t(locale, "Choose your language")}
+                icon="globe"
                 onClick={() => setBeat(1)}
                 style={{ height: 48 }}
               />
-              <Button label={t(locale, "Continue in demo mode")} kind="ghost" onClick={onFinish} />
+              <Button
+                label={t(locale, "Continue in demo mode")}
+                icon="play"
+                kind="ghost"
+                onClick={onFinish}
+              />
             </div>
           </>
         ) : null}
@@ -194,6 +223,7 @@ export function Onboarding({
               {ready ? (
                 <Button
                   label={t(locale, "Models installed — continue")}
+                  icon="check"
                   onClick={onFinish}
                   style={{ height: 46 }}
                 />
@@ -201,6 +231,7 @@ export function Onboarding({
                 <>
                   <Button
                     label={t(locale, "Try the demo while you wait")}
+                    icon="play"
                     onClick={onFinish}
                     style={{ height: 46 }}
                   />
@@ -218,6 +249,7 @@ export function Onboarding({
                       ? t(locale, "Retry download")
                       : t(locale, "Download models (~%@)", "1.08 GB")
                   }
+                  icon={models.error ? "rotate-ccw" : "download"}
                   onClick={onDownload}
                   style={{ height: 46 }}
                 />

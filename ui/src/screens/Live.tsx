@@ -1,5 +1,14 @@
 import { useEffect, useState } from "react";
-import { Badge, Button, CaptionRow, StatusDot, Surface, Tabs, Toast } from "../aurora/components";
+import {
+  Badge,
+  Button,
+  CaptionRow,
+  Icon,
+  StatusDot,
+  Surface,
+  Tabs,
+  Toast,
+} from "../aurora/components";
 import { colors, focusRing, fonts, textStyle, type } from "../aurora/theme";
 import {
   captionKeyAction,
@@ -160,10 +169,16 @@ export function LiveScreen({
           <>
             <Button
               label={`${t(locale, "Read latest")} (${READ_LATEST_SHORTCUT})`}
+              icon="audio-waveform"
               kind="ghost"
               onClick={readLatest}
             />
-            <Button label={t(locale, "Settings")} kind="secondary" onClick={onSettings} />
+            <Button
+              label={t(locale, "Settings")}
+              icon="settings"
+              kind="secondary"
+              onClick={onSettings}
+            />
           </>
         ) : null}
       </div>
@@ -338,15 +353,23 @@ export function LiveScreen({
       >
         <div style={{ display: "flex", flexDirection: "row", gap: 10 }}>
           {state.phase === "paused" ? (
-            <Button label={t(locale, "Resume captions")} onClick={onResume} />
+            <Button label={t(locale, "Resume captions")} icon="play" onClick={onResume} />
           ) : (
-            <Button label={t(locale, "Pause captions")} kind="secondary" onClick={onPause} />
+            <Button
+              label={t(locale, "Pause captions")}
+              icon="pause"
+              kind="secondary"
+              onClick={onPause}
+            />
           )}
-          <Button label={t(locale, "Stop")} kind="danger" onClick={onStop} />
+          <Button label={t(locale, "Stop")} icon="square" kind="danger" onClick={onStop} />
         </div>
-        <text style={textStyle(type.meta, colors.faint)}>
-          {t(locale, "Offline — audio never leaves this device")}
-        </text>
+        <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 6 }}>
+          <Icon name="lock" size={13} color={colors.faint} />
+          <text style={textStyle(type.meta, colors.faint)}>
+            {t(locale, "Offline — audio never leaves this device")}
+          </text>
+        </div>
       </div>
       {toast ? <Toast message={toast} tone="info" /> : null}
     </div>

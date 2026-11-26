@@ -13,7 +13,11 @@ import { join, resolve } from "node:path";
 
 const ROOT = resolve(import.meta.dir, "../..");
 const OUT = resolve(ROOT, "docs/screenshots/m2-windows");
-const FONTS = ["C:\\Windows\\Fonts\\segoeui.ttf", "C:\\Windows\\Fonts\\tahoma.ttf"];
+const FONTS = [
+  "C:\\Windows\\Fonts\\segoeui.ttf",
+  "C:\\Windows\\Fonts\\tahoma.ttf",
+  resolve(ROOT, "ui/assets/fonts/MPLUSRounded1c-Medium.ttf"),
+];
 
 interface Scenario {
   name: string;
@@ -51,6 +55,12 @@ const scenarios: Scenario[] = [
     waitMs: 1200,
   },
   { name: "console", screen: "console", size: [960, 660], waitMs: 1500 },
+  {
+    name: "console-language-menu",
+    screen: "console",
+    size: [960, 660],
+    waitMs: 1500,
+  },
   {
     name: "console-arabic",
     screen: "console",
@@ -190,6 +200,28 @@ for (const scenario of scenarios) {
         stops.add(focused);
       }
       keyboardStops = stops.size;
+    }
+    if (scenario.name === "console-language-menu") {
+      const value = root.renderer.findByText("Français (France)");
+      const bounds = value ? root.renderer.getElementBounds(value.id) : null;
+      if (!bounds) {
+        failures += 1;
+        console.error("  console-language-menu: language tile not found");
+      } else {
+        root.renderer.nativeSimulateClick(
+          bounds.x + bounds.width / 2,
+          bounds.y + bounds.height / 2,
+        );
+        root.renderer.flush();
+        for (let elapsed = 0; elapsed < 600; elapsed += 200) {
+          await sleep(200);
+          root.renderer.flush();
+        }
+        const text = root.renderer.getAllText().join(" ");
+        const open = text.includes("Deutsch (Deutschland)");
+        console.log(`  console-language-menu: ${open ? "menu open" : "menu did not open"}`);
+        if (!open) failures += 1;
+      }
     }
     if (scenario.name === "language-picker-coverage") {
       // Scroll past the five `ok` locales so one screenful shows both badge

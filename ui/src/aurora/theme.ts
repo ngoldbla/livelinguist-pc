@@ -46,6 +46,7 @@ export const fonts = {
   display: isWindows ? "Segoe UI" : "Noto Sans",
   arabic: "Noto Sans Arabic",
   mono: isWindows ? "Consolas" : "Noto Sans Mono",
+  rounded: "M PLUS Rounded 1c",
 } as const;
 
 export function gradient(from: string, to: string, angle = 120): StyleDesc["background"] {

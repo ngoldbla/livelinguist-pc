@@ -49,6 +49,8 @@ export function LicensesContent({ locale }: { locale: string }) {
             { name: "llama.cpp", detail: "GGUF inference", tag: "MIT" },
             { name: "sherpa-onnx", detail: "streaming ASR", tag: "Apache-2.0" },
             { name: "React 19.2", detail: "UI runtime", tag: "MIT" },
+            { name: "Lucide", detail: "interface icon set (SVG)", tag: "ISC" },
+            { name: "M PLUS Rounded 1c", detail: "rounded caption face", tag: "OFL-1.1" },
             {
               name: "Rust crates",
               detail: "serde, tokio, reqwest, ringbuf, rubato",

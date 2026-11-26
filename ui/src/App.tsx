@@ -1,5 +1,6 @@
 import { mkdirSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
+import { join } from "node:path";
 import { useGpuixRequired } from "@gpuix/react";
 import { useEffect, useRef, useState } from "react";
 import { AuroraField, Toast } from "./aurora/components";
@@ -12,6 +13,7 @@ import {
 } from "./bridge/transport";
 import { languageByCode } from "./i18n/languages";
 import { deviceLocales, resolveLocale, t } from "./i18n/locales";
+import { exeDir } from "./packaged";
 import { ConsoleScreen } from "./screens/Console";
 import { LiveScreen } from "./screens/Live";
 import { Onboarding } from "./screens/Onboarding";
@@ -99,7 +101,11 @@ export function App() {
   useEffect(() => {
     // Register the UI faces GPUIX may not list on its own. Missing files are
     // fine: the platform font is the fallback.
+    const bundled = join(import.meta.dir, "..", "assets", "fonts", "MPLUSRounded1c-Medium.ttf");
+    const packaged = join(exeDir(process.execPath), "fonts", "MPLUSRounded1c-Medium.ttf");
     const candidates = [
+      bundled,
+      packaged,
       "C:\\Windows\\Fonts\\segoeui.ttf",
       "C:\\Windows\\Fonts\\seguisb.ttf",
       "C:\\Windows\\Fonts\\NotoSansArabic-Regular.ttf",

@@ -1,6 +1,6 @@
 import type { StyleDesc } from "@gpuix/react";
 import { Badge, BrandMark, Button, StatusDot } from "../aurora/components";
-import { colors, textStyle, type } from "../aurora/theme";
+import { colors, fonts, textStyle, type } from "../aurora/theme";
 import { languageByCode } from "../i18n/languages";
 import { t } from "../i18n/locales";
 import type { SessionView } from "../store/sessionStore";
@@ -67,30 +67,35 @@ export function OverlayScreen({
           <div style={{ flexGrow: 1 }} />
           <Button
             label={state.phase === "paused" ? t(locale, "Resume") : t(locale, "Pause")}
+            icon={state.phase === "paused" ? "play" : "pause"}
             kind="ghost"
             onClick={state.phase === "paused" ? onResume : onPause}
             style={{ height: 26, paddingLeft: 8, paddingRight: 8 }}
           />
           <Button
             label={t(locale, "Move window")}
+            icon="move"
             kind="ghost"
             onMouseDown={onDrag}
             style={{ height: 26, paddingLeft: 8, paddingRight: 8 }}
           />
           <Button
             label={t(locale, "Settings")}
+            icon="settings"
             kind="ghost"
             onClick={onSettings}
             style={{ height: 26, paddingLeft: 8, paddingRight: 8 }}
           />
           <Button
             label={t(locale, "Expand")}
+            icon="maximize-2"
             kind="ghost"
             onClick={onExpand}
             style={{ height: 26, paddingLeft: 8, paddingRight: 8 }}
           />
           <Button
             label={t(locale, "Console window")}
+            icon="minimize-2"
             kind="ghost"
             onClick={onConsole}
             style={{ height: 26, paddingLeft: 8, paddingRight: 8 }}
@@ -146,6 +151,7 @@ export function OverlayScreen({
                     colors.text,
                     600,
                   ),
+                  fontFamily: fonts.rounded,
                   lineHeight: Math.round(
                     (line.simplified ? captionSize : captionSize * 0.8) * 1.32,
                   ),

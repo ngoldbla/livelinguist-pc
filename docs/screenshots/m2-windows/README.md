@@ -14,6 +14,7 @@ non-claims still apply: `docs/qa/2026-11-22-gpu-renderer.md`.
 | `onboarding-download-progress.png` | **real** window, native addon (T16: live download) |
 | `onboarding-models-ready.png` | **real** window, native addon (T16: models ready) |
 | `console.png` | GPUIX GPU test renderer |
+| `console-language-menu.png` | GPUIX GPU test renderer (Select menu open) |
 | `console-start-captions.png` | GPUIX click path console → live |
 | `console-live-asr.png` | **real** window, real sherpa ASR on loopback (T14) |
 | `console-click-simplified.png` | **real** window, real GGUF click (T20) |

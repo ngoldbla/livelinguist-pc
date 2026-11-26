@@ -114,6 +114,7 @@ export function SummaryScreen({
           <div style={{ display: "flex", flexDirection: "row", gap: 8 }}>
             <Button
               label={t(locale, "Markdown")}
+              icon="download"
               kind="secondary"
               style={{ flexGrow: 1 }}
               onClick={() => void exportAs("markdown")}
@@ -132,7 +133,7 @@ export function SummaryScreen({
             />
           </div>
           <Divider />
-          <Button label={t(locale, "Done")} onClick={onDone} style={{ height: 44 }} />
+          <Button label={t(locale, "Done")} icon="check" onClick={onDone} style={{ height: 44 }} />
         </div>
         {toast ? <Toast message={toast} tone="mint" /> : null}
       </div>

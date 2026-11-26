@@ -5,10 +5,12 @@ Live Linguist PC is built on the following projects. Exact versions are pinned i
 
 ## UI and runtime
 
-- GPUIX (`@gpuix/react`, `@gpuix/native`) 0.11.0 — Apache-2.0
-- GPUI (Zed) — Apache-2.0
-- React / React DOM 19.2.3 — MIT
-- Bun 1.4.5 — MIT
+- GPUIX (`@gpuix/react`, `@gpuix/native`) 0.11.0 - Apache-2.0
+- GPUI (Zed) - Apache-2.0
+- React / React DOM 19.2.3 - MIT
+- Bun 1.4.5 - MIT
+- Lucide icons - ISC (SVG paths vendored in `ui/src/aurora/iconData.ts`)
+- M PLUS Rounded 1c - SIL Open Font License 1.1 (`ui/assets/fonts`)
 
 ## Inference
 

@@ -205,6 +205,7 @@ export function SettingsScreen({
                         ? t(locale, "Downloading models…")
                         : t(locale, "Download models")
                     }
+                    icon="download"
                     disabled={!onDownloadModels || models?.downloading}
                     onClick={() => onDownloadModels?.()}
                   />
@@ -213,6 +214,7 @@ export function SettingsScreen({
                 )}
                 <Button
                   label={t(locale, "Licenses")}
+                  icon="file-text"
                   kind="secondary"
                   onClick={() => setTab("licenses")}
                 />

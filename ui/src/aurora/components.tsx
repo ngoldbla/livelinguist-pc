@@ -4,7 +4,8 @@ import { captionAccessibleLabel } from "../captionKeys";
 import { directionFor } from "../i18n/direction";
 import { t } from "../i18n/locales";
 import type { Segment } from "../store/sessionStore";
-import { card, colors, focusRing, glass, gradient, textStyle, type } from "./theme";
+import { ICON_PATHS, type IconName } from "./iconData";
+import { card, colors, focusRing, fonts, glass, gradient, textStyle, type } from "./theme";
 
 /**
  * A barely-there backdrop: flat near-black plus two very low-alpha washes.
@@ -73,22 +74,46 @@ export function Surface({
 
 export const GlassCard = Surface;
 
-/** Flat product mark: one accent tile, no gradient. */
+/** Lucide path, tinted by replacing the upstream currentColor. */
+export function Icon({
+  name,
+  size = 16,
+  color = colors.text,
+}: {
+  name: IconName;
+  size?: number;
+  color?: string;
+}) {
+  return (
+    <svg
+      source={ICON_PATHS[name].replace(/currentColor/g, color)}
+      style={{ width: size, height: size, flexShrink: 0 }}
+    />
+  );
+}
+
+const TWIN_L = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="297 362 430 300"><path d="M297,362 L365,362 L365,594 L487,594 L487,662 L297,662 Z" fill="#FFFFFF"/><path d="M537,362 L605,362 L605,594 L727,594 L727,662 L537,662 Z" fill="#FFFFFF"/></svg>`;
+
+/** The product mark: twin-L letterforms on the indigo-to-azure tile. */
 export function BrandMark({ size = 34 }: { size?: number }) {
+  const width = Math.round(size * 0.62);
+  const height = Math.round((width * 300) / 430);
   return (
     <div
       style={{
         width: size,
         height: size,
-        borderRadius: Math.round(size * 0.28),
-        backgroundColor: colors.accent,
+        borderRadius: Math.round(size * 0.23),
+        background: gradient("#3B3FD8", "#0A84FF", 150),
+        borderWidth: 1,
+        borderColor: "#FFFFFF40",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         flexShrink: 0,
       }}
     >
-      <text style={textStyle(Math.round(size * 0.52), "#0A0A0D", 800)}>L</text>
+      <svg source={TWIN_L} style={{ width, height }} />
     </div>
   );
 }
@@ -131,7 +156,9 @@ export function PageHeader({
 }) {
   return (
     <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 14 }}>
-      {onBack ? <Button label={backLabel ?? "Back"} kind="secondary" onClick={onBack} /> : null}
+      {onBack ? (
+        <Button label={backLabel ?? "Back"} icon="arrow-left" kind="secondary" onClick={onBack} />
+      ) : null}
       <div style={{ display: "flex", flexDirection: "column", gap: 3, flexGrow: 1, minWidth: 0 }}>
         <text style={{ ...textStyle(type.page, colors.text, 600), lineHeight: 34 }}>{title}</text>
         {subtitle ? <text style={textStyle(type.body, colors.muted)}>{subtitle}</text> : null}
@@ -229,6 +256,7 @@ export function Button({
   leading,
   style,
   onMouseDown,
+  icon,
 }: {
   label: string;
   onClick?: () => void;
@@ -238,6 +266,7 @@ export function Button({
   leading?: string;
   style?: StyleDesc;
   onMouseDown?: () => void;
+  icon?: IconName;
 }) {
   const palette: StyleDesc =
     kind === "primary"
@@ -301,6 +330,7 @@ export function Button({
         ...style,
       }}
     >
+      {icon ? <Icon name={icon} size={15} color={foreground} /> : null}
       {leading ? <text style={textStyle(type.label, foreground, 700)}>{leading}</text> : null}
       <text style={{ ...textStyle(type.body, foreground, 600), whiteSpace: "nowrap" }}>
         {label}
@@ -625,6 +655,7 @@ export function CaptionRow({
           <text
             style={{
               ...textStyle(simpleSize, colors.text, 600),
+              fontFamily: fonts.rounded,
               lineHeight: compact ? 24 : Math.round(simpleSize * 1.32),
               textAlign: rtl ? "right" : "left",
               paddingLeft: rtl ? 0 : 8,

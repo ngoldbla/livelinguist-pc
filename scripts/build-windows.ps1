@@ -58,6 +58,9 @@ try {
   $GpuixNode = Get-ChildItem -Path $GpuixPkg -Filter "*.node" | Select-Object -First 1
   if (-not $GpuixNode) { throw "GPUIX win32-x64 addon not found in $GpuixPkg" }
   Copy-Item $GpuixNode.FullName (Join-Path $Dist "gpuix-native.win32-x64-msvc.node")
+
+  # Bundled rounded caption face; src/App.tsx looks for fonts\ beside the exe.
+  Copy-Item -Recurse (Join-Path $Root "ui\assets\fonts") (Join-Path $Dist "fonts")
 } finally {
   Pop-Location
 }
