@@ -84,6 +84,12 @@ export function DevPanel({
               />
             ))}
           </div>
+          <text style={{ ...textStyle(type.meta, colors.muted), lineHeight: 18 }}>
+            {t(
+              locale,
+              "These presets change inference and strictness, not the audio source. Leave it on auto, and choose System audio or Microphone on the Console.",
+            )}
+          </text>
           <Divider />
           <Toggle
             label={t(locale, "Strict mode")}

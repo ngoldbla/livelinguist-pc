@@ -244,6 +244,7 @@
   "The app contacts Hugging Face only when you start a model download.": "The app contacts Hugging Face only when you start a model download.",
   "The app follows the language you're learning. Switch back any time.": "The app follows the language you're learning. Switch back any time.",
   "The selected device is unavailable; using the system default.": "The selected device is unavailable; using the system default.",
+  "These presets change inference and strictness, not the audio source. Leave it on auto, and choose System audio or Microphone on the Console.": "These presets change inference and strictness, not the audio source. Leave it on auto, and choose System audio or Microphone on the Console.",
   "Threads": "Threads",
   "Tier C": "Tier C",
   "Timeout": "Timeout",

@@ -298,5 +298,6 @@
   "Unavailable device": "Unavailable device",
   "Windows default": "Windows default",
   "Your microphone or headset": "Your microphone or headset",
-  "System default": "System default"
+  "System default": "System default",
+  "These presets change inference and strictness, not the audio source. Leave it on auto, and choose System audio or Microphone on the Console.": "These presets change inference and strictness, not the audio source. Leave it on auto, and choose System audio or Microphone on the Console."
 }
