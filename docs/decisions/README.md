@@ -36,6 +36,7 @@ Status labels: `proposed`, `accepted`, `baseline` (working default), `superseded
 | [0024](0024.md) | Caption-latency benchmark and CPU-first autoresearch loop | D-061 | accepted |
 | [0025](0025.md) | Run click simplification outside the bridge lock | D-062 | accepted |
 | [0026](0026.md) | Mac console flow on the PC, quiet utility surface, kept preferences | D-063 | accepted |
+| [0027](0027.md) | Custom title bar for the frameless window | D-064 | accepted |
 
 ## Superseded
 

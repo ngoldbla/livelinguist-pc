@@ -41,6 +41,7 @@ saved in `.impeccable/critique/` (local, not committed).
 | Onboarding sheet: welcome/privacy, language (pick advances), one aggregate download, "Try the demo while you wait" | Same three beats in the window; no step rail or numbered progress |
 | Summary sheet: stats, Export, Done | Same compact page; no transcript list |
 | Settings: Captions (size 16-40 + sample), App language, Models, Licenses | Captions tab with the same controls plus App language; Models, Licenses and the gated Developer tab |
+| Native caption with drag, min/max/close | Custom 34px title bar on every screen except the overlay; drag, minimize, zoom, close from the app |
 | Metrics: 640 content, 820 reading, 44 headline, 24 caption | 640 / 820 / 40 / 24 (16-40 slider) |
 
 Not copied: the Mac's glass/aurora world. The owner chose the quieter,
@@ -71,6 +72,12 @@ opening Settings from the overlay (it restores a console window first).
 Craft pass: no kicker above a heading, no unicode glyph icons, caption rows cap
 at 820px, and the transcript has no second pane.
 
+Window chrome (ADR 0027): a custom 34px title bar now sits above every screen
+except the overlay. It drags the window, double-click toggles maximize, and
+minimize / maximize-or-restore / close are explicit buttons. Close posts
+`WM_CLOSE` through a new `closeWindow` bridge command; drag now uses `HWND_TOP`
+so a moved console does not become permanently always-on-top.
+
 ## Evidence
 
 ```text
@@ -85,17 +92,17 @@ A11y counts from the capture run (unlabeled controls = 0 in every scenario):
 
 | Scenario | Nodes | Roles |
 |---|---|---|
-| onboarding-welcome | 8 | Label 5, Button 2 |
-| onboarding-language | 111 | Label 79, Button 30, TextInput |
-| onboarding-models | 10 | Label 6, Button 3 |
-| console | 16 | Label 11, Button 4 |
-| console-language-menu | 75 | Label 40, Button 4, ListBox, ListBoxOption 29 |
-| live | 48 | Label 30, Button 13, Tab 3, TabList |
+| onboarding-welcome | 12 | Label 6, Button 5 |
+| onboarding-language | 115 | Label 80, Button 33, TextInput |
+| onboarding-models | 14 | Label 7, Button 6 |
+| console | 20 | Label 12, Button 7 |
+| console-language-menu | 79 | Label 41, Button 7, ListBox, ListBoxOption 29 |
+| live | 52 | Label 31, Button 16, Tab 3, TabList |
 | overlay | 17 | Label 9, Button 6, Group |
-| settings | 37 | Label 22, Button 3, Tab 6, TabList 2, Slider, Switch 2 |
-| settings-developer | 89 | Label 64, Button 17, Tab 4, TabList, Switch 2 |
-| summary | 19 | Label 14, Button 4 |
-| licenses (Settings tab) | 68 | Label 61, Button, Tab 4, TabList |
+| settings | 41 | Label 23, Button 6, Tab 6, TabList 2, Slider, Switch 2 |
+| settings-developer | 93 | Label 65, Button 20, Tab 4, TabList, Switch 2 |
+| summary | 23 | Label 15, Button 7 |
+| licenses (Settings tab) | 72 | Label 62, Button 4, Tab 4, TabList |
 
 `console-start-captions.png` proves the console -> live click path; the keyboard
 walk on the console reaches 4 distinct stops.
@@ -124,6 +131,10 @@ tone against every surface with the palette.
   platforms.
 - **Icons:** 21 Lucide paths, not the full SF Symbols set; the language menu is
   a native Select popover, not searchable (the onboarding picker still is).
+- **Window chrome:** a custom caption does not get Windows 11 Snap Layouts on
+  hover or the Alt+Space system menu (Win+arrows still snap). Drag, double-click
+  and the three buttons need the human Windows pass; on Linux dev close falls
+  back to process exit and drag is a no-op.
 - **Capture canvas:** the GPUIX test renderer is fixed at 1536x1061 physical
   pixels, so the PNGs do not show the production window sizes; those are
   asserted by `windowSize.test.ts` and set in `main.tsx`.

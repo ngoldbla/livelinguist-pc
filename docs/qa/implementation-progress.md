@@ -49,7 +49,7 @@ This file is the live status board. Each merged PR is a validated stage.
 
 ## Decisions
 
-All 26 ADRs are present in `docs/decisions/`. New structural changes need a
+All 27 ADRs are present in `docs/decisions/`. New structural changes need a
 decision entry and an ADR update. **For 1.0, D-055/D-056 and
 `docs/plans/2026-11-22-v1-scope.md` are the source of truth.**
 
@@ -100,6 +100,13 @@ quiet and high-contrast (12px type floor, flat panels) and UI settings persist t
 14 capture scenarios pass. Pending: PR, the 28-catalog translation pass for 19
 new strings, the input-level meter (no bridge data), and the human
 Narrator/DPI walk.
+
+**2026-11-25 window chrome fix (same branch):** users could not move, minimize
+or maximize the frameless window. ADR 0027 adds a custom 34px title bar (drag,
+double-click maximize, minimize/maximize/close) on every screen except the
+overlay, a `closeWindow` bridge command that posts `WM_CLOSE`, and changes the
+drag helper to `HWND_TOP` so a moved console is not left topmost. Windows human
+pass still needed for drag and the three buttons.
 
 Checkpoint 2026-11-24 (Linux cloud session; PRs #24-#31). Card statuses are in
 `docs/tasks/README.md` (`linux-done` = only the Windows part remains).
