@@ -32,7 +32,7 @@ remembered between runs.
 
 **[Download the current Windows build](https://github.com/ngoldbla/livelinguist-pc/releases)**:
 under **Assets**, get `LiveLinguist-<version>-setup.exe` for the installer or the
-portable ZIP. The current candidate is **`v1.0.0-rc.4`**. Open the file and click
+portable ZIP. The current candidate is **`v1.0.0-rc.5`**. Open the file and click
 **Install**; no admin rights are needed.
 
 - **"Windows protected your PC"?** The app is not code-signed yet. Click
@@ -143,22 +143,21 @@ On Windows, build the app, installer, and portable ZIP locally:
 
 ```powershell
 pwsh scripts/build-windows.ps1
-pwsh scripts/test-installer.ps1 -Version 1.0.0-rc.4
+pwsh scripts/test-installer.ps1 -Version 1.0.0-rc.5
 ```
 
 ## Status
 
-`1.0.0-rc.4` is the current Windows release candidate. Working end to end:
-WASAPI loopback capture, sherpa-onnx streaming ASR with 560 ms chunks, CPU
-llama.cpp click-to-simplify, the 29 language packs, the console/overlay/expanded
-windows, first-run model download, NSIS installer and portable ZIP, and the
-tag-driven release workflow.
+`1.0.0-rc.5` is the current Windows release candidate. Working end to end:
+WASAPI loopback and microphone capture with a Windows endpoint picker,
+sherpa-onnx streaming ASR with 560 ms chunks, CPU llama.cpp click-to-simplify,
+the 29 language packs, the console/overlay/expanded windows, first-run model
+download, NSIS installer and portable ZIP, and the tag-driven release workflow.
 
-Microphone capture and the Windows endpoint picker are in `main` after
-`v1.0.0-rc.4` (ADR 0028); they are not in the rc.4 installer. The device list,
-microphone start/stop, and a selected non-default output are verified on the
-reference host (`docs/qa/2026-11-25-microphone-device-selection.md`). Spoken
-microphone WER/latency is still to be measured.
+The device list, microphone start/stop, and a selected non-default output are
+verified on the reference host
+(`docs/qa/2026-11-25-microphone-device-selection.md`). Spoken microphone
+WER/latency is still to be measured.
 
 Still human-gated before `v1.0.0`: the Narrator and keyboard-only live run, the
 100–150% scaling pass on the redesigned UI, and owner sign-off. The newest UI

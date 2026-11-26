@@ -1,19 +1,19 @@
 ## What's new in this build
 
-- A simpler interface, shaped like the Mac and iPhone apps: choose your
-  language, choose what to listen to, and press Start. The transcript is the
-  screen.
-- Easier to read: simplified captions start at 24px in a rounded face, nothing
-  in the interface is smaller than 12px, and the labels use plain words instead
-  of engineering terms.
-- The window now behaves like a window: drag the top bar to move it,
-  double-click to maximize, and use the minimize, maximize and close buttons.
-- Language and sound open from their tiles, the app language can follow your
-  learning language or your device, and preferences are kept for next time.
-- The interface now carries the Lucide icon set, the twin-L brand mark, and the
-  amber "English slipped in" border during a language exchange.
-- Captions still start quickly: the 560 ms live chunk and click-to-simplify on a
-  worker are unchanged from the last candidate.
+- **Microphone input.** Choose **Microphone** under Sound and Live Linguist
+  captions speech from your microphone or headset as well as from your
+  computer's audio.
+- **Choose the device.** A **Device** menu under Sound lists your Windows output
+  or input devices, names the current default, and remembers your choice for
+  next time.
+- **No surprise device swaps.** A device you choose explicitly stays chosen. If
+  it is unplugged, the app says so and uses the Windows default for that session
+  instead of failing silently or capturing something else.
+- Audio devices that do not report float samples now work too; the app converts
+  them for the caption pipeline.
+- Everything from the previous candidate remains: the simpler Mac-shaped
+  console, 24px simplified captions, the window controls, all 29 language packs,
+  and click-only simplification.
 
 ## Install on Windows 11
 
@@ -29,8 +29,9 @@
 **Needs:** Windows 11 on a 64-bit Intel or AMD PC, 8 GB of memory, about
 2.5 GB of free disk space, and an internet connection for the first download.
 
-**Privacy:** audio and captions never leave your PC. The only network use is
-the one-time model download from Hugging Face.
+**Privacy:** audio and captions never leave your PC. Microphone audio is
+processed on this PC exactly like system audio and is never recorded or sent.
+The only network use is the one-time model download from Hugging Face.
 
 **Uninstall:** Settings → Apps → Installed apps → Live Linguist → Uninstall.
 Your downloaded models are kept unless you tick the box to delete them.
