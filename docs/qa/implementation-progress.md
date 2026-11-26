@@ -135,9 +135,12 @@ the reference host: both outputs and the Realtek microphone open by id,
 the real window shows and starts on a selected non-default output. Evidence:
 `docs/qa/2026-11-25-microphone-device-selection.md`. UI: typecheck, 114 tests,
 Biome pass; Rust: capture tests 17 pass + 4 hardware-gated, bridge 11 pass,
-clippy `-D warnings` with `capture`. Remaining human checks: spoken microphone
-WER/latency, microphone-permission-denied path, and hot-plug beyond the default
-change.
+clippy `-D warnings` with `capture`. Merged as PR #46 and released as
+`v1.0.0-rc.5`
+([release](https://github.com/ngoldbla/livelinguist-pc/releases/tag/v1.0.0-rc.5))
+with `LiveLinguist-1.0.0-rc.5-setup.exe` and the portable ZIP. Remaining human
+checks: spoken microphone WER/latency, microphone-permission-denied path, and
+hot-plug beyond the default change.
 
 Checkpoint 2026-11-24 (Linux cloud session; PRs #24-#31). Card statuses are in
 `docs/tasks/README.md` (`linux-done` = only the Windows part remains).
