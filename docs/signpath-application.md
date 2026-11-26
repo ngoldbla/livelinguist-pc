@@ -3,11 +3,38 @@
 Decision: [ADR 0020](decisions/0020.md). Policy users see:
 [`CODE_SIGNING.md`](../CODE_SIGNING.md). Integration: [`.signpath/`](../.signpath/README.md).
 
-**State:** repository side prepared and inert; the application has **not** been
-submitted. Only the owner can submit it: it needs the owner's identity, e-mail
-and consent to the Foundation's conditions.
+**State:** submitted 2026-11-26, awaiting review. Nothing is signed yet; the
+repository side below is already on `main` (PR #47) and the `v1.0.0-rc.5`
+release notes carry the "Code signing policy" section that the download URL
+points to.
+
+### What was filed
+
+| Field | Value |
+| --- | --- |
+| Project | Live Linguist PC |
+| Repository / homepage | `github.com/ngoldbla/livelinguist-pc` |
+| Download page | `github.com/ngoldbla/livelinguist-pc/releases` |
+| Privacy policy | `README.md#privacy` (the app collects nothing) |
+| Category | Accessibility |
+| Maintainer type | For-profit company or corporate-backed project (Aquilops LLC) |
+| Build system | GitHub Actions |
+| Discovery | Organic search (Google) |
+| Account | Dylan Goldblatt, `dylan@aquilops.org`, Aquilops LLC |
+
+The **Reputation** field says plainly that the project is new: public since
+21 November 2026, five tagged pre-releases in five days, no adoption metrics
+yet, and a port of the maintainer's macOS/iOS implementation in development
+since June 2026. Nothing was dressed up; the public download counts are
+single-digit and reviewers can see them.
+
+Two required consents were ticked on the owner's instruction: the SignPath
+Foundation Code of Conduct (certificates are issued in the Foundation's name and
+can be revoked) and storage/processing of the personal data in the form. The
+optional marketing consent was left unticked.
 
 ## 1. Apply (owner, 10 minutes)
+
 
 Open <https://signpath.org/apply> and answer with the text below. The form is
 short; anything unclear goes in "anything else".

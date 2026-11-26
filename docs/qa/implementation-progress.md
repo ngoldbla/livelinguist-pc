@@ -254,6 +254,15 @@ exactly as before). `docs/signpath-application.md` holds the application text.
 Nothing is signed yet: the owner submits <https://signpath.org/apply>, then a
 maintainer approves two requests per release.
 
+**2026-11-26 SignPath application filed:** submitted on the owner's instruction
+through the browser panel (category Accessibility, maintainer type company,
+build system GitHub Actions, discovery organic search). The Reputation field
+states plainly that there are no adoption metrics yet. Consents ticked: Code of
+Conduct and data processing; marketing left off. Next: reply to reviewer
+questions, then accept the organization invite, enable MFA, add the GitHub.com
+trusted build system, paste the two artifact configurations, and run the
+test-signing dry run. Details in `docs/signpath-application.md`.
+
 **Linux work still open (resume here):**
 1. Owner decisions: es-ES
    matrix guard false negative (T22); confirm the ` /no_think` soft switch in
