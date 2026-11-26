@@ -13,6 +13,12 @@ If this plan and the scope doc disagree, the scope doc wins on *what* ships and
 this plan wins on *order, files, and tests*. If an ADR disagrees with either,
 the newer accepted ADR wins; update this plan in the same PR.
 
+> **Addendum 2026-11-25 — microphone and endpoint selection.** After
+> `v1.0.0-rc.4`, ADR 0028 adds microphone capture and a per-direction endpoint
+> picker. Statements below that say "no microphone" / "mic is post-1.0"
+> describe the 2026-11-23 state; the current scope is the one in
+> `docs/plans/2026-11-22-v1-scope.md` with its 2026-11-25 addendum.
+
 ---
 
 ## 1. Where we are (2026-11-23, `main` at `6f7961a`)
@@ -125,7 +131,7 @@ loopback stream when you call `build_input_stream` on an **output** device.
 | Overrun counter → `AUDIO_OVERRUN` event + degradation; never drop a finalized segment | `ll-audio`, `ll-pipeline::feed_audio` |
 | States: `Capturing`, `Paused`, `DeviceLost`, `NoRenderEndpoint`, `Unsupported` with content-free reasons | `ll-audio`, `ll-protocol` |
 | Default-device change → stop, re-open new default, emit `audio_source_changed`; never silently capture a different device type | `ll-audio` |
-| Bridge: `listAudioSources` reports `monitor` with real availability; `selectAudioSource("monitor")` starts capture; `mic` stays `available:false, note: "post-1.0"` | `core/crates/ll-bridge/src/lib.rs` |
+| Bridge: `listAudioSources` reports `monitor` and `mic` with real availability, endpoint lists and the default id; `start` accepts `deviceId`; see ADR 0028 | `core/crates/ll-bridge/src/lib.rs` |
 | UI: **System audio** is the default source tile when available; honest unavailable state otherwise; no "listening" animation without frames | `ui/src/screens/Console*`, store |
 | `ll-eval --scenario loopback --seconds N` for headless soak | `core/crates/ll-eval` |
 

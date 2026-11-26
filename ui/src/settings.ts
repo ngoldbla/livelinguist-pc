@@ -11,6 +11,10 @@ export interface UiSettings {
   scenario: string;
   /** Follow the learning language's UI, or the device UI language. */
   uiLanguage: "learning" | "device";
+  /** Windows output endpoint id for system audio; empty follows the default. */
+  outputDeviceId: string;
+  /** Windows input endpoint id for the microphone; empty follows the default. */
+  inputDeviceId: string;
 }
 
 export const CAPTION_SIZE_MIN = 16;
@@ -23,6 +27,8 @@ export const defaultSettings: UiSettings = {
   devEnabled: true,
   scenario: "mock",
   uiLanguage: "learning",
+  outputDeviceId: "",
+  inputDeviceId: "",
 };
 
 /** `%LOCALAPPDATA%\LiveLinguist\ui-settings.json`, else the XDG config dir. */
@@ -43,6 +49,10 @@ function bool(value: unknown, fallback: boolean): boolean {
   return typeof value === "boolean" ? value : fallback;
 }
 
+function text(value: unknown, fallback: string): string {
+  return typeof value === "string" ? value : fallback;
+}
+
 /** Read saved preferences; anything missing or malformed keeps its default. */
 export function loadSettings(path: string = settingsPath()): UiSettings {
   try {
@@ -56,6 +66,8 @@ export function loadSettings(path: string = settingsPath()): UiSettings {
       scenario:
         typeof raw.scenario === "string" && raw.scenario ? raw.scenario : defaultSettings.scenario,
       uiLanguage: raw.uiLanguage === "device" ? "device" : "learning",
+      outputDeviceId: text(raw.outputDeviceId, defaultSettings.outputDeviceId),
+      inputDeviceId: text(raw.inputDeviceId, defaultSettings.inputDeviceId),
     };
   } catch {
     return defaultSettings;

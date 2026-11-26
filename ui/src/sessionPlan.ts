@@ -11,14 +11,16 @@ export type SessionPlan =
   | { ok: true; source: AudioSource; feedDemo: boolean; asrStatus: AsrStatus }
   | { ok: false; error: string };
 
-/// `languageStatus` is the selected language's measured ASR status; only system
-/// audio is transcribed live, so only that source reports it.
+/// `languageStatus` is the selected language's measured ASR status; system
+/// audio and the microphone are transcribed live, so both report it.
 export function planSession(selected: string, languageStatus: AsrStatus = "tbd"): SessionPlan {
   switch (selected) {
     case "demo":
       return { ok: true, source: "demo", feedDemo: true, asrStatus: "simplify_only" };
     case "monitor":
       return { ok: true, source: "monitor", feedDemo: false, asrStatus: languageStatus };
+    case "mic":
+      return { ok: true, source: "mic", feedDemo: false, asrStatus: languageStatus };
     case "silence":
     case "file":
       return {
@@ -27,8 +29,6 @@ export function planSession(selected: string, languageStatus: AsrStatus = "tbd")
         feedDemo: false,
         asrStatus: "simplify_only",
       };
-    case "mic":
-      return { ok: false, error: "Microphone input is not available in this version." };
     default:
       return { ok: false, error: `Unknown audio source: ${selected}` };
   }

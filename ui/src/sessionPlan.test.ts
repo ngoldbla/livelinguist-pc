@@ -20,7 +20,7 @@ describe("planSession", () => {
   });
 
   test("only the demo source is fed the scripted conversation", () => {
-    for (const source of ["monitor", "silence", "file"]) {
+    for (const source of ["monitor", "mic", "silence", "file"]) {
       const plan = planSession(source);
       expect(plan.ok && plan.feedDemo).toBe(false);
     }
@@ -28,9 +28,13 @@ describe("planSession", () => {
     expect(demo.ok && demo.feedDemo).toBe(true);
   });
 
-  test("microphone is refused, not swapped for demo", () => {
-    const plan = planSession("mic");
-    expect(plan.ok).toBe(false);
+  test("microphone is a live source, not a demo substitute", () => {
+    expect(planSession("mic", "ok")).toEqual({
+      ok: true,
+      source: "mic",
+      feedDemo: false,
+      asrStatus: "ok",
+    });
   });
 
   test("unknown sources are refused", () => {

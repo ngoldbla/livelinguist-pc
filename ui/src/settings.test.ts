@@ -31,6 +31,8 @@ describe("ui settings", () => {
       devEnabled: false,
       scenario: "cpu-strict",
       uiLanguage: "device" as const,
+      outputDeviceId: "wasapi:{output}",
+      inputDeviceId: "wasapi:{input}",
     };
     expect(saveSettings(saved, path)).toBe(true);
     expect(loadSettings(path)).toEqual(saved);
