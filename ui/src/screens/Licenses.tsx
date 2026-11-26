@@ -1,29 +1,26 @@
-import { Badge, Button, Divider, SectionHeader, Surface } from "../aurora/components";
-import { colors, textStyle } from "../aurora/theme";
+import { Badge, Divider, Surface } from "../aurora/components";
+import { colors, textStyle, type } from "../aurora/theme";
 import { t } from "../i18n/locales";
 import { APP_VERSION } from "../version";
 
-export function LicensesScreen({ locale, onBack }: { locale: string; onBack: () => void }) {
+/**
+ * Attribution content, shared by the Settings Licenses tab. No page chrome:
+ * the tab provides the title and the scroll surface.
+ */
+export function LicensesContent({ locale }: { locale: string }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16, padding: 28, height: "100%" }}>
-      <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 12 }}>
-        <Button label={t(locale, "Back")} kind="secondary" onClick={onBack} />
-        <div style={{ display: "flex", flexDirection: "column", gap: 2, flexGrow: 1 }}>
-          <text style={{ ...textStyle(10, colors.accent, 700) }}>
-            {t(locale, "LICENSES").toUpperCase()}
-          </text>
-          <text style={textStyle(24, colors.text, 700)}>{t(locale, "Licenses")}</text>
-        </div>
-        <Badge label="Apache-2.0 · MIT" tone="mint" />
-      </div>
-
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 12,
+        alignItems: "flex-start",
+      }}
+    >
       <div
         style={{
-          flexGrow: 1,
-          minHeight: 0,
-          overflow: "scroll",
-          scrollbarColor: "#FFFFFF22",
-          scrollbarWidth: 6,
+          width: "100%",
+          maxWidth: 640,
           display: "flex",
           flexDirection: "column",
           gap: 12,
@@ -52,6 +49,8 @@ export function LicensesScreen({ locale, onBack }: { locale: string; onBack: () 
             { name: "llama.cpp", detail: "GGUF inference", tag: "MIT" },
             { name: "sherpa-onnx", detail: "streaming ASR", tag: "Apache-2.0" },
             { name: "React 19.2", detail: "UI runtime", tag: "MIT" },
+            { name: "Lucide", detail: "interface icon set (SVG)", tag: "ISC" },
+            { name: "M PLUS Rounded 1c", detail: "rounded caption face", tag: "OFL-1.1" },
             {
               name: "Rust crates",
               detail: "serde, tokio, reqwest, ringbuf, rubato",
@@ -81,16 +80,15 @@ export function LicensesScreen({ locale, onBack }: { locale: string; onBack: () 
             },
           ]}
         />
-        <Surface style={{ padding: 18, display: "flex", flexDirection: "column", gap: 8 }}>
-          <SectionHeader
-            title={t(locale, "About")}
-            subtitle={t(locale, "Built for Windows 11 x64")}
+        <Surface style={{ padding: 18, display: "flex", flexDirection: "column", gap: 10 }}>
+          <text style={{ ...textStyle(type.title, colors.text, 600) }}>{t(locale, "About")}</text>
+          <InfoRow label={t(locale, "Version")} value={APP_VERSION} />
+          <InfoRow
+            label={t(locale, "Built for Windows 11 x64")}
+            value="GPUIX 0.11.0 · React 19.2.3"
           />
-          <text style={textStyle(12, colors.muted)}>
-            Live Linguist PC {APP_VERSION} · GPUIX 0.11.0 · React 19.2.3.
-          </text>
           <Divider />
-          <text style={textStyle(11, colors.faint)}>
+          <text style={{ ...textStyle(type.meta, colors.muted), lineHeight: 18 }}>
             {t(
               locale,
               "No telemetry. No cloud inference. Model downloads contact Hugging Face only when you start one.",
@@ -98,6 +96,17 @@ export function LicensesScreen({ locale, onBack }: { locale: string; onBack: () 
           </text>
         </Surface>
       </div>
+    </div>
+  );
+}
+
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 16 }}>
+      <text style={{ ...textStyle(type.meta, colors.faint), width: 200 }}>{label}</text>
+      <text style={{ ...textStyle(type.body, colors.text), flexGrow: 1, minWidth: 0 }}>
+        {value}
+      </text>
     </div>
   );
 }
@@ -111,7 +120,7 @@ function LicenseBlock({
 }) {
   return (
     <Surface style={{ padding: 18, display: "flex", flexDirection: "column", gap: 10 }}>
-      <text style={{ ...textStyle(10, colors.faint, 700) }}>{title}</text>
+      <text style={{ ...textStyle(type.meta, colors.faint, 600) }}>{title}</text>
       {rows.map((row) => (
         <div
           key={row.name}
@@ -120,8 +129,8 @@ function LicenseBlock({
           <div
             style={{ display: "flex", flexDirection: "column", gap: 2, flexGrow: 1, minWidth: 0 }}
           >
-            <text style={textStyle(12, colors.text, 600)}>{row.name}</text>
-            <text style={textStyle(10, colors.faint)}>{row.detail}</text>
+            <text style={textStyle(type.body, colors.text, 600)}>{row.name}</text>
+            <text style={textStyle(type.meta, colors.faint)}>{row.detail}</text>
           </div>
           <Badge label={row.tag} tone="neutral" />
         </div>

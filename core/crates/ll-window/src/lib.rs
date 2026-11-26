@@ -169,6 +169,18 @@ pub fn begin_drag() -> bool {
     }
 }
 
+/// Ask the app window to close through the native path (WM_CLOSE on Windows).
+pub fn close_current_window() -> bool {
+    #[cfg(target_os = "windows")]
+    {
+        win32::close_current()
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        false
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

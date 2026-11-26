@@ -17,6 +17,8 @@ type Hresult = i32;
 
 const HWND_TOPMOST: Hwnd = -1;
 const HWND_NOTOPMOST: Hwnd = -2;
+const HWND_TOP: Hwnd = 0;
+const WM_CLOSE: u32 = 0x0010;
 const WM_MOUSEACTIVATE: u32 = 0x0021;
 const MA_NOACTIVATE: isize = 3;
 const VK_LBUTTON: i32 = 0x01;
@@ -61,6 +63,7 @@ extern "system" {
     fn IsWindowVisible(hwnd: Hwnd) -> i32;
     fn GetCursorPos(point: *mut Point) -> i32;
     fn GetAsyncKeyState(key: i32) -> i16;
+    fn PostMessageW(hwnd: Hwnd, msg: u32, wparam: usize, lparam: isize) -> i32;
     fn GetWindowRect(hwnd: Hwnd, rect: *mut Rect) -> i32;
     #[cfg(test)]
     fn SendMessageW(hwnd: Hwnd, msg: u32, wparam: usize, lparam: isize) -> isize;
@@ -395,7 +398,7 @@ pub fn begin_drag_current() -> bool {
                 }
                 SetWindowPos(
                     hwnd,
-                    HWND_TOPMOST,
+                    HWND_TOP,
                     cursor.x - offset_x,
                     cursor.y - offset_y,
                     0,
@@ -407,6 +410,17 @@ pub fn begin_drag_current() -> bool {
         });
         true
     }
+}
+
+/// Ask the app window to close, the same path as the native close button:
+/// WM_CLOSE ends the event loop and the process.
+pub fn close_current() -> bool {
+    let pid = unsafe { GetCurrentProcessId() };
+    let hwnd = find_window(pid, "");
+    if hwnd == 0 {
+        return false;
+    }
+    unsafe { PostMessageW(hwnd, WM_CLOSE, 0, 0) != 0 }
 }
 
 #[cfg(test)]

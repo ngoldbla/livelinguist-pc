@@ -13,7 +13,11 @@ import { join, resolve } from "node:path";
 
 const ROOT = resolve(import.meta.dir, "../..");
 const OUT = resolve(ROOT, "docs/screenshots/m2-windows");
-const FONTS = ["C:\\Windows\\Fonts\\segoeui.ttf", "C:\\Windows\\Fonts\\tahoma.ttf"];
+const FONTS = [
+  "C:\\Windows\\Fonts\\segoeui.ttf",
+  "C:\\Windows\\Fonts\\tahoma.ttf",
+  resolve(ROOT, "ui/assets/fonts/MPLUSRounded1c-Medium.ttf"),
+];
 
 interface Scenario {
   name: string;
@@ -25,32 +29,42 @@ interface Scenario {
 }
 
 const scenarios: Scenario[] = [
-  { name: "onboarding-welcome", screen: "onboarding", waitMs: 1200 },
+  { name: "onboarding-welcome", screen: "onboarding", size: [960, 680], waitMs: 1200 },
   {
     name: "onboarding-language",
     screen: "onboarding",
+    size: [960, 680],
     env: { LL_ONBOARDING_BEAT: "1" },
     waitMs: 1200,
   },
   {
     // T33: the picker's coverage badges come from the measured matrix
-    // (`ui/src/i18n/languages.ts`). The first screenful shows both statuses:
-    // de/fr/es/en/ar ok, then da/et simplify-only.
+    // (`ui/src/i18n/languages.ts`). The first screenful shows da/et/fi as
+    // text-only; languages with live captions carry no badge.
     name: "language-picker-coverage",
     screen: "onboarding",
+    size: [960, 680],
     env: { LL_ONBOARDING_BEAT: "1" },
     waitMs: 1200,
   },
   {
     name: "onboarding-models",
     screen: "onboarding",
+    size: [960, 680],
     env: { LL_ONBOARDING_BEAT: "2" },
     waitMs: 1200,
   },
-  { name: "console", screen: "console", waitMs: 1500 },
+  { name: "console", screen: "console", size: [960, 660], waitMs: 1500 },
+  {
+    name: "console-language-menu",
+    screen: "console",
+    size: [960, 660],
+    waitMs: 1500,
+  },
   {
     name: "console-arabic",
     screen: "console",
+    size: [960, 660],
     env: { LL_LANGUAGE: "ar-SA", LL_UI_LOCALE: "en" },
     waitMs: 1500,
   },
@@ -63,16 +77,22 @@ const scenarios: Scenario[] = [
     size: [780, 250],
     waitMs: 2500,
   },
-  { name: "settings", screen: "settings", size: [1180, 880], waitMs: 1500 },
+  { name: "settings", screen: "settings", size: [1000, 860], waitMs: 1500 },
   {
     name: "settings-developer",
     screen: "settings",
     env: { LL_TAB: "developer" },
-    size: [1180, 880],
+    size: [1000, 860],
     waitMs: 1500,
   },
-  { name: "summary", screen: "summary", mode: "live", size: [1180, 840], waitMs: 2500 },
-  { name: "licenses", screen: "licenses", size: [1020, 880], waitMs: 1200 },
+  { name: "summary", screen: "summary", mode: "live", size: [960, 700], waitMs: 2500 },
+  {
+    name: "licenses",
+    screen: "settings",
+    env: { LL_TAB: "licenses" },
+    size: [1000, 860],
+    waitMs: 1200,
+  },
 ];
 
 const sleep = (ms: number) => new Promise((done) => setTimeout(done, ms));
@@ -181,6 +201,28 @@ for (const scenario of scenarios) {
       }
       keyboardStops = stops.size;
     }
+    if (scenario.name === "console-language-menu") {
+      const value = root.renderer.findByText("Français (France)");
+      const bounds = value ? root.renderer.getElementBounds(value.id) : null;
+      if (!bounds) {
+        failures += 1;
+        console.error("  console-language-menu: language tile not found");
+      } else {
+        root.renderer.nativeSimulateClick(
+          bounds.x + bounds.width / 2,
+          bounds.y + bounds.height / 2,
+        );
+        root.renderer.flush();
+        for (let elapsed = 0; elapsed < 600; elapsed += 200) {
+          await sleep(200);
+          root.renderer.flush();
+        }
+        const text = root.renderer.getAllText().join(" ");
+        const open = text.includes("Deutsch (Deutschland)");
+        console.log(`  console-language-menu: ${open ? "menu open" : "menu did not open"}`);
+        if (!open) failures += 1;
+      }
+    }
     if (scenario.name === "language-picker-coverage") {
       // Scroll past the five `ok` locales so one screenful shows both badge
       // kinds: es/en/ar "Live ASR" and da/et/fi "Simplify only".
@@ -195,11 +237,11 @@ for (const scenario of scenarios) {
         root.renderer.flush();
       }
       const text = root.renderer.getAllText().join(" ");
-      const showsBoth = text.includes("Live ASR") && text.includes("Simplify only");
+      const showsTextOnly = text.includes("Simplified text only");
       console.log(
-        `  language-picker-coverage: badges ${showsBoth ? "show both live and simplify-only" : "do not show both statuses"}`,
+        `  language-picker-coverage: text-only badge ${showsTextOnly ? "visible" : "missing"}`,
       );
-      if (!showsBoth) failures += 1;
+      if (!showsTextOnly) failures += 1;
     }
     const target = join(OUT, `${scenario.name}.png`);
     root.renderer.captureScreenshot(target);
@@ -233,7 +275,7 @@ for (const scenario of scenarios) {
         root.renderer.flush();
         root.renderer.captureScreenshot(join(OUT, "console-start-captions.png"));
         const liveText = root.renderer.getAllText().join(" ");
-        const started = liveText.includes("CAPTIONS");
+        const started = liveText.includes("Pause captions");
         console.log(
           `  console-start-captions.png  click path ${started ? "reached the live screen" : "did not reach live"}`,
         );

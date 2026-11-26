@@ -8,7 +8,7 @@ import {
   Toast,
   Toggle,
 } from "../aurora/components";
-import { colors, textStyle } from "../aurora/theme";
+import { colors, textStyle, type } from "../aurora/theme";
 import type { RuntimeStatus } from "../bridge/generated/RuntimeStatus";
 import { t } from "../i18n/locales";
 import { rendererAdapter, rendererLabel } from "./renderer";
@@ -60,18 +60,17 @@ export function DevPanel({
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <SectionHeader
-        eyebrow={t(locale, "DEVELOPER")}
         title={t(locale, "Runtime health")}
         subtitle={t(
           locale,
           "Requested vs effective backend, calibration, and event stats. Content-free.",
         )}
       />
-      <div style={{ display: "flex", flexDirection: "row", gap: 14 }}>
+      <div style={{ display: "flex", flexDirection: "row", alignItems: "flex-start", gap: 14 }}>
         <Surface
           style={{ padding: 16, flexGrow: 1, display: "flex", flexDirection: "column", gap: 8 }}
         >
-          <text style={{ ...textStyle(10, colors.faint, 700) }}>
+          <text style={{ ...textStyle(type.meta, colors.faint, 600) }}>
             {t(locale, "SCENARIO").toUpperCase()}
           </text>
           <div style={{ display: "flex", flexDirection: "row", gap: 6, flexWrap: "wrap" }}>
@@ -136,7 +135,7 @@ export function DevPanel({
             gap: 7,
           }}
         >
-          <text style={{ ...textStyle(10, colors.faint, 700) }}>
+          <text style={{ ...textStyle(type.meta, colors.faint, 600) }}>
             {t(locale, "RUNTIME").toUpperCase()}
           </text>
           <Health
@@ -211,8 +210,10 @@ function Health({ label, value }: { label: string; value: string }) {
         paddingBottom: 3,
       }}
     >
-      <text style={{ ...textStyle(10, colors.faint), width: 100 }}>{label}</text>
-      <text style={{ ...textStyle(10, colors.muted), flexGrow: 1, minWidth: 0 }}>{value}</text>
+      <text style={{ ...textStyle(type.meta, colors.faint), width: 100 }}>{label}</text>
+      <text style={{ ...textStyle(type.meta, colors.muted), flexGrow: 1, minWidth: 0 }}>
+        {value}
+      </text>
     </div>
   );
 }

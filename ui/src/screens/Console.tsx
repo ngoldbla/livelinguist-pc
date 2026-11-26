@@ -1,419 +1,423 @@
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@gpuix/react";
 import { useState } from "react";
-import { Badge, Button, Divider, SectionHeader, Surface, Tabs, Toggle } from "../aurora/components";
-import { LanguagePicker } from "../aurora/LanguagePicker";
-import { colors, gradient, textStyle } from "../aurora/theme";
-import { languageByCode, statusLabel } from "../i18n/languages";
+import { BrandMark, Button, Icon } from "../aurora/components";
+import { colors, focusRing, textStyle, type } from "../aurora/theme";
+import { LANGUAGES, languageByCode, statusLabel } from "../i18n/languages";
 import { t } from "../i18n/locales";
 import { planSession } from "../sessionPlan";
-import type { ModelEntry, ModelView } from "../store/modelStore";
-import type { AudioSource, SimplificationMode } from "../store/sessionStore";
+import { allReady, type ModelView } from "../store/modelStore";
+import type { AudioSource } from "../store/sessionStore";
 
+/**
+ * Mac/iOS console: brand lockup, a state headline, two decision tiles with
+ * native Select menus (language, sound), then one session cluster at the
+ * bottom. The transcript lives on the live screen.
+ */
 export function ConsoleScreen({
   language,
   locale,
   source,
-  mode,
   models,
+  hasTranscript,
   onLanguage,
   onSource,
-  onMode,
   onStart,
   onBlocked,
   onSettings,
-  onLicenses,
   onSummary,
 }: {
   language: string;
   locale: string;
   source: AudioSource;
-  mode: SimplificationMode;
   models: ModelView;
+  hasTranscript: boolean;
   onLanguage: (code: string) => void;
   onSource: (source: AudioSource) => void;
-  onMode: (mode: SimplificationMode) => void;
   onStart: () => void;
   onBlocked: (message: string) => void;
   onSettings: () => void;
-  onLicenses: () => void;
   onSummary: () => void;
 }) {
   const selected = languageByCode(language);
-  const [showLanguages, setShowLanguages] = useState(false);
-  const llm = models.models.find((model) => model.id.startsWith("llm-"));
-  const asr = models.models.find((model) => model.id.startsWith("asr-"));
+  const [openMenu, setOpenMenu] = useState<"language" | "sound" | null>(null);
   const micPlan = planSession("mic");
   const micMessage = micPlan.ok ? "" : micPlan.error;
+  const ready = allReady(models);
+
+  const sourceName =
+    source === "demo"
+      ? t(locale, "Demo conversation")
+      : source === "mic"
+        ? t(locale, "Microphone")
+        : t(locale, "System audio");
+  const sourceCaption =
+    source === "demo"
+      ? t(locale, "Built-in French conversation")
+      : source === "mic"
+        ? micMessage
+        : t(locale, "Everything your computer plays");
+
+  const languageItems = LANGUAGES.map((entry) => ({
+    value: entry.code,
+    label: entry.name,
+    textValue: entry.name,
+  }));
+  const soundItems = [
+    {
+      value: "monitor",
+      label: t(locale, "System audio"),
+      textValue: t(locale, "System audio"),
+    },
+    { value: "mic", label: t(locale, "Microphone"), textValue: t(locale, "Microphone") },
+    {
+      value: "demo",
+      label: t(locale, "Demo conversation"),
+      textValue: t(locale, "Demo conversation"),
+    },
+  ];
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "row",
-        gap: 20,
-        padding: 24,
-        height: "100%",
-        minWidth: 0,
-      }}
-    >
+    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      <div
+        style={{
+          flexGrow: 1,
+          minHeight: 0,
+          overflow: "scroll",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+        }}
+      >
+        <div
+          style={{
+            width: "100%",
+            maxWidth: 640,
+            display: "flex",
+            flexDirection: "column",
+            gap: 20,
+            paddingLeft: 20,
+            paddingRight: 20,
+            paddingTop: 36,
+            paddingBottom: 24,
+          }}
+        >
+          <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 10 }}>
+            <BrandMark size={30} />
+            <text style={{ ...textStyle(type.meta, colors.faint, 700) }}>
+              {t(locale, "LIVE LINGUIST · ON-DEVICE")}
+            </text>
+            <div style={{ flexGrow: 1 }} />
+            {hasTranscript ? (
+              <Button
+                label={t(locale, "Summary")}
+                icon="captions"
+                kind="ghost"
+                onClick={onSummary}
+              />
+            ) : null}
+            <Button
+              label={t(locale, "Settings")}
+              icon="settings"
+              kind="secondary"
+              onClick={onSettings}
+            />
+          </div>
+
+          <text style={{ ...textStyle(40, colors.text, 700), lineHeight: 46 }}>
+            {t(locale, "Ready to caption")}
+          </text>
+
+          <div style={{ display: "flex", flexDirection: "row", gap: 12 }}>
+            <div style={{ flexGrow: 1, flexBasis: 0, minWidth: 0 }}>
+              <Select
+                items={languageItems}
+                value={language}
+                open={openMenu === "language"}
+                onOpenChange={(open) => setOpenMenu(open ? "language" : null)}
+                onValueChange={(code) => onLanguage(code)}
+              >
+                <SelectTrigger
+                  role="button"
+                  aria-haspopup="listbox"
+                  aria-expanded={openMenu === "language"}
+                  aria-label={`${t(locale, "LANGUAGE")}: ${selected.name}`}
+                  style={(state) => tileStyle(state.open)}
+                >
+                  <TileBody
+                    icon="globe"
+                    label={t(locale, "LANGUAGE")}
+                    value={selected.name}
+                    caption={statusLabel(selected.asrStatus)}
+                  />
+                </SelectTrigger>
+                <SelectContent
+                  role="listbox"
+                  aria-label={t(locale, "LANGUAGE")}
+                  side="bottom"
+                  align="start"
+                  sideOffset={6}
+                  style={menuStyle}
+                >
+                  {LANGUAGES.map((entry) => (
+                    <SelectItem
+                      key={entry.code}
+                      value={entry.code}
+                      role="option"
+                      aria-selected={entry.code === language}
+                      style={itemStyle}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "row",
+                          alignItems: "center",
+                          gap: 8,
+                        }}
+                      >
+                        <text style={textStyle(type.body, colors.text, 500)}>{entry.name}</text>
+                        <div style={{ flexGrow: 1 }} />
+                        {entry.code === language ? (
+                          <Icon name="check" size={14} color={colors.accent} />
+                        ) : null}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div style={{ flexGrow: 1, flexBasis: 0, minWidth: 0 }}>
+              <Select
+                items={soundItems}
+                value={source}
+                open={openMenu === "sound"}
+                onOpenChange={(open) => setOpenMenu(open ? "sound" : null)}
+                onValueChange={(value) => {
+                  if (value === "mic") {
+                    onBlocked(micMessage);
+                    return;
+                  }
+                  onSource(value as AudioSource);
+                }}
+              >
+                <SelectTrigger
+                  role="button"
+                  aria-haspopup="listbox"
+                  aria-expanded={openMenu === "sound"}
+                  aria-label={`${t(locale, "SOUND")}: ${sourceName}`}
+                  style={(state) => tileStyle(state.open)}
+                >
+                  <TileBody
+                    icon="audio-waveform"
+                    label={t(locale, "SOUND")}
+                    value={sourceName}
+                    caption={sourceCaption}
+                  />
+                </SelectTrigger>
+                <SelectContent
+                  role="listbox"
+                  aria-label={t(locale, "SOUND")}
+                  side="bottom"
+                  align="start"
+                  sideOffset={6}
+                  style={menuStyle}
+                >
+                  <SelectItem
+                    value="monitor"
+                    role="option"
+                    aria-selected={source === "monitor"}
+                    style={itemStyle}
+                  >
+                    <ChoiceBody
+                      icon="audio-waveform"
+                      title={t(locale, "System audio")}
+                      detail={t(locale, "Everything your computer plays")}
+                      selected={source === "monitor"}
+                    />
+                  </SelectItem>
+                  <SelectItem
+                    value="mic"
+                    role="option"
+                    aria-selected={source === "mic"}
+                    disabled
+                    style={itemStyle}
+                  >
+                    <ChoiceBody
+                      icon="mic"
+                      title={t(locale, "Microphone")}
+                      detail={micMessage}
+                      selected={source === "mic"}
+                    />
+                  </SelectItem>
+                  <SelectItem
+                    value="demo"
+                    role="option"
+                    aria-selected={source === "demo"}
+                    style={itemStyle}
+                  >
+                    <ChoiceBody
+                      icon="captions"
+                      title={t(locale, "Demo conversation")}
+                      detail={t(locale, "Built-in French conversation")}
+                      selected={source === "demo"}
+                    />
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {ready ? null : (
+            <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <Icon name="info" size={14} color={colors.amber} />
+              <text style={textStyle(type.meta, colors.muted)}>
+                {t(locale, "Model download pending — captions run in demo mode")}
+              </text>
+            </div>
+          )}
+        </div>
+      </div>
+
       <div
         style={{
           display: "flex",
           flexDirection: "column",
-          gap: 14,
+          alignItems: "center",
+          gap: 10,
+          paddingTop: 14,
+          paddingBottom: 20,
+        }}
+      >
+        <Button
+          label={t(locale, "Start captions")}
+          icon="audio-waveform"
+          onClick={onStart}
+          testId="start-captions"
+          style={{ height: 48, minWidth: 240, paddingLeft: 24, paddingRight: 24 }}
+        />
+        <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 6 }}>
+          <Icon name="lock" size={13} color={colors.faint} />
+          <text style={textStyle(type.meta, colors.faint)}>
+            {t(locale, "Offline — audio never leaves this device")}
+          </text>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function tileStyle(open: boolean) {
+  return {
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: 6,
+    padding: 16,
+    minHeight: 108,
+    width: "100%",
+    borderRadius: 12,
+    backgroundColor: open ? "#AFA2FF14" : colors.surface,
+    borderWidth: 1,
+    borderColor: open ? "#AFA2FF66" : colors.border,
+    cursor: "pointer" as const,
+    hover: { backgroundColor: open ? "#AFA2FF1F" : "#FFFFFF0A" },
+    focusVisible: focusRing,
+  };
+}
+
+const menuStyle = {
+  width: 320,
+  maxHeight: 320,
+  overflowY: "scroll" as const,
+  padding: 6,
+  borderRadius: 10,
+  borderWidth: 1,
+  borderColor: colors.borderStrong,
+  backgroundColor: colors.surfaceRaised,
+  boxShadow: {
+    offsetX: 0,
+    offsetY: 12,
+    blurRadius: 24,
+    spreadRadius: 0,
+    color: "#00000088",
+  },
+  scrollbarColor: "#FFFFFF22",
+  scrollbarWidth: 6,
+};
+
+function itemStyle(state: { selected: boolean; highlighted: boolean; disabled: boolean }) {
+  return {
+    display: "flex",
+    flexDirection: "row" as const,
+    alignItems: "center",
+    gap: 8,
+    paddingTop: 8,
+    paddingBottom: 8,
+    paddingLeft: 10,
+    paddingRight: 10,
+    borderRadius: 6,
+    backgroundColor: state.selected
+      ? colors.accentSoft
+      : state.highlighted
+        ? "#FFFFFF0A"
+        : "#00000000",
+    opacity: state.disabled ? 0.5 : 1,
+    cursor: state.disabled ? ("not-allowed" as const) : ("pointer" as const),
+  };
+}
+
+function TileBody({
+  icon,
+  label,
+  value,
+  caption,
+}: {
+  icon: "globe" | "audio-waveform";
+  label: string;
+  value: string;
+  caption: string;
+}) {
+  return (
+    <>
+      <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 6 }}>
+        <Icon name={icon} size={13} color={colors.faint} />
+        <text style={{ ...textStyle(type.meta, colors.faint, 700) }}>{label}</text>
+        <div style={{ flexGrow: 1 }} />
+        <Icon name="chevron-down" size={14} color={colors.faint} />
+      </div>
+      <div style={{ flexGrow: 1 }} />
+      <text style={{ ...textStyle(type.title, colors.text, 600), lineHeight: 24 }}>{value}</text>
+      <text style={{ ...textStyle(type.meta, colors.muted), lineHeight: 17 }}>{caption}</text>
+    </>
+  );
+}
+
+function ChoiceBody({
+  icon,
+  title,
+  detail,
+  selected,
+}: {
+  icon: "audio-waveform" | "mic" | "captions";
+  title: string;
+  detail: string;
+  selected: boolean;
+}) {
+  return (
+    <>
+      <Icon name={icon} size={15} color={selected ? colors.accent : colors.muted} />
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 1,
           flexGrow: 1,
-          flexShrink: 1,
           minWidth: 0,
         }}
       >
-        <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 12 }}>
-          <div
-            style={{
-              width: 38,
-              height: 38,
-              borderRadius: 12,
-              background: gradient("#8B7CFF", "#2ED3B7", 135),
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <text style={textStyle(14, "#0B0B12", 800)}>LL</text>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 2, flexGrow: 1 }}>
-            <text style={textStyle(20, colors.text, 700)}>{t(locale, "CONSOLE")}</text>
-            <text style={textStyle(11, colors.faint)}>
-              {t(locale, "Same-language easy captions · on-device")}
-            </text>
-          </div>
-          <Button label={t(locale, "Summary")} kind="ghost" onClick={onSummary} />
-          <Button label={t(locale, "Settings")} kind="secondary" onClick={onSettings} />
-        </div>
-
-        <Surface style={{ padding: 18, display: "flex", flexDirection: "column", gap: 10 }}>
-          <SectionHeader
-            eyebrow={t(locale, "LEARNING LANGUAGE")}
-            title={selected.name}
-            subtitle={t(locale, "You're learning %@", selected.shortName)}
-            trailing={
-              <div style={{ display: "flex", flexDirection: "row", gap: 8, alignItems: "center" }}>
-                <Badge
-                  label={statusLabel(selected.asrStatus)}
-                  tone={selected.asrStatus === "simplify_only" ? "amber" : "mint"}
-                />
-                <Button
-                  label={showLanguages ? t(locale, "Done") : t(locale, "Change")}
-                  kind="secondary"
-                  onClick={() => setShowLanguages((current) => !current)}
-                />
-              </div>
-            }
-          />
-          {showLanguages ? (
-            <LanguagePicker
-              selected={language}
-              onSelect={(code) => {
-                onLanguage(code);
-                setShowLanguages(false);
-              }}
-              locale={locale}
-              height={250}
-              showHeader={false}
-            />
-          ) : (
-            <div style={{ display: "flex", flexDirection: "row", gap: 10, flexWrap: "wrap" }}>
-              <Badge label={selected.pack} tone="accent" />
-              <Badge label={selected.code} tone="neutral" />
-              <Badge
-                label={
-                  selected.asrStatus === "simplify_only"
-                    ? "demo / typed input"
-                    : "live ASR available"
-                }
-                tone={selected.asrStatus === "simplify_only" ? "amber" : "mint"}
-              />
-            </div>
-          )}
-          {selected.asrStatus === "simplify_only" ? (
-            <text style={textStyle(12, colors.amber)}>
-              {t(
-                locale,
-                "Live listening is not available for this language yet. Paste or type text to simplify it.",
-              )}
-            </text>
-          ) : null}
-        </Surface>
-
-        <div style={{ display: "flex", flexDirection: "row", gap: 12, minWidth: 0 }}>
-          <Surface
-            style={{
-              padding: 16,
-              flexGrow: 1,
-              flexShrink: 1,
-              minWidth: 0,
-              display: "flex",
-              flexDirection: "column",
-              gap: 12,
-            }}
-          >
-            <text style={{ ...textStyle(10, colors.faint, 700) }}>
-              {t(locale, "SOUND").toUpperCase()}
-            </text>
-            <SourceTile
-              title={t(locale, "Demo conversation")}
-              detail={t(
-                locale,
-                "Demo mode shows the caption experience with a built-in conversation — no download or permissions needed. Live captioning of real audio needs the models.",
-              )}
-              active={source === "demo"}
-              badge={t(locale, "Ready")}
-              onClick={() => onSource("demo")}
-            />
-            <SourceTile
-              title={t(locale, "Microphone")}
-              detail={t(
-                locale,
-                "Live listening is not available for this language yet. Paste or type text to simplify it.",
-              )}
-              active={source === "mic"}
-              badge="pending"
-              disabled
-              onClick={() => onSource("mic")}
-              onBlocked={() => onBlocked(micMessage)}
-            />
-            <SourceTile
-              title={t(locale, "System audio")}
-              detail={t(locale, "WASAPI loopback on Windows; PipeWire monitor on Linux dev.")}
-              active={source === "monitor"}
-              badge={t(locale, "Ready")}
-              onClick={() => onSource("monitor")}
-            />
-          </Surface>
-
-          <Surface
-            style={{
-              padding: 16,
-              width: 280,
-              flexShrink: 0,
-              display: "flex",
-              flexDirection: "column",
-              gap: 14,
-            }}
-          >
-            <text style={{ ...textStyle(10, colors.faint, 700) }}>
-              {t(locale, "CAPTIONING").toUpperCase()}
-            </text>
-            <Tabs
-              tabs={[
-                { id: "on_demand", label: t(locale, "On-demand") },
-                { id: "live", label: t(locale, "Live") },
-              ]}
-              value={mode}
-              onChange={(id) => onMode(id as SimplificationMode)}
-            />
-            <text style={textStyle(12, colors.muted)}>
-              {mode === "on_demand"
-                ? t(locale, "Pause any time and click a sentence to see it in simpler words.")
-                : t(locale, "Simplified captions always stay visible — they are the point.")}
-            </text>
-            <Divider />
-            <Toggle
-              label={t(locale, "Show live verbatim text (Tier 1)")}
-              checked
-              onChange={() => undefined}
-              description={t(locale, "Two caption tiers: verbatim partial + simplified final.")}
-            />
-            <Toggle
-              label={t(locale, "Detect language")}
-              checked
-              onChange={() => undefined}
-              description={t(locale, "Language detection powers the English-reversion indicator.")}
-            />
-            <div style={{ flexGrow: 1 }} />
-            <Button label={t(locale, "Start captions")} onClick={onStart} testId="start-captions" />
-            <div
-              style={{ display: "flex", flexDirection: "row", gap: 8, justifyContent: "center" }}
-            >
-              <text style={textStyle(10, colors.faint)}>
-                {t(locale, "Offline — audio never leaves this device")}
-              </text>
-            </div>
-          </Surface>
-        </div>
-
-        <Surface
-          style={{
-            padding: 12,
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 12,
-          }}
-        >
-          <Badge label={t(locale, "DEMO READY")} tone="mint" />
-          <text style={{ ...textStyle(12, colors.muted), flexGrow: 1 }}>
-            {t(locale, "Ready. Pick a sound source to start live, simplified captions.")}
-          </text>
-          <div
-            role="button"
-            tabIndex={0}
-            aria-label={t(locale, "Licenses")}
-            onClick={onLicenses}
-            style={{ cursor: "pointer" }}
-          >
-            <text style={textStyle(11, colors.faint)}>{t(locale, "Licenses")} →</text>
-          </div>
-        </Surface>
+        <text style={textStyle(type.body, colors.text, 600)}>{title}</text>
+        <text style={textStyle(type.meta, colors.muted)}>{detail}</text>
       </div>
-
-      <div style={{ width: 300, flexShrink: 0, display: "flex", flexDirection: "column", gap: 16 }}>
-        <Surface style={{ padding: 18, display: "flex", flexDirection: "column", gap: 12 }}>
-          <text style={{ ...textStyle(10, colors.faint, 700) }}>
-            {t(locale, "ON-DEVICE MODELS").toUpperCase()}
-          </text>
-          <ModelStatus
-            name="Qwen3 0.6B EasyLanguage"
-            detail="Q4_K_M · 397 MB"
-            status={modelLabel(locale, llm)}
-            tone={modelTone(llm)}
-          />
-          <ModelStatus
-            name="Nemotron 3.5 ASR"
-            detail="560 ms · int8 · 682 MB"
-            status={modelLabel(locale, asr)}
-            tone={modelTone(asr)}
-          />
-          <text style={textStyle(11, colors.faint)}>
-            {t(locale, "No models are bundled. Downloads are public and tokenless.")}
-          </text>
-        </Surface>
-
-        <Surface style={{ padding: 18, display: "flex", flexDirection: "column", gap: 10 }}>
-          <text style={{ ...textStyle(10, colors.faint, 700) }}>
-            {t(locale, "SESSION").toUpperCase()}
-          </text>
-          <text style={textStyle(12, colors.muted)}>
-            {t(
-              locale,
-              "Everything this device hears is processed locally. Nothing leaves the device.",
-            )}
-          </text>
-          <Divider />
-          <text style={textStyle(11, colors.faint)}>
-            {t(locale, "Transcripts are kept in memory only. Export now to keep one.")}
-          </text>
-          <div
-            role="button"
-            tabIndex={0}
-            aria-label={t(locale, "Settings")}
-            onClick={onSettings}
-            style={{ cursor: "pointer", paddingTop: 4 }}
-          >
-            <text style={textStyle(11, colors.muted)}>{t(locale, "Settings")} →</text>
-          </div>
-        </Surface>
-      </div>
-    </div>
-  );
-}
-
-function SourceTile({
-  title,
-  detail,
-  active,
-  badge,
-  disabled = false,
-  onClick,
-  onBlocked,
-}: {
-  title: string;
-  detail: string;
-  active: boolean;
-  badge: string;
-  disabled?: boolean;
-  onClick: () => void;
-  onBlocked?: () => void;
-}) {
-  return (
-    <div
-      role="button"
-      tabIndex={0}
-      aria-label={title}
-      aria-selected={active}
-      aria-disabled={disabled || undefined}
-      onClick={() => {
-        if (disabled) onBlocked?.();
-        else onClick();
-      }}
-      style={{
-        display: "flex",
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 10,
-        padding: 10,
-        borderRadius: 10,
-        backgroundColor: active ? colors.accentSoft : "#FFFFFF05",
-        borderWidth: 1,
-        borderColor: active ? "#8B7CFF55" : colors.border,
-        opacity: disabled ? 0.55 : 1,
-        cursor: disabled ? "not-allowed" : "pointer",
-        hover: disabled ? undefined : { backgroundColor: active ? "#8B7CFF30" : "#FFFFFF0D" },
-      }}
-    >
-      <div
-        style={{
-          width: 8,
-          height: 8,
-          borderRadius: 4,
-          backgroundColor: active ? colors.mint : colors.faint,
-        }}
-      />
-      <div style={{ display: "flex", flexDirection: "column", gap: 2, flexGrow: 1, minWidth: 0 }}>
-        <text style={textStyle(13, colors.text, 600)}>{title}</text>
-        <text style={textStyle(10, colors.muted)}>{detail}</text>
-      </div>
-      <Badge label={badge} tone={disabled ? "neutral" : "mint"} />
-    </div>
-  );
-}
-
-function modelLabel(locale: string, model: ModelEntry | undefined): string {
-  if (!model) return t(locale, "Model download pending");
-  if (model.phase === "ready") return t(locale, "Ready");
-  if (model.phase === "downloading") {
-    const value = model.bytes > 0 ? Math.floor((model.doneBytes / model.bytes) * 100) : 0;
-    return `${value}%`;
-  }
-  if (model.phase === "error") return t(locale, "Download failed: %@", "retry");
-  return t(locale, "Not downloaded");
-}
-
-function modelTone(model: ModelEntry | undefined): "accent" | "amber" | "mint" {
-  if (!model) return "amber";
-  if (model.phase === "ready") return "mint";
-  if (model.phase === "error") return "amber";
-  return "accent";
-}
-
-function ModelStatus({
-  name,
-  detail,
-  status,
-  tone,
-}: {
-  name: string;
-  detail: string;
-  status: string;
-  tone: "accent" | "amber" | "mint";
-}) {
-  const color = tone === "accent" ? colors.accent : tone === "amber" ? colors.amber : colors.mint;
-  return (
-    <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 9 }}>
-      <div style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: color }} />
-      <div style={{ display: "flex", flexDirection: "column", gap: 1, flexGrow: 1, minWidth: 0 }}>
-        <text style={textStyle(12, colors.text, 600)}>{name}</text>
-        <text style={textStyle(10, colors.faint)}>{detail}</text>
-      </div>
-      <text style={textStyle(10, color, 600)}>{status}</text>
-    </div>
+      {selected ? <Icon name="check" size={14} color={colors.accent} /> : null}
+    </>
   );
 }

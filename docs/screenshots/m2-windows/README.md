@@ -1,8 +1,9 @@
 # Windows screenshots
 
-Portfolio rebuilt 2026-11-22 on the Windows 11 host with the GPUIX 0.11 GPU
-test renderer (DirectX). Evidence and non-claims:
-`docs/qa/2026-11-22-gpu-renderer.md`.
+Portfolio rebuilt 2026-11-25 on the Windows 11 host with the GPUIX 0.11 GPU
+test renderer (DirectX) for the quiet utility UI pass (ADR 0026, evidence
+`docs/qa/2026-11-25-ui-clarity.md`). The 2026-11-22 renderer evidence and
+non-claims still apply: `docs/qa/2026-11-22-gpu-renderer.md`.
 
 | File | Path |
 |---|---|
@@ -13,6 +14,7 @@ test renderer (DirectX). Evidence and non-claims:
 | `onboarding-download-progress.png` | **real** window, native addon (T16: live download) |
 | `onboarding-models-ready.png` | **real** window, native addon (T16: models ready) |
 | `console.png` | GPUIX GPU test renderer |
+| `console-language-menu.png` | GPUIX GPU test renderer (Select menu open) |
 | `console-start-captions.png` | GPUIX click path console → live |
 | `console-live-asr.png` | **real** window, real sherpa ASR on loopback (T14) |
 | `console-click-simplified.png` | **real** window, real GGUF click (T20) |
@@ -30,6 +32,10 @@ The offscreen test window is fixed at 1536x1061 physical pixels on this host, so
 those captures share that canvas. `settings-developer.png` shows
 `Renderer: directx · GPU` and `Adapter: NVIDIA GeForce RTX 5060 Ti`, measured by
 DXGI.
+
+Every capture except `overlay.png` includes the custom title bar (drag region,
+minimize / maximize / close) added in ADR 0027; the overlay stays frameless and
+keeps its own Move control.
 
 Reproduce from an elevated PowerShell on the logged-on desktop:
 

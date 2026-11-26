@@ -1,13 +1,21 @@
 import type { StyleDesc } from "@gpuix/react";
-import { Badge, Button } from "../aurora/components";
-import { colors, gradient, textStyle } from "../aurora/theme";
-import { languageByCode, statusLabel } from "../i18n/languages";
+import { Badge, BrandMark, Button, StatusDot } from "../aurora/components";
+import { colors, fonts, textStyle, type } from "../aurora/theme";
+import { languageByCode } from "../i18n/languages";
 import { t } from "../i18n/locales";
 import type { SessionView } from "../store/sessionStore";
 
+/**
+ * Mac caption panel: the live partial above the last finalized lines, in
+ * black glass, sized from the caption-size setting. A single quiet control row
+ * exists only because the PC overlay is the app's only window and must offer
+ * a way back.
+ */
 export function OverlayScreen({
   state,
   locale,
+  captionSize,
+  showTier1,
   onSimplify,
   onPause,
   onResume,
@@ -18,6 +26,8 @@ export function OverlayScreen({
 }: {
   state: SessionView;
   locale: string;
+  captionSize: number;
+  showTier1: boolean;
   onSimplify: (id: string) => void;
   onPause: () => void;
   onResume: () => void;
@@ -27,176 +37,133 @@ export function OverlayScreen({
   onConsole: () => void;
 }) {
   const language = languageByCode(state.language);
+  const lines = state.segments.slice(-2);
   const latest = state.segments[state.segments.length - 1];
-  const simplified = [...state.segments].reverse().find((segment) => segment.simplified);
+  const partialSize = Math.max(13, Math.round(captionSize * 0.55));
 
   const shell: StyleDesc = {
     height: "100%",
-    padding: 14,
+    padding: 16,
     display: "flex",
     flexDirection: "column",
     gap: 8,
-    background: gradient("#0B0B12F2", "#15102AF2", 120),
+    backgroundColor: "#0A0A0ACC",
     borderWidth: 1,
-    borderColor: "#FFFFFF22",
+    borderColor: state.reversionActive ? "#F5C06A99" : "#FFFFFF24",
     borderRadius: 16,
-    boxShadow: { offsetX: 0, offsetY: 12, blurRadius: 40, spreadRadius: 0, color: "#00000088" },
   };
 
   return (
-    <div style={{ height: "100%", padding: 10 }}>
-      <div style={shell}>
+    <div style={{ height: "100%", padding: 8 }}>
+      <div style={shell} role="group" aria-label={t(locale, "Caption overlay")}>
         <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <div
-            style={{
-              width: 22,
-              height: 22,
-              borderRadius: 7,
-              background: gradient("#8B7CFF", "#2ED3B7", 135),
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <text style={textStyle(8, "#0B0B12", 800)}>LL</text>
-          </div>
-          <text style={textStyle(11, colors.text, 700)}>{language.shortName}</text>
-          <Badge
-            label={state.phase === "paused" ? t(locale, "Paused") : t(locale, "Listening")}
+          <BrandMark size={20} />
+          <text style={textStyle(type.meta, colors.muted, 600)}>{language.shortName}</text>
+          <StatusDot
             tone={state.phase === "paused" ? "amber" : "mint"}
+            label={state.phase === "paused" ? t(locale, "Paused") : t(locale, "Listening")}
           />
-          {state.reversionActive ? <Badge label="EN" tone="info" /> : null}
-          <div style={{ flexGrow: 1 }} />
-          <text style={textStyle(9, colors.faint)}>{statusLabel(language.asrStatus)}</text>
-          <OverlayIcon
-            glyph="⋮⋮"
-            label="Move window"
-            onClick={() => {}}
-            onMouseDown={onDrag}
-            focusable={false}
-          />
-          <OverlayIcon glyph="⟳" label={t(locale, "Settings")} onClick={onSettings} />
-          <OverlayIcon glyph="⤢" label={t(locale, "Expanded transcript")} onClick={onExpand} />
-          <OverlayIcon glyph="▣" label={t(locale, "Console window")} onClick={onConsole} />
-        </div>
-
-        <div
-          style={{ flexGrow: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 5 }}
-        >
-          {state.partial ? (
-            <div role="group" aria-label={t(locale, "Listening — keep speaking")}>
-              <text style={textStyle(12, colors.muted, 500)}>{state.partial.text}</text>
-            </div>
-          ) : null}
-          {latest ? (
-            <>
-              <div
-                role="button"
-                tabIndex={0}
-                aria-label={latest.text}
-                onClick={() => onSimplify(latest.id)}
-                onKeyDown={(event) => {
-                  if (event.key === "enter" || event.key === "space" || event.key === " ") {
-                    event.preventDefault();
-                    onSimplify(latest.id);
-                  }
-                }}
-                style={{ display: "flex", flexDirection: "column", gap: 3, cursor: "pointer" }}
-              >
-                <text style={textStyle(11, colors.muted)}>{latest.text}</text>
-                <text style={textStyle(17, colors.text, 600)}>
-                  {latest.simplified ?? t(locale, "Tap a sentence to simplify it")}
-                </text>
-              </div>
-              {latest.flags.length > 0 ? (
-                <div style={{ display: "flex", flexDirection: "row", gap: 5 }}>
-                  {latest.flags.slice(0, 2).map((flag) => (
-                    <Badge key={flag} label={flag} tone="amber" />
-                  ))}
-                </div>
-              ) : null}
-            </>
-          ) : (
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 4,
-                flexGrow: 1,
-                justifyContent: "center",
-              }}
-            >
-              <text style={textStyle(17, colors.text, 600)}>
-                {t(locale, "Listening — keep speaking")}
-              </text>
-              <text style={textStyle(11, colors.faint)}>
-                {t(locale, "Start speaking, or use the demo conversation.")}
-              </text>
-            </div>
-          )}
-        </div>
-
-        <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <text style={textStyle(9, colors.faint)}>
-            {simplified ? t(locale, "Simplified caption") : t(locale, "Verbatim")}
-          </text>
+          {state.reversionActive ? <Badge label="EN" tone="amber" /> : null}
           <div style={{ flexGrow: 1 }} />
           <Button
             label={state.phase === "paused" ? t(locale, "Resume") : t(locale, "Pause")}
+            icon={state.phase === "paused" ? "play" : "pause"}
             kind="ghost"
             onClick={state.phase === "paused" ? onResume : onPause}
+            style={{ height: 26, paddingLeft: 8, paddingRight: 8 }}
           />
-          <text style={textStyle(9, colors.faint)}>{t(locale, "click to simplify")}</text>
+          <Button
+            label={t(locale, "Move window")}
+            icon="move"
+            kind="ghost"
+            onMouseDown={onDrag}
+            style={{ height: 26, paddingLeft: 8, paddingRight: 8 }}
+          />
+          <Button
+            label={t(locale, "Settings")}
+            icon="settings"
+            kind="ghost"
+            onClick={onSettings}
+            style={{ height: 26, paddingLeft: 8, paddingRight: 8 }}
+          />
+          <Button
+            label={t(locale, "Expand")}
+            icon="maximize-2"
+            kind="ghost"
+            onClick={onExpand}
+            style={{ height: 26, paddingLeft: 8, paddingRight: 8 }}
+          />
+          <Button
+            label={t(locale, "Console window")}
+            icon="minimize-2"
+            kind="ghost"
+            onClick={onConsole}
+            style={{ height: 26, paddingLeft: 8, paddingRight: 8 }}
+          />
+        </div>
+
+        <div
+          role="button"
+          tabIndex={0}
+          aria-label={latest ? latest.text : t(locale, "Listening — keep speaking")}
+          onClick={() => latest && onSimplify(latest.id)}
+          onKeyDown={(event) => {
+            if (!latest) return;
+            if (event.key === "enter" || event.key === "space" || event.key === " ") {
+              event.preventDefault();
+              onSimplify(latest.id);
+            }
+          }}
+          style={{
+            flexGrow: 1,
+            minHeight: 0,
+            display: "flex",
+            flexDirection: "column",
+            gap: 6,
+            justifyContent: "center",
+            cursor: latest ? "pointer" : "default",
+          }}
+        >
+          {showTier1 && state.partial?.text ? (
+            <text
+              style={{
+                ...textStyle(partialSize, colors.muted),
+                lineHeight: Math.round(partialSize * 1.35),
+                whiteSpace: "normal",
+                lineClamp: 2,
+              }}
+            >
+              {state.partial.text}
+            </text>
+          ) : null}
+
+          {lines.length === 0 ? (
+            <text style={{ ...textStyle(captionSize, colors.text, 600), lineHeight: 28 }}>
+              {t(locale, "Listening — keep speaking")}
+            </text>
+          ) : (
+            lines.map((line) => (
+              <text
+                key={line.id}
+                style={{
+                  ...textStyle(
+                    line.simplified ? captionSize : Math.round(captionSize * 0.8),
+                    colors.text,
+                    600,
+                  ),
+                  fontFamily: fonts.rounded,
+                  lineHeight: Math.round(
+                    (line.simplified ? captionSize : captionSize * 0.8) * 1.32,
+                  ),
+                  lineClamp: 2,
+                }}
+              >
+                {line.simplified ?? line.text}
+              </text>
+            ))
+          )}
         </div>
       </div>
-    </div>
-  );
-}
-
-function OverlayIcon({
-  glyph,
-  label,
-  onClick,
-  onMouseDown,
-  focusable = true,
-}: {
-  glyph: string;
-  label: string;
-  onClick: () => void;
-  onMouseDown?: () => void;
-  focusable?: boolean;
-}) {
-  return (
-    <div
-      role={focusable ? "button" : undefined}
-      tabIndex={focusable ? 0 : undefined}
-      aria-label={focusable ? label : undefined}
-      aria-hidden={focusable ? undefined : true}
-      onClick={onClick}
-      onMouseDown={onMouseDown}
-      onKeyDown={
-        focusable
-          ? (event) => {
-              if (event.key === "enter" || event.key === "space" || event.key === " ") {
-                event.preventDefault();
-                onClick();
-              }
-            }
-          : undefined
-      }
-      style={{
-        width: 22,
-        height: 22,
-        borderRadius: 7,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: "#FFFFFF0A",
-        cursor: "pointer",
-        hover: { backgroundColor: "#FFFFFF16" },
-      }}
-    >
-      <text style={textStyle(10, colors.muted, 700)}>{glyph}</text>
     </div>
   );
 }

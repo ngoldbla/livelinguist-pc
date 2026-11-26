@@ -18,7 +18,8 @@ use ll_core::session::{AudioSourceKind, SessionConfiguration, SimplificationMode
 use ll_llm::{DemoBackend, FaultyBackend};
 use ll_pipeline::{ActiveJob, ClickOutcome, Pipeline, PipelineConfig};
 use ll_window::{
-    apply_for_current_window, begin_drag, resize_current_window, work_area, WindowPolicyResult,
+    apply_for_current_window, begin_drag, close_current_window, resize_current_window, work_area,
+    WindowPolicyResult,
 };
 use napi::bindgen_prelude::*;
 use napi::threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode};
@@ -634,6 +635,12 @@ impl CoreClient {
     #[napi]
     pub fn begin_drag(&self) -> bool {
         begin_drag()
+    }
+
+    /// Close the native window (custom title bar close button).
+    #[napi]
+    pub fn close_window(&self) -> bool {
+        close_current_window()
     }
 
     #[napi]

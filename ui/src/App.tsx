@@ -1,9 +1,11 @@
 import { mkdirSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
+import { join } from "node:path";
 import { useGpuixRequired } from "@gpuix/react";
 import { useEffect, useRef, useState } from "react";
 import { AuroraField, Toast } from "./aurora/components";
 import { colors } from "./aurora/theme";
+import { WindowChrome } from "./aurora/WindowChrome";
 import {
   createTransport,
   readWorkArea,
@@ -11,22 +13,23 @@ import {
   type Transport,
 } from "./bridge/transport";
 import { languageByCode } from "./i18n/languages";
-import { t } from "./i18n/locales";
+import { deviceLocales, resolveLocale, t } from "./i18n/locales";
+import { exeDir } from "./packaged";
 import { ConsoleScreen } from "./screens/Console";
-import { LicensesScreen } from "./screens/Licenses";
 import { LiveScreen } from "./screens/Live";
 import { Onboarding } from "./screens/Onboarding";
 import { OverlayScreen } from "./screens/Overlay";
-import { SettingsScreen, type UiSettings } from "./screens/Settings";
+import { SettingsScreen } from "./screens/Settings";
 import { SummaryScreen } from "./screens/Summary";
 import { exportDir, exportPath, planSession } from "./sessionPlan";
+import { defaultSettings, loadSettings, saveSettings, type UiSettings } from "./settings";
 import { createModelStore, useModels } from "./store/modelStore";
 import { createSessionStore, useSession } from "./store/sessionStore";
 import { sizeForMode } from "./windowSize";
 
 const hasSizeOverride = () => Boolean(process.env.LL_WIDTH || process.env.LL_HEIGHT);
 
-type Screen = "onboarding" | "console" | "live" | "settings" | "summary" | "licenses";
+type Screen = "onboarding" | "console" | "live" | "settings" | "summary";
 type WindowMode = "console" | "overlay" | "expanded";
 
 const AUTO_SCREENS = new Set<Screen>(["live"]);
@@ -39,8 +42,7 @@ function readScreen(): Screen {
     raw === "console" ||
     raw === "live" ||
     raw === "settings" ||
-    raw === "summary" ||
-    raw === "licenses"
+    raw === "summary"
   ) {
     return raw;
   }
@@ -59,16 +61,6 @@ function readLanguage(): string {
   return languageByCode(code).code;
 }
 
-const defaultSettings: UiSettings = {
-  captionSize: 20,
-  showTier1: true,
-  detection: true,
-  reducedEffects: false,
-  followLearning: true,
-  devEnabled: true,
-  scenario: "mock",
-};
-
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export function App() {
@@ -85,7 +77,7 @@ export function App() {
   const [screen, setScreen] = useState<Screen>(readScreen());
   const [windowMode, setWindowModeState] = useState<WindowMode>(readWindowMode());
   const [backTo, setBackTo] = useState<Screen>("console");
-  const [settings, setSettings] = useState<UiSettings>(defaultSettings);
+  const [settings, setSettings] = useState<UiSettings>(loadSettings);
   const [toast, setToast] = useState<string | null>(null);
   const [simplifyingId, setSimplifyingId] = useState<string | null>(null);
   const [modelStore] = useState(createModelStore);
@@ -94,16 +86,39 @@ export function App() {
   const started = useRef(false);
   const renderer = useGpuixRequired();
 
+  const applySettings = (patch: Partial<UiSettings>) => {
+    setSettings((current) => {
+      const next = { ...current, ...patch };
+      saveSettings(next);
+      return next;
+    });
+  };
+
+  const deviceUi = resolveLocale(false, null, deviceLocales());
   const locale =
     process.env.LL_UI_LOCALE ??
-    (settings.followLearning ? languageByCode(state.language).uiCode : state.uiLocale || "en");
+    (settings.uiLanguage === "device" ? deviceUi : languageByCode(state.language).uiCode);
 
   useEffect(() => {
-    try {
-      const bytes = readFileSync("/usr/share/fonts/truetype/noto/NotoSansArabic-Regular.ttf");
-      renderer.registerFont?.(bytes);
-    } catch {
-      // System fallback is fine; Arabic still renders through Noto Sans Arabic.
+    // Register the UI faces GPUIX may not list on its own. Missing files are
+    // fine: the platform font is the fallback.
+    const bundled = join(import.meta.dir, "..", "assets", "fonts", "MPLUSRounded1c-Medium.ttf");
+    const packaged = join(exeDir(process.execPath), "fonts", "MPLUSRounded1c-Medium.ttf");
+    const candidates = [
+      bundled,
+      packaged,
+      "C:\\Windows\\Fonts\\segoeui.ttf",
+      "C:\\Windows\\Fonts\\seguisb.ttf",
+      "C:\\Windows\\Fonts\\NotoSansArabic-Regular.ttf",
+      "/usr/share/fonts/truetype/noto/NotoSansArabic-Regular.ttf",
+      "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf",
+    ];
+    for (const path of candidates) {
+      try {
+        renderer.registerFont?.(readFileSync(path));
+      } catch {
+        // Optional face; the system fallback still renders.
+      }
     }
   }, [renderer]);
 
@@ -343,13 +358,10 @@ export function App() {
   };
 
   const openSettings = () => {
+    // Settings needs a normal window; the overlay is 780x250 and cannot show it.
+    if (windowMode === "overlay") void setWindowMode("console");
     setBackTo(screen === "settings" ? "console" : screen);
     setScreen("settings");
-  };
-
-  const openLicenses = () => {
-    setBackTo(screen === "licenses" ? "console" : screen);
-    setScreen("licenses");
   };
 
   const screenContent = (() => {
@@ -360,7 +372,6 @@ export function App() {
           locale={locale}
           onLanguage={onLanguage}
           onFinish={() => setScreen("console")}
-          onOpenLicenses={openLicenses}
           models={models}
           onDownload={() => void onDownloadModels()}
           onCancelDownload={onCancelDownload}
@@ -373,15 +384,13 @@ export function App() {
           language={state.language}
           locale={locale}
           source={state.source}
-          mode={state.mode}
           models={models}
+          hasTranscript={state.segments.length > 0}
           onLanguage={onLanguage}
           onSource={(source) => bootStore.setSource(source)}
-          onMode={(mode) => bootStore.setMode(mode)}
           onStart={() => void startSession()}
           onBlocked={(message) => setToast(message)}
           onSettings={openSettings}
-          onLicenses={openLicenses}
           onSummary={() => setScreen(state.segments.length > 0 ? "summary" : "console")}
         />
       );
@@ -390,11 +399,11 @@ export function App() {
       return (
         <SettingsScreen
           locale={locale}
+          language={state.language}
           settings={settings}
-          onChange={(patch) => setSettings((current) => ({ ...current, ...patch }))}
+          onChange={applySettings}
           runtime={state.runtime}
           onBack={() => setScreen(backTo)}
-          onLicenses={openLicenses}
           onProbe={onProbe}
           onCalibrate={onCalibrate}
           onReload={async () => setToast("Model reload is a no-op in the mock backend.")}
@@ -406,14 +415,11 @@ export function App() {
           models={models}
           onDownloadModels={() => void onDownloadModels()}
           onReset={() => {
-            setSettings(defaultSettings);
+            applySettings(defaultSettings);
             void onScenario("auto");
           }}
         />
       );
-    }
-    if (screen === "licenses") {
-      return <LicensesScreen locale={locale} onBack={() => setScreen(backTo)} />;
     }
     if (screen === "summary") {
       return (
@@ -421,8 +427,7 @@ export function App() {
           state={state}
           locale={locale}
           onExport={onExport}
-          onBack={() => setScreen("console")}
-          onConsole={() => {
+          onDone={() => {
             void setWindowMode("console");
             setScreen("console");
           }}
@@ -434,6 +439,8 @@ export function App() {
         <OverlayScreen
           state={state}
           locale={locale}
+          captionSize={settings.captionSize}
+          showTier1={settings.showTier1}
           onSimplify={(id) => void onSimplify(id)}
           onPause={() => void ensureTransport().pause()}
           onResume={() => void ensureTransport().resume()}
@@ -456,12 +463,12 @@ export function App() {
         locale={locale}
         captionSize={settings.captionSize}
         showTier1={settings.showTier1}
+        windowMode={windowMode}
         onSimplify={(id) => void onSimplify(id)}
         onStop={() => void stopWith(ensureTransport())}
         onPause={() => void ensureTransport().pause()}
         onResume={() => void ensureTransport().resume()}
         onSettings={openSettings}
-        onMode={(mode) => bootStore.setMode(mode)}
         onWindowMode={(mode) => void setWindowMode(mode)}
         onTypedSimplify={onTypedSimplify}
         compact={false}
@@ -476,12 +483,43 @@ export function App() {
         width: "100%",
         height: "100%",
         position: "relative",
+        display: "flex",
+        flexDirection: "column",
         overflow: "hidden",
         backgroundColor: colors.bg,
       }}
     >
-      <AuroraField active={screen === "live" && !settings.reducedEffects} />
-      <div style={{ position: "relative", width: "100%", height: "100%" }}>{screenContent}</div>
+      <AuroraField active={screen === "live"} />
+      {windowMode === "overlay" ? null : (
+        <WindowChrome
+          onDrag={() => void ensureTransport().beginDrag()}
+          onMinimize={() => {
+            try {
+              renderer.minimizeWindow?.();
+            } catch {
+              // No native window in the renderer harness.
+            }
+          }}
+          onToggleMax={() => {
+            try {
+              renderer.zoomWindow?.();
+            } catch {
+              // No native window in the renderer harness.
+            }
+          }}
+          onClose={() => {
+            void ensureTransport()
+              .closeWindow()
+              .then((closed) => {
+                if (!closed) process.exit(0);
+              })
+              .catch(() => process.exit(0));
+          }}
+        />
+      )}
+      <div style={{ position: "relative", flexGrow: 1, minHeight: 0, width: "100%" }}>
+        {screenContent}
+      </div>
       {toast ? (
         <div
           style={{
