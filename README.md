@@ -11,11 +11,26 @@ native-speed speech and reads the same content rendered into the official
 easy-language register for that language — **FALC**, **Leichte Sprache**,
 **Easy English**, **Lectura Fácil**, and 25 further locales.
 
+![Live Linguist console](docs/screenshots/m2-windows/console.png)
+
+## What it does
+
+1. Choose the language you are learning and the sound to listen to.
+2. Press **Start captions**. Speech is transcribed on the CPU as it plays.
+3. Click any sentence to see the same sentence in simpler words, in the same
+   language. Nothing is translated, and nothing leaves the PC.
+
+The window starts as a small console, can collapse into a 780×250 caption
+overlay over any app, and keeps the spoken line above the simpler one so you can
+compare them. Caption size, the original-line toggle, and the app language are
+remembered between runs.
+
 ## Download for Windows
 
-**[Get the latest Live Linguist for Windows](https://github.com/ngoldbla/livelinguist-pc/releases/latest)**:
-download `LiveLinguist-<version>-setup.exe` under **Assets**, open it, and
-click **Install**. No admin rights needed.
+**[Download the current Windows build](https://github.com/ngoldbla/livelinguist-pc/releases)**:
+under **Assets**, get `LiveLinguist-<version>-setup.exe` for the installer or the
+portable ZIP. The current candidate is **`v1.0.0-rc.4`**. Open the file and click
+**Install**; no admin rights are needed.
 
 - **"Windows protected your PC"?** The app is not code-signed yet. Click
   **More info**, then **Run anyway**. Each release lists SHA-256 hashes so you
@@ -23,17 +38,43 @@ click **Install**. No admin rights needed.
 - **First start:** it downloads the speech and simplification models once
   (about 1.1 GB), then works offline. Audio never leaves your PC.
 - **Needs:** Windows 11, 64-bit Intel or AMD PC, 8 GB memory, about 2.5 GB disk.
+- Release candidates are pre-releases, so the repository's "latest release" link
+  skips them. All builds are on the [releases page](https://github.com/ngoldbla/livelinguist-pc/releases).
 
-## Source of truth
+## Watch it run
 
-- **Docs map:** [`docs/README.md`](docs/README.md) — start here
-- **Execution plan (v1.0, Windows):** [`docs/plans/2026-11-23-windows-v1-plan.md`](docs/plans/2026-11-23-windows-v1-plan.md)
-  and the copy-paste [agent prompt](docs/plans/2026-11-23-windows-agent-prompt.md)
-- **v1.0 scope:** [`docs/plans/2026-11-22-v1-scope.md`](docs/plans/2026-11-22-v1-scope.md)
-- **Progress board:** [`docs/qa/implementation-progress.md`](docs/qa/implementation-progress.md)
-- **Decisions:** [`docs/decisions/`](docs/decisions/) (canonical ADRs)
-- **Architecture reference:** [`docs/plans/2026-11-21-live-linguist-pc-master-plan.md`](docs/plans/2026-11-21-live-linguist-pc-master-plan.md)
-- **Agent rules:** [`AGENTS.md`](AGENTS.md)
+A real 60-second German run on Windows: system audio captured through WASAPI
+loopback, sherpa-onnx transcribing on the CPU, and every second finalized
+sentence clicked for a llama.cpp simplification. The UI is English; the captions
+are German.
+
+[![Live Linguist German run](docs/media/readme-german.gif)](docs/media/german-60s.mp4)
+
+*30-second preview. [Watch the full 60-second MP4](docs/media/german-60s.mp4).*
+
+Measured on that run: live partials at p50 1.87 s / p95 6.31 s, all 7 requested
+clicks applied, and click-to-simplified at p95 2.27 s. Captions kept flowing
+through the clicks. Full numbers and method:
+[`docs/qa/2026-11-25-german-live-baseline.md`](docs/qa/2026-11-25-german-live-baseline.md).
+
+The clip is *Wie Fasten den Stoffwechsel verändert* (3sat/nano, Terra X), CC BY
+4.0, from [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Wie_Fasten_den_Stoffwechsel_ver%C3%A4ndert_(CC_BY_4.0).webm).
+It contains only that public fixture's audio and captions.
+
+## Screens
+
+| | |
+|---|---|
+| ![Console](docs/screenshots/m2-windows/console.png) | ![Language picker](docs/screenshots/m2-windows/language-picker-coverage.png) |
+| **Console.** Pick a language, pick a sound source, press Start. **Settings** stays one click away. | **Any of 29 languages.** Languages without a live-ASR gate are marked *Simplified text only* and take pasted or typed text instead of sound. |
+| ![Live captions](docs/screenshots/m2-windows/live.png) | ![Caption overlay](docs/screenshots/m2-windows/overlay.png) |
+| **Live captions.** The spoken sentence stays visible above the simpler version. Click a sentence at any time; captions keep flowing. | **Caption overlay.** A frameless 780×250 window over your video call or player, with pause, move, expand, and back to the console. |
+| ![Settings](docs/screenshots/m2-windows/settings.png) | ![Session summary](docs/screenshots/m2-windows/summary.png) |
+| **Settings.** Caption size, show-or-hide the original line, other-language alerts, and the app language. | **Summary.** Session length, sentence count, target-language share, and content-free Markdown / text / diagnostics exports. |
+
+Screens are 1536×1061 GPU test-renderer captures from the current UI, except the
+overlay, which is a real GPUIX window. The video above is a real app run. The
+full portfolio is in [`docs/screenshots/m2-windows/`](docs/screenshots/m2-windows/README.md).
 
 ## Scope (v1.0)
 
@@ -48,6 +89,17 @@ Not in 1.0: microphone, per-app capture, multi-monitor/mixed-DPI, GPU
 inference, 1.7B, automatic simplification, Windows 10/ARM64, Linux/macOS
 packages, translation, cloud. Full list: [`docs/plans/2026-11-22-v1-scope.md`](docs/plans/2026-11-22-v1-scope.md).
 
+## Source of truth
+
+- **Docs map:** [`docs/README.md`](docs/README.md) — start here
+- **Execution plan (v1.0, Windows):** [`docs/plans/2026-11-23-windows-v1-plan.md`](docs/plans/2026-11-23-windows-v1-plan.md)
+  and the copy-paste [agent prompt](docs/plans/2026-11-23-windows-agent-prompt.md)
+- **v1.0 scope:** [`docs/plans/2026-11-22-v1-scope.md`](docs/plans/2026-11-22-v1-scope.md)
+- **Progress board:** [`docs/qa/implementation-progress.md`](docs/qa/implementation-progress.md)
+- **Decisions:** [`docs/decisions/`](docs/decisions/) (canonical ADRs)
+- **Architecture reference:** [`docs/plans/2026-11-21-live-linguist-pc-master-plan.md`](docs/plans/2026-11-21-live-linguist-pc-master-plan.md)
+- **Agent rules:** [`AGENTS.md`](AGENTS.md)
+
 ## Repository layout
 
 ```
@@ -58,7 +110,7 @@ assets/packs/   29 canonical FrameworkPacks (ported verbatim from the Mac repo)
 assets/locales/ 29 UI locale JSON files
 tests/          golden inventory, fixtures, bridge harness
 packaging/      NSIS + portable ZIP
-docs/           plan, ADRs, QA evidence
+docs/           plan, ADRs, QA evidence, screenshots, README media
 ```
 
 ## Build
@@ -83,24 +135,24 @@ On a Wayland desktop, force X11 for overlay development:
 env -u WAYLAND_DISPLAY bun ui/src/main.tsx
 ```
 
+On Windows, build the app, installer, and portable ZIP locally:
+
+```powershell
+pwsh scripts/build-windows.ps1
+pwsh scripts/test-installer.ps1 -Version 1.0.0-rc.4
+```
+
 ## Status
 
-Done: deterministic core and 29 packs, pipeline and `ll-eval`, napi bridge,
-GPUIX UI on demo data, Windows toolchain and verify script, measured renderer,
-single-screen Win32 overlay, pinned v1.0 models.
+`1.0.0-rc.4` is the current Windows release candidate. Working end to end:
+WASAPI loopback capture, sherpa-onnx streaming ASR with 560 ms chunks, CPU
+llama.cpp click-to-simplify, the 29 language packs, the console/overlay/expanded
+windows, first-run model download, NSIS installer and portable ZIP, and the
+tag-driven release workflow.
 
-Next (see the plan): WASAPI loopback capture, sherpa-onnx streaming ASR and
-the 29-locale coverage matrix, the exact EasyLanguage prompt contract and CPU
-llama.cpp, 150% layout and accessibility, end-to-end integration, packaging,
-release candidate.
-
-UI portfolio: [`docs/screenshots/m2/`](docs/screenshots/m2/README.md).
-
-![Console](docs/screenshots/m2/console.png)
-
-![Live transcript](docs/screenshots/m2/live.png)
-
-![Caption overlay](docs/screenshots/m2/overlay.png)
+Still human-gated before `v1.0.0`: the Narrator and keyboard-only live run, the
+100–150% scaling pass on the redesigned UI, and owner sign-off. The newest UI
+strings are English placeholders in the 28 non-English UI catalogs.
 
 ## Design invariants (inherited)
 
