@@ -62,8 +62,31 @@ poll/scan interval).
 - The app window is placed at x=1300, y=60 and the player at 0,0 so the crop
   contains only the app. The trim starts at the media start.
 - Contains the fixture's public captions and audio only. No microphone, system
-  audio, or transcript leaves the device; the MP4 stays under `target/` and is
-  not uploaded.
+  audio, or transcript leaves the device. The original run stayed under
+  `target/`; the README now publishes a copy with the public fixture media
+  (`docs/media/german-60s.mp4`, preview `docs/media/readme-german.gif`).
+
+## README rerun with the redesigned UI (2026-11-25)
+
+The README recording was re-made after PR #44 and `v1.0.0-rc.4`, with the same
+fixture, window size (1180×820, outer 1196×828), start offset and click cadence.
+The probe was updated for the new UI: the sound source is chosen from the
+**SOUND** tile menu instead of a visible "System audio" button, caption rows are
+buttons whose accessible name carries `. Click to simplify`, and the live
+partial group is named `Listening — keep talking`. Capture now uses
+`-draw_mouse 0`, so the pointer is not in the video.
+
+| Run | Partial p50 / p95 | Partial cov. | Final p50 / p95 | Final cov. |
+|---|---:|---:|---:|---:|
+| `v1.0.0-rc.4` recording | 1866 / 6308 ms | 94.4% | 5245 / 8885 ms | 77.8% |
+
+| Clicks | Applied | Click p50 / p95 | Max caption gap |
+|---:|---:|---:|---:|
+| 7/7 | 7 | 1604 / 2266 ms | 1235 ms |
+
+The video is 60.000 s, 1196×828, 20 fps, H.264 + AAC 48 kHz stereo, 2.75 MB,
+mean volume -26.5 dB, peak -4.3 dB. The 30-second GIF preview is cut from
+00:13–00:43 at 12 fps (1.18 MB).
 
 ## Reproduction
 

@@ -84,7 +84,8 @@ decision entry and an ADR update. **For 1.0, D-055/D-056 and
 
 ## Next run
 
-**2026-11-25 UI clarity pass (branch `stage-ui-clarity`):** the shipped UI was
+**2026-11-25 UI clarity pass (branch `stage-ui-clarity`, merged in #44,
+released as `v1.0.0-rc.4`):** the shipped UI was
 reviewed with the impeccable design skill (20/40, Acceptable) and rebuilt on the
 macOS/iOS flow (`ngoldbla/live-linguist` @ `8eecdc4`, plus the iOS store listing
 `ngoldbla/live-linguist-ios`): a console with two decision tiles and one Start
@@ -97,9 +98,9 @@ quiet and high-contrast (12px type floor, flat panels) and UI settings persist t
 `%LOCALAPPDATA%\LiveLinguist\ui-settings.json`. ADR 0026; evidence
 `docs/qa/2026-11-25-ui-clarity.md` and the rebuilt
 `docs/screenshots/m2-windows/` portfolio. UI: typecheck, 114 tests, Biome and
-14 capture scenarios pass. Pending: PR, the 28-catalog translation pass for 19
+14 capture scenarios pass. Remaining: the 28-catalog translation pass for 19
 new strings, the input-level meter (no bridge data), and the human
-Narrator/DPI walk.
+Narrator/DPI walk. `v1.0.0-rc.4` is published as a pre-release.
 
 **2026-11-25 window chrome fix (same branch):** users could not move, minimize
 or maximize the frameless window. ADR 0027 adds a custom 34px title bar (drag,
@@ -107,6 +108,17 @@ double-click maximize, minimize/maximize/close) on every screen except the
 overlay, a `closeWindow` bridge command that posts `WM_CLOSE`, and changes the
 drag helper to `HWND_TOP` so a moved console is not left topmost. Windows human
 pass still needed for drag and the three buttons.
+
+**2026-11-25 README media refresh (`v1.0.0-rc.4`):** the top-level README now
+shows the current console, language picker, live, overlay, settings and summary
+screens from `docs/screenshots/m2-windows/`, and publishes a new 60 s German run
+with the redesigned UI (`docs/media/german-60s.mp4`, 30 s GIF preview
+`docs/media/readme-german.gif`). The harness probe was updated for the new UI
+(SOUND tile menu, caption-row button labels, `Listening — keep talking` partial
+group); capture uses `-draw_mouse 0`. Recorded numbers: partial p50/p95
+1866/6308 ms at 94.4% coverage, clicks 7/7 applied, click p95 2266 ms, max
+caption gap 1235 ms. Details in `docs/qa/2026-11-25-german-live-baseline.md`
+(`## README rerun with the redesigned UI`).
 
 Checkpoint 2026-11-24 (Linux cloud session; PRs #24-#31). Card statuses are in
 `docs/tasks/README.md` (`linux-done` = only the Windows part remains).

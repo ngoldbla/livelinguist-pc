@@ -38,7 +38,9 @@ JSON.
    48 kHz stereo, non-silent audio; extract a few frames to confirm captions,
    spinners, and simplified text.
 6. Record the numbers and the video path in a QA note. The MP4 contains public
-   fixture captions/audio only; it stays under `target/` and is never uploaded.
+   fixture captions/audio only. The README publishes a copy under
+   `docs/media/` (`german-60s.mp4`, with `readme-german.gif` as the preview);
+   the working capture stays under `target/`.
 
 ```powershell
 bun autoresearch\benchmark.ts `
@@ -64,6 +66,8 @@ ffprobe -v error -show_entries format=duration:stream=codec_type,codec_name `
 - Two dry trials are stable and the recorded run has audio.
 - Click series reports clicked/applied and click p50/p95; the video shows the
   clicks and the German simplified lines.
+- The README recording is published for `v1.0.0-rc.4`:
+  `docs/media/german-60s.mp4` and the 30 s preview `docs/media/readme-german.gif`.
 - Numbers and caveats are in `docs/qa/2026-11-25-german-live-baseline.md`.
 - Known limitation: the recording muxes the fixture's own audio because Realtek
   Stereo Mix is not exposed to DirectShow on the reference PC. A true loopback

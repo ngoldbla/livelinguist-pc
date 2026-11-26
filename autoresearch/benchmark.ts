@@ -458,7 +458,7 @@ function startRecording(
       "-framerate",
       "20",
       "-draw_mouse",
-      "1",
+      "0",
       "-offset_x",
       String(x),
       "-offset_y",

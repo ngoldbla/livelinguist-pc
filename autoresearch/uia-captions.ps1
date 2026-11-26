@@ -71,6 +71,45 @@ function Find-ButtonContaining {
     return $null
 }
 
+function Find-Text {
+    param($Root, [string]$Name)
+    $texts = $Root.FindAll(
+        [System.Windows.Automation.TreeScope]::Descendants,
+        [System.Windows.Automation.AndCondition]::new(
+            [System.Windows.Automation.PropertyCondition]::new(
+                [System.Windows.Automation.AutomationElement]::NameProperty, $Name
+            ),
+            [System.Windows.Automation.PropertyCondition]::new(
+                [System.Windows.Automation.AutomationElement]::ControlTypeProperty,
+                [System.Windows.Automation.ControlType]::Text
+            )
+        )
+    )
+    if ($texts.Count -gt 0) { return $texts[0] }
+    return $null
+}
+
+function Select-SystemAudio {
+    param($Root)
+    if ($null -eq $Root) { throw "app window did not appear" }
+    $tile = Find-ButtonContaining -Root $Root -Text "SOUND:"
+    if ($null -eq $tile) { throw "sound tile did not appear" }
+    if ($tile.Current.Name -like "*System audio*") { return }
+    Click-Element $tile
+    Start-Sleep -Milliseconds 300
+    $option = $null
+    $deadline = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds() + 5000
+    do {
+        $current = Get-AppRoot
+        if ($null -ne $current) { $option = Find-Text -Root $current -Name "System audio" }
+        if ($null -ne $option) { break }
+        Start-Sleep -Milliseconds 50
+    } while ([DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds() -lt $deadline)
+    if ($null -eq $option) { throw "system audio option did not appear" }
+    Click-Element $option
+    Start-Sleep -Milliseconds 300
+}
+
 function Find-CaptionButton {
     param($Root, [string]$Text, [switch]$AnyState)
     $buttons = $Root.FindAll(
@@ -138,7 +177,7 @@ function Wait-CaptionScreen {
                 [System.Windows.Automation.TreeScope]::Descendants,
                 [System.Windows.Automation.Condition]::TrueCondition
             ) | ForEach-Object { $_.Current.Name }
-            if ($names -contains "CAPTIONS" -or $names -contains "Listening") { return }
+            if ($names -contains "Pause captions" -or $names -contains "Stop") { return }
         }
         Start-Sleep -Milliseconds 50
     } while ([DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds() -lt $deadline)
@@ -178,8 +217,7 @@ try {
     } while ([DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds() -lt $deadline)
     if ($null -eq $root) { throw "app window did not appear" }
 
-    Click-Element (Wait-Button -Name "System audio")
-    Start-Sleep -Milliseconds 250
+    Select-SystemAudio -Root (Get-AppRoot)
     Click-Element (Wait-Button -Name "Start captions")
     Wait-CaptionScreen
     if ($Mode -eq "overlay") {
@@ -234,14 +272,38 @@ try {
             foreach ($element in $elements) {
                 if (
                     $element.Current.ControlType -eq [System.Windows.Automation.ControlType]::Group -and
-                    $element.Current.Name -in @("Live partial", "Listening — keep speaking")
+                    (
+                        $element.Current.Name -in @("Live partial", "Listening — keep speaking", "Listening - keep speaking") -or
+                        $element.Current.Name -match "^Listening .*(speaking|talking)$"
+                    )
                 ) {
                     $pendingPartial = $true
                     continue
                 }
-                if ($element.Current.ControlType -eq [System.Windows.Automation.ControlType]::Text) {
+                if (
+                    $element.Current.ControlType -eq [System.Windows.Automation.ControlType]::Button
+                ) {
+                    $name = [string]$element.Current.Name
+                    $original = $null
+                    if ($name.EndsWith(". Click to simplify")) {
+                        $original = $name.Substring(0, $name.Length - ". Click to simplify".Length)
+                    } elseif ($name.EndsWith(". Simplifying")) {
+                        $original = $name.Substring(0, $name.Length - ". Simplifying".Length)
+                    } elseif (($marker = $name.IndexOf(". Simplified: ")) -ge 0) {
+                        $original = $name.Substring(0, $marker)
+                    }
+                    if ($null -ne $original -and -not [string]::IsNullOrWhiteSpace($original)) {
+                        $texts.Add($original)
+                        $partialFlags.Add($false)
+                    }
+                    continue
+                }
+                if (
+                    $element.Current.ControlType -eq [System.Windows.Automation.ControlType]::Text -and
+                    $pendingPartial
+                ) {
                     $texts.Add([string]$element.Current.Name)
-                    $partialFlags.Add($pendingPartial)
+                    $partialFlags.Add($true)
                     $pendingPartial = $false
                 }
             }
@@ -256,17 +318,15 @@ try {
             for ($i = 0; $i -lt $texts.Count; $i += 1) {
                 $text = $texts[$i]
                 if ([string]::IsNullOrWhiteSpace($text) -or $text -eq "Live partial") { continue }
-                $next = if ($i + 1 -lt $texts.Count) { $texts[$i + 1] } else { "" }
-                $previous = if ($i -gt 0) { $texts[$i - 1] } else { "" }
 
-                if ($partialFlags[$i] -or $next -match "^Listening .*keep speaking$") {
+                if ($partialFlags[$i]) {
                     [void]$currentPartial.Add($text)
                     if (-not $previousPartial.Contains($text)) {
                         $newItems.Add([ordered]@{
                             t = $stamp; kind = "partial"; text = $text; scan_ms = $scanMs
                         })
                     }
-                } elseif ($previous -eq "verbatim" -or $next -match "^Tap a sentence") {
+                } else {
                     [void]$currentFinal.Add($text)
                     $lastFinalText = $text
                     if (-not $previousFinal.Contains($text) -and $allFinals.Add($text)) {

@@ -37,6 +37,12 @@ Every capture except `overlay.png` includes the custom title bar (drag region,
 minimize / maximize / close) added in ADR 0027; the overlay stays frameless and
 keeps its own Move control.
 
+`console-live-asr.png` and `console-click-simplified.png` are real-window
+captures from 2026-11-24, before the UI clarity pass. They remain T14/T20
+evidence for the live ASR and click paths, not current-UI screenshots; the
+current-UI live captures are `live.png`, `console-start-captions.png`, and the
+README video under `docs/media/`.
+
 Reproduce from an elevated PowerShell on the logged-on desktop:
 
 ```powershell
