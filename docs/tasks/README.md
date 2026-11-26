@@ -54,6 +54,7 @@ writing new cards. Agents work from cards.
 | [T40](T40-release-candidate.md) | Release gates and `v1.0.0` | `release-v1.0.0` | todo |
 | [T41](T41-caption-latency-baseline.md) | Caption-latency baseline + autoresearch harness | `stage-autoresearch-baseline` | done |
 | [T42](T42-video-evidence.md) | German video-evidence run (alternating clicks + MP4) | `stage-german-baseline` | done |
+| [T43](T43-microphone-device-selection.md) | Microphone capture + Windows endpoint picker | `stage-audio-devices` | done |
 
 Cards marked **(PR)** end their branch: open the PR, merge when CI is green.
 Two cards stop for a human on purpose: **T36** (MVP: real call + Narrator

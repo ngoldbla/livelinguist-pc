@@ -16,6 +16,8 @@ import type { Snapshot } from "./generated/Snapshot";
 export interface StartOptions {
   language: string;
   source: AudioSource;
+  /** Windows endpoint id; absent means the current default for the source. */
+  deviceId?: string;
   mode: SimplificationMode;
   detection: boolean;
   scenario?: string;
@@ -34,12 +36,22 @@ export interface WindowPolicy {
   notes: string[];
 }
 
+export interface AudioDeviceInfo {
+  id: string;
+  label: string;
+  default: boolean;
+}
+
 export interface AudioSourceInfo {
   id: string;
   label: string;
   kind: string;
   available: boolean;
   note?: string;
+  /** Endpoints for `monitor` and `mic`; empty for demo and silence. */
+  devices?: AudioDeviceInfo[];
+  /** Windows' current default endpoint for this source. */
+  defaultDeviceId?: string | null;
 }
 
 export interface BackendProbe {
@@ -205,6 +217,7 @@ class NativeTransport implements Transport {
       JSON.stringify({
         language: options.language,
         source: options.source,
+        deviceId: options.deviceId,
         mode: options.mode,
         detection: options.detection,
         scenario: options.scenario ?? "mock",
@@ -541,6 +554,20 @@ class DemoTransport implements Transport {
     return [
       { id: "demo", label: "Demo conversation", kind: "demo", available: true },
       { id: "silence", label: "Synthetic silence", kind: "silence", available: true },
+      {
+        id: "monitor",
+        label: "System audio",
+        kind: "monitor",
+        available: true,
+        devices: [],
+      },
+      {
+        id: "mic",
+        label: "Microphone",
+        kind: "mic",
+        available: true,
+        devices: [],
+      },
     ];
   }
 

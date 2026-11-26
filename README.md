@@ -15,14 +15,17 @@ easy-language register for that language — **FALC**, **Leichte Sprache**,
 
 ## What it does
 
-1. Choose the language you are learning and the sound to listen to.
+1. Choose the language you are learning, then the sound: **System audio** or
+   **Microphone**, and the Windows device that should be captured.
 2. Press **Start captions**. Speech is transcribed on the CPU as it plays.
 3. Click any sentence to see the same sentence in simpler words, in the same
    language. Nothing is translated, and nothing leaves the PC.
 
 The window starts as a small console, can collapse into a 780×250 caption
 overlay over any app, and keeps the spoken line above the simpler one so you can
-compare them. Caption size, the original-line toggle, and the app language are
+compare them. A device picker under **Sound** selects the output or input
+endpoint; an explicit choice is never swapped behind your back. Caption size,
+the original-line toggle, the chosen devices, and the app language are
 remembered between runs.
 
 ## Download for Windows
@@ -66,7 +69,7 @@ It contains only that public fixture's audio and captions.
 | | |
 |---|---|
 | ![Console](docs/screenshots/m2-windows/console.png) | ![Language picker](docs/screenshots/m2-windows/language-picker-coverage.png) |
-| **Console.** Pick a language, pick a sound source, press Start. **Settings** stays one click away. | **Any of 29 languages.** Languages without a live-ASR gate are marked *Simplified text only* and take pasted or typed text instead of sound. |
+| **Console.** Pick a language, a sound source, and — for system audio or microphone — the Windows device. **Settings** stays one click away. | **Any of 29 languages.** Languages without a live-ASR gate are marked *Simplified text only* and take pasted or typed text instead of sound. |
 | ![Live captions](docs/screenshots/m2-windows/live.png) | ![Caption overlay](docs/screenshots/m2-windows/overlay.png) |
 | **Live captions.** The spoken sentence stays visible above the simpler version. Click a sentence at any time; captions keep flowing. | **Caption overlay.** A frameless 780×250 window over your video call or player, with pause, move, expand, and back to the console. |
 | ![Settings](docs/screenshots/m2-windows/settings.png) | ![Session summary](docs/screenshots/m2-windows/summary.png) |
@@ -79,15 +82,16 @@ full portfolio is in [`docs/screenshots/m2-windows/`](docs/screenshots/m2-window
 ## Scope (v1.0)
 
 A single-screen Windows 11 x64 (23H2+) user installs per-user without admin,
-plays a call or video, sees live verbatim captions from **system audio**
-(WASAPI loopback) where the locale passes the ASR gate, and **clicks** any
+plays a call or video (or speaks into a microphone), sees live verbatim captions
+from the **selected Windows endpoint** — WASAPI loopback for system audio, WASAPI
+input for a microphone — where the locale passes the ASR gate, and **clicks** any
 sentence to get a same-language easy-language rewrite in any of the **29**
 packs. Inference is CPU-only (sherpa-onnx Nemotron 3.5 ASR + llama.cpp Qwen3
 0.6B EasyLanguage), models are downloaded on first run and hash-verified.
 
-Not in 1.0: microphone, per-app capture, multi-monitor/mixed-DPI, GPU
-inference, 1.7B, automatic simplification, Windows 10/ARM64, Linux/macOS
-packages, translation, cloud. Full list: [`docs/plans/2026-11-22-v1-scope.md`](docs/plans/2026-11-22-v1-scope.md).
+Not in 1.0: per-app capture, multi-monitor/mixed-DPI, GPU inference, 1.7B,
+automatic simplification, Windows 10/ARM64, Linux/macOS packages, translation,
+cloud. Full list: [`docs/plans/2026-11-22-v1-scope.md`](docs/plans/2026-11-22-v1-scope.md).
 
 ## Source of truth
 
@@ -149,6 +153,12 @@ WASAPI loopback capture, sherpa-onnx streaming ASR with 560 ms chunks, CPU
 llama.cpp click-to-simplify, the 29 language packs, the console/overlay/expanded
 windows, first-run model download, NSIS installer and portable ZIP, and the
 tag-driven release workflow.
+
+Microphone capture and the Windows endpoint picker are in `main` after
+`v1.0.0-rc.4` (ADR 0028); they are not in the rc.4 installer. The device list,
+microphone start/stop, and a selected non-default output are verified on the
+reference host (`docs/qa/2026-11-25-microphone-device-selection.md`). Spoken
+microphone WER/latency is still to be measured.
 
 Still human-gated before `v1.0.0`: the Narrator and keyboard-only live run, the
 100–150% scaling pass on the redesigned UI, and owner sign-off. The newest UI

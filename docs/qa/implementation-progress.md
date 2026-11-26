@@ -120,6 +120,25 @@ group); capture uses `-draw_mouse 0`. Recorded numbers: partial p50/p95
 caption gap 1235 ms. Details in `docs/qa/2026-11-25-german-live-baseline.md`
 (`## README rerun with the redesigned UI`).
 
+**2026-11-25 microphone and audio-endpoint selection (branch
+`stage-audio-devices`):** ADR 0028 adds microphone capture beside WASAPI
+loopback and a per-direction Windows endpoint picker. `ll-audio` exposes
+`CaptureKind`, `list_devices`, `default_device_id` and one `DeviceCapture` that
+opens a selected endpoint by stable id (or the Windows default), converts the
+device's sample format to f32, and shares the existing ring/downmix/resample
+path. `ll-bridge` lists `devices` + `defaultDeviceId` on `monitor`/`mic`, accepts
+`deviceId` at start, runs real ASR for `mic`, and refuses a missing explicit
+endpoint instead of silently switching. The console adds a **Device** selector
+under the SOUND tile and persists `outputDeviceId`/`inputDeviceId`. Verified on
+the reference host: both outputs and the Realtek microphone open by id,
+`listAudioSources` returns both lists, a mic session starts/stops cleanly, and
+the real window shows and starts on a selected non-default output. Evidence:
+`docs/qa/2026-11-25-microphone-device-selection.md`. UI: typecheck, 114 tests,
+Biome pass; Rust: capture tests 17 pass + 4 hardware-gated, bridge 11 pass,
+clippy `-D warnings` with `capture`. Remaining human checks: spoken microphone
+WER/latency, microphone-permission-denied path, and hot-plug beyond the default
+change.
+
 Checkpoint 2026-11-24 (Linux cloud session; PRs #24-#31). Card statuses are in
 `docs/tasks/README.md` (`linux-done` = only the Windows part remains).
 

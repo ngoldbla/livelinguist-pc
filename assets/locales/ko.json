@@ -291,5 +291,12 @@
   "English": "English",
   "stopped at %@%": "stopped at %@%",
   "overrun %@": "overrun %@",
-  "Everything your computer plays": "Everything your computer plays"
+  "Everything your computer plays": "Everything your computer plays",
+  "No microphone found": "No microphone found",
+  "System default (%lld)": "System default (%lld)",
+  "The selected device is unavailable; using the system default.": "The selected device is unavailable; using the system default.",
+  "Unavailable device": "Unavailable device",
+  "Windows default": "Windows default",
+  "Your microphone or headset": "Your microphone or headset",
+  "System default": "System default"
 }

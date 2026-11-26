@@ -7,6 +7,7 @@ import { AuroraField, Toast } from "./aurora/components";
 import { colors } from "./aurora/theme";
 import { WindowChrome } from "./aurora/WindowChrome";
 import {
+  type AudioSourceInfo,
   createTransport,
   readWorkArea,
   type SimplifyResult,
@@ -82,6 +83,7 @@ export function App() {
   const [simplifyingId, setSimplifyingId] = useState<string | null>(null);
   const [modelStore] = useState(createModelStore);
   const models = useModels(modelStore);
+  const [sources, setSources] = useState<AudioSourceInfo[] | null>(null);
   const transportRef = useRef<Transport | null>(null);
   const started = useRef(false);
   const renderer = useGpuixRequired();
@@ -137,6 +139,16 @@ export function App() {
     return transportRef.current;
   };
 
+  const refreshSources = async () => {
+    try {
+      setSources(await ensureTransport().listSources());
+    } catch {
+      // A missing addon or a failed enumeration leaves the picker unchanged;
+      // starting still reports the real error.
+      setSources(null);
+    }
+  };
+
   const stopWith = async (transport: Transport) => {
     try {
       const snapshot = await transport.snapshot();
@@ -169,10 +181,29 @@ export function App() {
     const transport = createTransport((envelope) => bootStore.applyEnvelope(envelope));
     transportRef.current = transport;
     setScreen("live");
+    let deviceId =
+      source === "monitor"
+        ? settings.outputDeviceId || undefined
+        : source === "mic"
+          ? settings.inputDeviceId || undefined
+          : undefined;
+    if (deviceId) {
+      // A saved endpoint may have been unplugged since it was chosen. Keep the
+      // selection honest instead of failing the session on a dead id.
+      const info = (await transport.listSources().catch(() => [] as AudioSourceInfo[])).find(
+        (entry) => entry.id === source,
+      );
+      const devices = info?.devices ?? [];
+      if (devices.length > 0 && !devices.some((entry) => entry.id === deviceId)) {
+        deviceId = undefined;
+        setToast(t(locale, "The selected device is unavailable; using the system default."));
+      }
+    }
     try {
       await transport.start({
         language,
         source,
+        deviceId,
         mode,
         detection: settings.detection,
         scenario: settings.scenario,
@@ -262,7 +293,9 @@ export function App() {
 
   useEffect(() => {
     void refreshModels();
-    // Model status is read once at start; downloads refresh it themselves.
+    void refreshSources();
+    // Model and endpoint status is read once at start; downloads and the
+    // sound menu refresh them themselves.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -271,6 +304,14 @@ export function App() {
     bootStore.setLanguage(option.code, option.uiCode);
     if (state.phase === "listening") {
       setToast(t(locale, "Language change applies to the next session."));
+    }
+  };
+
+  const onDevice = (deviceId: string) => {
+    if (state.source === "monitor") {
+      applySettings({ outputDeviceId: deviceId });
+    } else if (state.source === "mic") {
+      applySettings({ inputDeviceId: deviceId });
     }
   };
 
@@ -386,10 +427,19 @@ export function App() {
           source={state.source}
           models={models}
           hasTranscript={state.segments.length > 0}
+          sources={sources}
+          deviceId={
+            state.source === "monitor"
+              ? settings.outputDeviceId
+              : state.source === "mic"
+                ? settings.inputDeviceId
+                : ""
+          }
           onLanguage={onLanguage}
           onSource={(source) => bootStore.setSource(source)}
+          onDevice={onDevice}
+          onRefreshSources={() => void refreshSources()}
           onStart={() => void startSession()}
-          onBlocked={(message) => setToast(message)}
           onSettings={openSettings}
           onSummary={() => setScreen(state.segments.length > 0 ? "summary" : "console")}
         />

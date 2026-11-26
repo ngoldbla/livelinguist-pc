@@ -2,16 +2,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger } from "@gpuix/react";
 import { useState } from "react";
 import { BrandMark, Button, Icon } from "../aurora/components";
 import { colors, focusRing, textStyle, type } from "../aurora/theme";
+import type { AudioSourceInfo } from "../bridge/transport";
 import { LANGUAGES, languageByCode, statusLabel } from "../i18n/languages";
 import { t } from "../i18n/locales";
-import { planSession } from "../sessionPlan";
 import { allReady, type ModelView } from "../store/modelStore";
 import type { AudioSource } from "../store/sessionStore";
 
 /**
  * Mac/iOS console: brand lockup, a state headline, two decision tiles with
- * native Select menus (language, sound), then one session cluster at the
- * bottom. The transcript lives on the live screen.
+ * native Select menus (language, sound), an optional device picker, then one
+ * session cluster at the bottom. The transcript lives on the live screen.
  */
 export function ConsoleScreen({
   language,
@@ -19,10 +19,13 @@ export function ConsoleScreen({
   source,
   models,
   hasTranscript,
+  sources,
+  deviceId,
   onLanguage,
   onSource,
+  onDevice,
+  onRefreshSources,
   onStart,
-  onBlocked,
   onSettings,
   onSummary,
 }: {
@@ -31,17 +34,31 @@ export function ConsoleScreen({
   source: AudioSource;
   models: ModelView;
   hasTranscript: boolean;
+  sources: AudioSourceInfo[] | null;
+  deviceId: string;
   onLanguage: (code: string) => void;
   onSource: (source: AudioSource) => void;
+  onDevice: (deviceId: string) => void;
+  onRefreshSources: () => void;
   onStart: () => void;
-  onBlocked: (message: string) => void;
   onSettings: () => void;
   onSummary: () => void;
 }) {
   const selected = languageByCode(language);
   const [openMenu, setOpenMenu] = useState<"language" | "sound" | null>(null);
-  const micPlan = planSession("mic");
-  const micMessage = micPlan.ok ? "" : micPlan.error;
+  const monitorInfo = sources?.find((entry) => entry.id === "monitor");
+  const micInfo = sources?.find((entry) => entry.id === "mic");
+  const monitorAvailable = monitorInfo?.available ?? true;
+  const micAvailable = micInfo?.available ?? true;
+  const monitorDetail =
+    monitorInfo && !monitorInfo.available
+      ? (monitorInfo.note ?? t(locale, "Everything your computer plays"))
+      : t(locale, "Everything your computer plays");
+  const micDetail = micInfo
+    ? micInfo.available
+      ? t(locale, "Your microphone or headset")
+      : (micInfo.note ?? t(locale, "No microphone found"))
+    : t(locale, "Your microphone or headset");
   const ready = allReady(models);
 
   const sourceName =
@@ -54,8 +71,8 @@ export function ConsoleScreen({
     source === "demo"
       ? t(locale, "Built-in French conversation")
       : source === "mic"
-        ? micMessage
-        : t(locale, "Everything your computer plays");
+        ? micDetail
+        : monitorDetail;
 
   const languageItems = LANGUAGES.map((entry) => ({
     value: entry.code,
@@ -75,6 +92,47 @@ export function ConsoleScreen({
       textValue: t(locale, "Demo conversation"),
     },
   ];
+
+  const deviceInfo = source === "monitor" ? monitorInfo : source === "mic" ? micInfo : undefined;
+  const devices = deviceInfo?.devices ?? [];
+  const defaultDevice =
+    devices.find((entry) => entry.default) ??
+    devices.find((entry) => entry.id === deviceInfo?.defaultDeviceId);
+  const defaultDeviceLabel = t(
+    locale,
+    "System default (%lld)",
+    defaultDevice?.label ?? t(locale, "Windows default"),
+  );
+  const selectedDevice = devices.find((entry) => entry.id === deviceId);
+  const selectedDeviceLabel = deviceId
+    ? (selectedDevice?.label ?? t(locale, "Unavailable device"))
+    : defaultDeviceLabel;
+  const showDevice = (source === "monitor" || source === "mic") && devices.length > 0;
+  const deviceItems: Array<{
+    value: string;
+    label: string;
+    textValue: string;
+    detail?: string;
+  }> = [
+    {
+      value: "default",
+      label: t(locale, "System default"),
+      textValue: defaultDeviceLabel,
+      detail: defaultDevice?.label ?? t(locale, "Windows default"),
+    },
+    ...devices.map((entry) => ({
+      value: entry.id,
+      label: entry.label,
+      textValue: entry.label,
+    })),
+  ];
+  if (deviceId && !selectedDevice) {
+    deviceItems.push({
+      value: deviceId,
+      label: t(locale, "Unavailable device"),
+      textValue: t(locale, "Unavailable device"),
+    });
+  }
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
@@ -191,14 +249,12 @@ export function ConsoleScreen({
                 items={soundItems}
                 value={source}
                 open={openMenu === "sound"}
-                onOpenChange={(open) => setOpenMenu(open ? "sound" : null)}
-                onValueChange={(value) => {
-                  if (value === "mic") {
-                    onBlocked(micMessage);
-                    return;
-                  }
-                  onSource(value as AudioSource);
+                onOpenChange={(open) => {
+                  setOpenMenu(open ? "sound" : null);
+                  // Endpoints can appear or disappear while the app is open.
+                  if (open) onRefreshSources();
                 }}
+                onValueChange={(value) => onSource(value as AudioSource)}
               >
                 <SelectTrigger
                   role="button"
@@ -226,12 +282,13 @@ export function ConsoleScreen({
                     value="monitor"
                     role="option"
                     aria-selected={source === "monitor"}
+                    disabled={!monitorAvailable}
                     style={itemStyle}
                   >
                     <ChoiceBody
                       icon="audio-waveform"
                       title={t(locale, "System audio")}
-                      detail={t(locale, "Everything your computer plays")}
+                      detail={monitorDetail}
                       selected={source === "monitor"}
                     />
                   </SelectItem>
@@ -239,13 +296,13 @@ export function ConsoleScreen({
                     value="mic"
                     role="option"
                     aria-selected={source === "mic"}
-                    disabled
+                    disabled={!micAvailable}
                     style={itemStyle}
                   >
                     <ChoiceBody
                       icon="mic"
                       title={t(locale, "Microphone")}
-                      detail={micMessage}
+                      detail={micDetail}
                       selected={source === "mic"}
                     />
                   </SelectItem>
@@ -266,6 +323,97 @@ export function ConsoleScreen({
               </Select>
             </div>
           </div>
+
+          {showDevice ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <text style={{ ...textStyle(type.meta, colors.faint, 700) }}>
+                {t(locale, "Device")}
+              </text>
+              <Select
+                items={deviceItems}
+                value={deviceId || "default"}
+                onValueChange={(value) => onDevice(value === "default" ? "" : value)}
+              >
+                <SelectTrigger
+                  role="button"
+                  aria-haspopup="listbox"
+                  aria-label={`${t(locale, "Device")}: ${selectedDeviceLabel}`}
+                  style={(state) => deviceTileStyle(state.open)}
+                >
+                  <Icon
+                    name={source === "mic" ? "mic" : "audio-waveform"}
+                    size={15}
+                    color={colors.muted}
+                  />
+                  <text
+                    style={{
+                      ...textStyle(type.body, colors.text, 500),
+                      flexGrow: 1,
+                      minWidth: 0,
+                      whiteSpace: "nowrap",
+                      textOverflow: "ellipsis",
+                    }}
+                  >
+                    {selectedDeviceLabel}
+                  </text>
+                  <Icon name="chevron-down" size={14} color={colors.faint} />
+                </SelectTrigger>
+                <SelectContent
+                  role="listbox"
+                  aria-label={t(locale, "Device")}
+                  side="bottom"
+                  align="start"
+                  sideOffset={6}
+                  style={deviceMenuStyle}
+                >
+                  {deviceItems.map((entry) => (
+                    <SelectItem
+                      key={entry.value}
+                      value={entry.value}
+                      role="option"
+                      aria-selected={(deviceId || "default") === entry.value}
+                      style={itemStyle}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 1,
+                          flexGrow: 1,
+                          minWidth: 0,
+                        }}
+                      >
+                        <text
+                          style={{
+                            ...textStyle(type.body, colors.text, 500),
+                            whiteSpace: "nowrap",
+                            textOverflow: "ellipsis",
+                          }}
+                        >
+                          {entry.label}
+                        </text>
+                        {entry.detail ? (
+                          <text
+                            style={{
+                              ...textStyle(type.meta, colors.muted),
+                              whiteSpace: "nowrap",
+                              textOverflow: "ellipsis",
+                            }}
+                          >
+                            {entry.detail}
+                          </text>
+                        ) : null}
+                      </div>
+                      <div style={{ flexGrow: 1 }} />
+                      {(deviceId || "default") === entry.value ? (
+                        <Icon name="check" size={14} color={colors.accent} />
+                      ) : null}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          ) : null}
 
           {ready ? null : (
             <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8 }}>
@@ -324,6 +472,26 @@ function tileStyle(open: boolean) {
   };
 }
 
+function deviceTileStyle(open: boolean) {
+  return {
+    display: "flex",
+    flexDirection: "row" as const,
+    alignItems: "center",
+    gap: 8,
+    height: 44,
+    paddingLeft: 14,
+    paddingRight: 12,
+    width: "100%",
+    borderRadius: 10,
+    backgroundColor: open ? "#AFA2FF14" : colors.surface,
+    borderWidth: 1,
+    borderColor: open ? "#AFA2FF66" : colors.border,
+    cursor: "pointer" as const,
+    hover: { backgroundColor: open ? "#AFA2FF1F" : "#FFFFFF0A" },
+    focusVisible: focusRing,
+  };
+}
+
 const menuStyle = {
   width: 320,
   maxHeight: 320,
@@ -342,6 +510,11 @@ const menuStyle = {
   },
   scrollbarColor: "#FFFFFF22",
   scrollbarWidth: 6,
+};
+
+const deviceMenuStyle = {
+  ...menuStyle,
+  width: 420,
 };
 
 function itemStyle(state: { selected: boolean; highlighted: boolean; disabled: boolean }) {

@@ -46,6 +46,11 @@ struct StartRequest {
     language: String,
     #[serde(default = "default_source")]
     source: String,
+    /// Windows endpoint id from `listAudioSources`; absent means the default.
+    /// Only the `capture` feature reads it.
+    #[cfg_attr(not(feature = "capture"), allow(dead_code))]
+    #[serde(default)]
+    device_id: Option<String>,
     #[serde(default = "default_mode")]
     mode: String,
     #[serde(default)]
@@ -165,7 +170,8 @@ impl CoreClient {
             "demo" => AudioSourceKind::Demo,
             "silence" => AudioSourceKind::Silence,
             "monitor" => AudioSourceKind::SystemAudio,
-            _other => AudioSourceKind::Demo,
+            "mic" => AudioSourceKind::Microphone,
+            other => return Err(Error::from_reason(format!("unknown audio source: {other}"))),
         };
         // Real ASR for real audio: with the `sherpa` feature, system audio
         // (or any non-mock scenario) uses the pinned model. A missing model is
@@ -186,18 +192,26 @@ impl CoreClient {
         #[cfg(not(feature = "sherpa"))]
         let sherpa_asr: Option<Box<dyn AsrEngine>> = None;
         #[cfg(feature = "capture")]
-        let capture = if matches!(source_kind, AudioSourceKind::SystemAudio) {
-            match ll_audio::capture::LoopbackCapture::start_default() {
-                Ok(capture) => Some(capture),
-                Err(error) => {
-                    emit_error(&callback, "AUDIO_SOURCE_UNAVAILABLE", &error.to_string());
-                    return Err(Error::from_reason(format!(
-                        "system audio capture failed: {error}"
-                    )));
+        let capture_kind = match &source_kind {
+            AudioSourceKind::SystemAudio => Some(ll_audio::capture::CaptureKind::Loopback),
+            AudioSourceKind::Microphone => Some(ll_audio::capture::CaptureKind::Microphone),
+            _ => None,
+        };
+        #[cfg(feature = "capture")]
+        let capture = match capture_kind {
+            Some(kind) => {
+                match ll_audio::capture::DeviceCapture::start(kind, request.device_id.as_deref()) {
+                    Ok(capture) => Some(capture),
+                    Err(error) => {
+                        emit_error(&callback, "AUDIO_SOURCE_UNAVAILABLE", &error.to_string());
+                        return Err(Error::from_reason(format!(
+                            "{} capture failed: {error}",
+                            kind.label()
+                        )));
+                    }
                 }
             }
-        } else {
-            None
+            None => None,
         };
         let mut session = SessionConfiguration::new(language, source_kind);
         session.simplification_mode = match request.mode.as_str() {
@@ -270,7 +284,7 @@ impl CoreClient {
         emit(callback.as_ref(), events);
         #[cfg(feature = "capture")]
         if let Some(capture) = capture {
-            start_monitor_feeder(Arc::clone(&self.inner), capture);
+            start_capture_feeder(Arc::clone(&self.inner), capture);
         }
         Ok(())
     }
@@ -645,12 +659,13 @@ impl CoreClient {
 
     #[napi]
     pub fn list_audio_sources(&self) -> Result<String> {
+        let (monitor, mic) = audio_source_entries();
         let sources = serde_json::json!([
             {"id": "demo", "label": "Demo conversation", "kind": "demo", "available": true},
             {"id": "silence", "label": "Synthetic silence", "kind": "silence", "available": true},
-            {"id": "file", "label": "Audio file", "kind": "file", "available": true},
-            {"id": "mic", "label": "Microphone", "kind": "mic", "available": false, "note": "post-1.0"},
-            monitor_source_entry()
+            {"id": "file", "label": "Audio file", "kind": "file", "available": false, "note": "not available in this build"},
+            mic,
+            monitor
         ]);
         Ok(sources.to_string())
     }
@@ -950,54 +965,99 @@ fn emit_error(callback: &ThreadsafeFunction<String>, code: &str, message: &str) 
 
 /// `start` can only build the sources this build was compiled with.
 fn preflight_source(source: &str) -> std::result::Result<(), String> {
-    if source != "monitor" {
-        return Ok(());
-    }
-    #[cfg(feature = "capture")]
-    {
-        Ok(())
-    }
-    #[cfg(not(feature = "capture"))]
-    {
-        Err("system audio capture not built".to_string())
+    match source {
+        "demo" | "silence" => Ok(()),
+        "monitor" => capture_preflight("system audio"),
+        "mic" => capture_preflight("microphone"),
+        "file" => Err("audio file source is not available".to_string()),
+        other => Err(format!("unknown audio source: {other}")),
     }
 }
 
-fn monitor_source_entry() -> serde_json::Value {
-    let available = {
-        #[cfg(feature = "capture")]
-        {
-            ll_audio::capture::default_output_available()
-        }
-        #[cfg(not(feature = "capture"))]
-        {
-            false
-        }
-    };
-    if available {
-        serde_json::json!({
-            "id": "monitor", "label": "System audio", "kind": "monitor", "available": true
-        })
-    } else {
-        serde_json::json!({
-            "id": "monitor", "label": "System audio", "kind": "monitor", "available": false,
-            "note": "device capture pending"
-        })
-    }
-}
-
-/// Pull loopback buffers into the running pipeline until the session stops.
-///
-/// When the capture ends or the default output device changes, the capture is
-/// dropped, the loss is reported, and the default output is reopened once a
-/// second for up to ten seconds. It never falls back to demo audio.
 #[cfg(feature = "capture")]
-fn start_monitor_feeder(
+fn capture_preflight(_label: &str) -> std::result::Result<(), String> {
+    Ok(())
+}
+
+#[cfg(not(feature = "capture"))]
+fn capture_preflight(label: &str) -> std::result::Result<(), String> {
+    Err(format!("{label} capture not built"))
+}
+
+/// The selectable system-audio and microphone sources, with their endpoints.
+///
+/// The UI uses `devices` for the device picker and `defaultDeviceId` to name
+/// Windows' current default. Without the `capture` feature both are empty.
+#[cfg(feature = "capture")]
+fn audio_source_entries() -> (serde_json::Value, serde_json::Value) {
+    use ll_audio::capture::{list_devices, CaptureDevice, CaptureKind};
+
+    fn entry(id: &str, label: &str, devices: &[CaptureDevice]) -> serde_json::Value {
+        let default_device = devices
+            .iter()
+            .find(|device| device.is_default)
+            .map(|device| device.id.clone());
+        let available = !devices.is_empty();
+        let devices: Vec<serde_json::Value> = devices
+            .iter()
+            .map(|device| {
+                serde_json::json!({
+                    "id": device.id,
+                    "label": device.name,
+                    "default": device.is_default
+                })
+            })
+            .collect();
+        if available {
+            serde_json::json!({
+                "id": id, "label": label, "kind": id, "available": true,
+                "devices": devices, "defaultDeviceId": default_device
+            })
+        } else {
+            serde_json::json!({
+                "id": id, "label": label, "kind": id, "available": false,
+                "devices": [], "defaultDeviceId": null,
+                "note": format!("no {} device found", label.to_lowercase())
+            })
+        }
+    }
+
+    let outputs = list_devices(CaptureKind::Loopback);
+    let inputs = list_devices(CaptureKind::Microphone);
+    (
+        entry("monitor", "System audio", &outputs),
+        entry("mic", "Microphone", &inputs),
+    )
+}
+
+#[cfg(not(feature = "capture"))]
+fn audio_source_entries() -> (serde_json::Value, serde_json::Value) {
+    (
+        serde_json::json!({
+            "id": "monitor", "label": "System audio", "kind": "monitor",
+            "available": false, "devices": [], "defaultDeviceId": null,
+            "note": "audio capture not built"
+        }),
+        serde_json::json!({
+            "id": "mic", "label": "Microphone", "kind": "mic",
+            "available": false, "devices": [], "defaultDeviceId": null,
+            "note": "audio capture not built"
+        }),
+    )
+}
+
+/// Pull capture buffers into the running pipeline until the session stops.
+///
+/// A selected endpoint is reopened by id after a loss; the default endpoint is
+/// followed when Windows changes it. The session never falls back to demo audio.
+#[cfg(feature = "capture")]
+fn start_capture_feeder(
     inner: Arc<Mutex<BridgeInner>>,
-    mut capture: ll_audio::capture::LoopbackCapture,
+    mut capture: ll_audio::capture::DeviceCapture,
 ) {
+    let kind = capture.kind();
     let _ = std::thread::Builder::new()
-        .name("loopback-feed".into())
+        .name("capture-feed".into())
         .spawn(move || {
             let mut last_device_check = Instant::now();
             loop {
@@ -1008,9 +1068,13 @@ fn start_monitor_feeder(
                         }
                     }
                     None => {
-                        let Some(reopened) = reopen_capture(&inner, capture, "output device lost")
-                        else {
-                            stop_after_device_loss(&inner);
+                        let Some(reopened) = reopen_capture(
+                            &inner,
+                            capture,
+                            kind,
+                            &format!("{} device lost", kind.label()),
+                        ) else {
+                            stop_after_device_loss(&inner, kind);
                             break;
                         };
                         capture = reopened;
@@ -1023,12 +1087,18 @@ fn start_monitor_feeder(
                     continue;
                 }
                 last_device_check = Instant::now();
-                let current = ll_audio::capture::default_device_name();
-                if device_changed(capture.device_name(), current.as_deref()) {
-                    let Some(reopened) =
-                        reopen_capture(&inner, capture, "default output device changed")
-                    else {
-                        stop_after_device_loss(&inner);
+                if !capture.follows_default() {
+                    continue;
+                }
+                let current = ll_audio::capture::default_device_id(capture.kind());
+                if should_reopen(true, capture.device_id(), current.as_deref()) {
+                    let Some(reopened) = reopen_capture(
+                        &inner,
+                        capture,
+                        kind,
+                        &format!("default {} device changed", kind.label()),
+                    ) else {
+                        stop_after_device_loss(&inner, kind);
                         break;
                     };
                     capture = reopened;
@@ -1038,7 +1108,7 @@ fn start_monitor_feeder(
         });
 }
 
-/// Feed one loopback buffer into the running pipeline; false when it is gone.
+/// Feed one capture buffer into the running pipeline; false when it is gone.
 #[cfg(feature = "capture")]
 fn push_capture_audio(inner: &Arc<Mutex<BridgeInner>>, buffer: &[f32]) -> bool {
     let (events, callback) = {
@@ -1061,33 +1131,35 @@ fn push_capture_audio(inner: &Arc<Mutex<BridgeInner>>, buffer: &[f32]) -> bool {
     true
 }
 
-/// True when the capture no longer follows the default output device.
+/// True when a default-following capture no longer matches Windows' default.
+///
+/// A capture pinned to an explicit endpoint ignores default changes; it ends
+/// only when its own stream reports the device lost.
 #[cfg(feature = "capture")]
-fn device_changed(captured: &str, current: Option<&str>) -> bool {
-    match current {
-        // No default output at all: the device we captured is gone.
-        None => true,
-        Some(name) => name != captured,
-    }
+fn should_reopen(follows_default: bool, captured_id: &str, current_default: Option<&str>) -> bool {
+    follows_default && current_default != Some(captured_id)
 }
 
-/// Report the loss, drop the dead capture, and reopen the default output.
+/// Report the loss, drop the dead capture, and reopen the same endpoint.
 ///
-/// Returns the new capture, or `None` when nothing reopened within
+/// A default-following capture opens the new default; an explicit selection is
+/// retried by id. Returns `None` when nothing reopened within
 /// [`DEVICE_RETRY_WINDOW`].
 #[cfg(feature = "capture")]
 fn reopen_capture(
     inner: &Arc<Mutex<BridgeInner>>,
-    stale: ll_audio::capture::LoopbackCapture,
+    stale: ll_audio::capture::DeviceCapture,
+    kind: ll_audio::capture::CaptureKind,
     reason: &str,
-) -> Option<ll_audio::capture::LoopbackCapture> {
+) -> Option<ll_audio::capture::DeviceCapture> {
     emit_capture_event(inner, "AUDIO_DEVICE_LOST", reason);
+    let requested = stale.requested_device_id().map(str::to_string);
     drop(stale);
 
     let deadline = Instant::now() + DEVICE_RETRY_WINDOW;
     while Instant::now() < deadline {
         std::thread::sleep(DEVICE_RETRY_INTERVAL);
-        if let Ok(capture) = ll_audio::capture::LoopbackCapture::start_default() {
+        if let Ok(capture) = ll_audio::capture::DeviceCapture::start(kind, requested.as_deref()) {
             emit_capture_event(
                 inner,
                 "AUDIO_DEVICE_CHANGED",
@@ -1101,13 +1173,17 @@ fn reopen_capture(
 
 /// The device did not come back: stop the session rather than use demo audio.
 #[cfg(feature = "capture")]
-fn stop_after_device_loss(inner: &Arc<Mutex<BridgeInner>>) {
-    emit_capture_event(inner, "AUDIO_DEVICE_LOST", "no output device after 10 s");
+fn stop_after_device_loss(inner: &Arc<Mutex<BridgeInner>>, kind: ll_audio::capture::CaptureKind) {
+    emit_capture_event(
+        inner,
+        "AUDIO_DEVICE_LOST",
+        &format!("no {} device after 10 s", kind.label()),
+    );
     if let Ok(mut guard) = inner.lock() {
         if let Some(mut pipeline) = guard.pipeline.take() {
             let _ = pipeline.stop();
         }
-        guard.last_error = Some("system audio device lost".into());
+        guard.last_error = Some(format!("{} device lost", kind.label()));
     }
 }
 
@@ -1178,7 +1254,9 @@ fn download_event(event: ll_models::DownloadEvent) -> ll_protocol::CoreEvent {
 /// Real ASR applies to system audio and to every non-mock scenario. Demo
 /// and silence sources under the mock scenario keep the scripted engine.
 fn use_real_asr(source: &str, scenario: Scenario) -> bool {
-    source == "monitor" || (scenario != Scenario::Mock && source != "demo" && source != "silence")
+    source == "monitor"
+        || source == "mic"
+        || (scenario != Scenario::Mock && source != "demo" && source != "silence")
 }
 
 #[cfg(feature = "sherpa")]
@@ -1278,6 +1356,7 @@ mod tests {
     #[test]
     fn real_asr_only_for_real_audio_or_non_mock_scenarios() {
         assert!(use_real_asr("monitor", Scenario::Mock));
+        assert!(use_real_asr("mic", Scenario::Mock));
         assert!(!use_real_asr("demo", Scenario::Mock));
         assert!(!use_real_asr("silence", Scenario::Mock));
         assert!(!use_real_asr("demo", Scenario::TierC));
@@ -1352,36 +1431,78 @@ mod tests {
     fn start_request_defaults_match_the_ui() {
         let request: StartRequest = serde_json::from_str(r#"{"language":"de-DE"}"#).unwrap();
         assert_eq!(request.source, "demo");
+        assert_eq!(request.device_id, None);
         assert_eq!(request.mode, "on_demand");
         assert_eq!(request.scenario, "mock");
         assert!(!request.detection);
     }
 
     #[test]
+    fn start_request_accepts_a_selected_endpoint() {
+        let request: StartRequest = serde_json::from_str(
+            r#"{"language":"de-DE","source":"mic","deviceId":"wasapi:{abc}"}"#,
+        )
+        .unwrap();
+        assert_eq!(request.source, "mic");
+        assert_eq!(request.device_id.as_deref(), Some("wasapi:{abc}"));
+    }
+
+    #[test]
     #[cfg(not(feature = "capture"))]
-    fn monitor_source_is_unavailable_without_capture() {
-        // The napi entry point returns this entry; testing the entry itself keeps
+    fn capture_sources_are_unavailable_without_capture() {
+        // The napi entry point returns these entries; testing the entries keeps
         // the unit test free of napi runtime symbols.
-        let monitor = monitor_source_entry();
+        let (monitor, mic) = audio_source_entries();
         assert_eq!(monitor["id"], "monitor");
         assert_eq!(monitor["available"], serde_json::Value::Bool(false));
+        assert_eq!(mic["id"], "mic");
+        assert_eq!(mic["available"], serde_json::Value::Bool(false));
 
-        // `start` rejects "monitor" with this error before it builds any source,
-        // so no demo session is created.
+        // `start` rejects both before it builds any source, so no demo session
+        // is created for audio that this build cannot capture.
         assert_eq!(
             preflight_source("monitor").unwrap_err(),
             "system audio capture not built"
         );
+        assert_eq!(
+            preflight_source("mic").unwrap_err(),
+            "microphone capture not built"
+        );
         assert!(preflight_source("demo").is_ok());
+        assert!(preflight_source("silence").is_ok());
+    }
+
+    #[test]
+    fn unknown_sources_are_rejected_not_mapped_to_demo() {
+        assert!(preflight_source("speaker").is_err());
+        assert!(preflight_source("file").is_err());
     }
 
     #[test]
     #[cfg(feature = "capture")]
-    fn a_new_default_output_counts_as_a_device_change() {
-        assert!(!device_changed("Speakers", Some("Speakers")));
-        assert!(device_changed("Speakers", Some("Headphones")));
-        // No default output at all means the captured device is gone.
-        assert!(device_changed("Speakers", None));
+    fn capture_entries_expose_endpoint_lists() {
+        let (monitor, mic) = audio_source_entries();
+        for entry in [&monitor, &mic] {
+            assert!(entry["devices"].is_array());
+            assert!(
+                entry["defaultDeviceId"].is_null() || entry["defaultDeviceId"].is_string(),
+                "defaultDeviceId must be an id or null"
+            );
+        }
+        assert!(preflight_source("monitor").is_ok());
+        assert!(preflight_source("mic").is_ok());
+    }
+
+    #[test]
+    #[cfg(feature = "capture")]
+    fn a_new_default_counts_only_when_the_default_is_followed() {
+        assert!(!should_reopen(true, "device-a", Some("device-a")));
+        assert!(should_reopen(true, "device-a", Some("device-b")));
+        // No default at all means the captured default device is gone.
+        assert!(should_reopen(true, "device-a", None));
+        // An explicit endpoint never follows someone else's default.
+        assert!(!should_reopen(false, "device-a", Some("device-b")));
+        assert!(!should_reopen(false, "device-a", None));
     }
 
     #[test]

@@ -20,7 +20,7 @@ Start here. Everything in `docs/` is one of four kinds: **what to do next**,
 
 | File | Use it for |
 |---|---|
-| [`decisions/README.md`](decisions/README.md) | ADR index (0001–0019). ADRs are canonical for their decision. |
+| [`decisions/README.md`](decisions/README.md) | ADR index (0001–0028). ADRs are canonical for their decision. |
 | [`plans/2026-11-21-live-linguist-pc-master-plan.md`](plans/2026-11-21-live-linguist-pc-master-plan.md) | Architecture and spec reference (crates, protocol, UI, inference, packaging, decision log). Sections superseded for 1.0 carry a banner. Read the relevant section before structural changes; do not execute from it. |
 
 ## 3. What we measured (evidence)
@@ -36,6 +36,7 @@ Current evidence (Windows host):
 | [`qa/2026-11-22-model-pins.md`](qa/2026-11-22-model-pins.md) | Pinned ASR/LLM artifacts and hashes |
 | [`qa/2026-11-21-event-delivery.md`](qa/2026-11-21-event-delivery.md) | S-2 bridge event delivery |
 | [`qa/2026-11-21-version-verification.md`](qa/2026-11-21-version-verification.md) | Dependency pins (add new pins here) |
+| [`qa/2026-11-25-microphone-device-selection.md`](qa/2026-11-25-microphone-device-selection.md) | Microphone capture + Windows endpoint picker (ADR 0028) |
 | [`qa/skills-lock.md`](qa/skills-lock.md) | Pinned third-party agent skills |
 
 Baseline evidence from the Linux dev phase (still true, partially superseded by
@@ -43,8 +44,8 @@ the plan's pending stages): `qa/2026-11-21-{pipeline,audio,asr-coverage,llm-back
 Each will be replaced or marked historical by the stage that supersedes it
 (S1 audio, S3 ASR coverage, S5 LLM, S6 UI, S8 packaging).
 
-Screenshots: `screenshots/m2-windows/` (Windows, current) and `screenshots/m2/`
-(Linux dev portfolio, used by the root README).
+Screenshots: `screenshots/m2-windows/` (Windows, current, used by the root
+README) and `screenshots/m2/` (older Linux dev portfolio).
 
 ## 4. Conventions
 
