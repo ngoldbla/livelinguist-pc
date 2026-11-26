@@ -8,10 +8,11 @@ name: Windows release
 # version> and publishes the same way. Leave the box unticked for a dry run
 # (same build and install test, files kept as a workflow artifact).
 #
-# Unsigned until SignPath Foundation accepts the project (ADR 0020). Safety
-# without a signature: built only here from the tagged source, published
-# SHA256SUMS.txt, a build-provenance attestation (public repo), and an
-# install/self-test/uninstall check on a clean runner before publishing.
+# Code signing (ADR 0020, CODE_SIGNING.md): once the SignPath variables exist
+# (see .signpath/README.md) the payload is signed before packaging and the
+# installer after it, so no signed bytes are ever rewritten. Until then every
+# signing step is skipped and the release is unsigned but still verifiable via
+# SHA256SUMS.txt and the build provenance attestation.
 
 on:
   push:
@@ -37,10 +38,12 @@ jobs:
     runs-on: windows-2025
     permissions:
       contents: read
+      actions: read
       id-token: write
       attestations: write
     outputs:
       version: ${{ steps.version.outputs.version }}
+      signed: ${{ steps.sign-installer.outcome == 'success' }}
     steps:
       # Actions are pinned by commit; the comment is the tag it was resolved from.
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -68,9 +71,124 @@ jobs:
       - name: Install NSIS
         run: choco install nsis --no-progress -y
 
-      - name: Build, self-test and package
+      # Stage 1: build and self-test the payload only, so it can be signed
+      # before the installer and ZIP embed it.
+      - name: Build and self-test payload
         shell: pwsh
-        run: ./scripts/build-windows.ps1
+        run: ./scripts/build-windows.ps1 -Stage payload
+
+      - name: Stage payload for signing
+        if: vars.SIGNPATH_PROJECT_SLUG != ''
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path signpath/payload | Out-Null
+          Copy-Item dist/windows/livelinguist.exe, dist/windows/livelinguist-core.node signpath/payload
+
+      - name: Upload payload for signing
+        id: upload-payload
+        if: vars.SIGNPATH_PROJECT_SLUG != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: signpath-payload
+          path: signpath/payload
+          if-no-files-found: error
+          retention-days: 1
+
+      # A maintainer approves this request in SignPath (CODE_SIGNING.md).
+      - name: Sign payload (SignPath)
+        id: sign-payload
+        if: vars.SIGNPATH_PROJECT_SLUG != ''
+        uses: signpath/github-action-submit-signing-request@a2c5b60d9c75f073142b653c354b632eedce097b # v3
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG }}
+          artifact-configuration-slug: windows-payload
+          github-artifact-id: ${{ steps.upload-payload.outputs.artifact-id }}
+          wait-for-completion: true
+          wait-for-completion-timeout-in-seconds: 1800
+          output-artifact-directory: signpath/signed-payload
+
+      - name: Restore signed payload
+        if: vars.SIGNPATH_PROJECT_SLUG != ''
+        shell: pwsh
+        run: |
+          foreach ($file in "livelinguist.exe", "livelinguist-core.node") {
+            $signed = Join-Path "signpath/signed-payload" $file
+            if (-not (Test-Path $signed)) { throw "SignPath returned no $file" }
+            Copy-Item $signed (Join-Path "dist/windows" $file) -Force
+          }
+
+      # Stage 2: package from the signed payload, then sign the installer.
+      - name: Package installer and portable ZIP
+        shell: pwsh
+        run: ./scripts/build-windows.ps1 -Stage package
+
+      - name: Stage installer for signing
+        if: vars.SIGNPATH_PROJECT_SLUG != ''
+        shell: pwsh
+        run: |
+          $setup = @(Get-ChildItem dist -Filter "LiveLinguist-*-setup.exe")
+          if ($setup.Count -ne 1) { throw "expected one setup.exe, found $($setup.Count)" }
+          New-Item -ItemType Directory -Force -Path signpath/installer | Out-Null
+          Copy-Item $setup[0].FullName signpath/installer
+
+      - name: Upload installer for signing
+        id: upload-installer
+        if: vars.SIGNPATH_PROJECT_SLUG != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: signpath-installer
+          path: signpath/installer
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Sign installer (SignPath)
+        id: sign-installer
+        if: vars.SIGNPATH_PROJECT_SLUG != ''
+        uses: signpath/github-action-submit-signing-request@a2c5b60d9c75f073142b653c354b632eedce097b # v3
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG }}
+          artifact-configuration-slug: windows-installer
+          github-artifact-id: ${{ steps.upload-installer.outputs.artifact-id }}
+          wait-for-completion: true
+          wait-for-completion-timeout-in-seconds: 1800
+          output-artifact-directory: signpath/signed-installer
+
+      - name: Restore signed installer
+        if: vars.SIGNPATH_PROJECT_SLUG != ''
+        shell: pwsh
+        run: |
+          $signed = @(Get-ChildItem signpath/signed-installer -Filter "*.exe")
+          if ($signed.Count -ne 1) { throw "SignPath returned $($signed.Count) installers" }
+          Copy-Item $signed[0].FullName (Join-Path dist $signed[0].Name) -Force
+
+      # Signing changed bytes: the checksums published with the release must
+      # describe the files users download.
+      - name: Write checksums
+        shell: pwsh
+        run: ./scripts/build-windows.ps1 -Stage sums
+
+      - name: Verify signatures
+        if: vars.SIGNPATH_PROJECT_SLUG != ''
+        shell: pwsh
+        run: |
+          $targets = @(Get-ChildItem dist -Filter "LiveLinguist-*-setup.exe") +
+                     @(Get-Item dist/windows/livelinguist.exe, dist/windows/livelinguist-core.node)
+          $release = "${{ vars.SIGNPATH_SIGNING_POLICY_SLUG }}" -eq "release-signing"
+          foreach ($file in $targets) {
+            $sig = Get-AuthenticodeSignature $file.FullName
+            if ($sig.Status -ne "Valid") { throw "$($file.Name): signature $($sig.Status)" }
+            $subject = $sig.SignerCertificate.Subject
+            Write-Host "ok: $($file.Name) - $subject"
+            if ($release -and $subject -notmatch "SignPath Foundation") {
+              throw "$($file.Name) was signed by $subject, not SignPath Foundation"
+            }
+          }
 
       - name: Install, launch self-test, uninstall (clean runner)
         shell: pwsh
@@ -83,11 +201,6 @@ jobs:
           subject-path: |
             dist/LiveLinguist-*-setup.exe
             dist/LiveLinguist-*-portable.zip
-
-      # SignPath signing step goes here once the project is accepted (ADR 0020):
-      # submit dist/windows/livelinguist.exe and the installer to SignPath,
-      # replace the files with the signed ones, then recompute SHA256SUMS.txt.
-      # No certificates or tokens in the repository; only an org secret.
 
       - name: Upload release files
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -112,6 +225,20 @@ jobs:
         with:
           name: livelinguist-windows-x64
           path: release
+
+      # Never publish a build that was meant to be signed but was not.
+      - name: Require the signed build
+        if: vars.SIGNPATH_PROJECT_SLUG != '' && needs.build.outputs.signed != 'true'
+        run: |
+          echo "::error::Signing is configured but the build was not signed. Not publishing."
+          exit 1
+
+      # The setup certificate is only trusted on the build runner.
+      - name: Refuse to publish test-signed files
+        if: vars.SIGNPATH_SIGNING_POLICY_SLUG == 'test-signing'
+        run: |
+          echo "::error::Signing policy is test-signing; switch the SIGNPATH_SIGNING_POLICY_SLUG variable to release-signing."
+          exit 1
 
       - name: Verify checksums
         working-directory: release
