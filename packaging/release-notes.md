@@ -1,13 +1,19 @@
 ## What's new in this build
 
-- Captions start faster: the live ASR input chunk is now 560 ms instead of
-  1100 ms, which halves the recognizer's chunk latency without changing accuracy
-  or CPU use. The overlay partial is still shown above the latest final.
-- Clicking a sentence no longer pauses live captions. The simplification runs on
-  a worker while audio and captions keep flowing, and the simplified line
-  appears when it is ready.
-- Caption latency is now measured end to end against a pinned, openly licensed
-  video, so future changes can be compared on the same numbers.
+- A simpler interface, shaped like the Mac and iPhone apps: choose your
+  language, choose what to listen to, and press Start. The transcript is the
+  screen.
+- Easier to read: simplified captions start at 24px in a rounded face, nothing
+  in the interface is smaller than 12px, and the labels use plain words instead
+  of engineering terms.
+- The window now behaves like a window: drag the top bar to move it,
+  double-click to maximize, and use the minimize, maximize and close buttons.
+- Language and sound open from their tiles, the app language can follow your
+  learning language or your device, and preferences are kept for next time.
+- The interface now carries the Lucide icon set, the twin-L brand mark, and the
+  amber "English slipped in" border during a language exchange.
+- Captions still start quickly: the 560 ms live chunk and click-to-simplify on a
+  worker are unchanged from the last candidate.
 
 ## Install on Windows 11
 
