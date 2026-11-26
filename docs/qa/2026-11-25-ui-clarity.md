@@ -34,8 +34,9 @@ saved in `.impeccable/critique/` (local, not committed).
 
 | Mac / iOS | PC |
 |---|---|
-| Control window: lockup, state headline, two decision tiles, bottom Start cluster | Same, with the tiles opening inline pickers instead of menus |
+| Control window: lockup, state headline, two decision tiles, bottom Start cluster | Same, with GPUIX Select menus on the tiles |
 | Captioner: language name, timer, cadence line, confidence bar, amber reversion ring | Same; the level meter is the one iOS affordance the PC has no bridge data for |
+| SF Symbols, SF Rounded, twin-L icon | Lucide (ISC), M PLUS Rounded 1c for simplified captions, the repo's twin-L on the indigo→azure tile |
 | Captions in floating overlay / transcript sidebar | Transcript screen after Start; overlay panel keeps one small control row because the PC has one window |
 | Onboarding sheet: welcome/privacy, language (pick advances), one aggregate download, "Try the demo while you wait" | Same three beats in the window; no step rail or numbered progress |
 | Summary sheet: stats, Export, Done | Same compact page; no transcript list |
@@ -51,6 +52,7 @@ the 12px type floor.
 | Area | Before | After |
 |---|---|---|
 | Surface | Glass, gradients, 18px radii, glow shadows | Flat near-black fields, one violet accent, 8-12px radii, no shadows |
+| Icons / brand / type | Text-only controls, flat "L" tile, Segoe captions | 21 Lucide icons, the twin-L gradient mark, M PLUS Rounded 1c captions |
 | Type | 14 sizes from 9 to 38; metadata 9-11px | Six sizes 12-34; 12px floor; section 20 < page 28 |
 | Console | Language card + 3 source cards + captioning rail + models rail + session rail | Two decision tiles + Start cluster + model note |
 | Onboarding | Left step rail, sample caption, progress segments, Continue after picking | Welcome/privacy, pick-to-advance language, aggregate download |
@@ -76,23 +78,24 @@ cd ui
 bun run typecheck                          # pass
 bun test                                   # 114 pass, 0 fail, 318 expect() calls
 bun run check                              # pass (pre-existing biome config deprecation warning)
-bun scripts/screenshots-windows.tsx         # 13 scenarios, 0 failures
+bun scripts/screenshots-windows.tsx         # 14 scenarios, 0 failures
 ```
 
 A11y counts from the capture run (unlabeled controls = 0 in every scenario):
 
 | Scenario | Nodes | Roles |
 |---|---|---|
-| onboarding-welcome | 9 | Label 6, Button 2 |
+| onboarding-welcome | 8 | Label 5, Button 2 |
 | onboarding-language | 111 | Label 79, Button 30, TextInput |
 | onboarding-models | 10 | Label 6, Button 3 |
-| console | 17 | Label 12, Button 4 |
+| console | 16 | Label 11, Button 4 |
+| console-language-menu | 75 | Label 40, Button 4, ListBox, ListBoxOption 29 |
 | live | 48 | Label 30, Button 13, Tab 3, TabList |
-| overlay | 18 | Label 10, Button 6, Group |
+| overlay | 17 | Label 9, Button 6, Group |
 | settings | 37 | Label 22, Button 3, Tab 6, TabList 2, Slider, Switch 2 |
 | settings-developer | 89 | Label 64, Button 17, Tab 4, TabList, Switch 2 |
-| summary | 20 | Label 15, Button 4 |
-| licenses (Settings tab) | 62 | Label 55, Button, Tab 4, TabList |
+| summary | 19 | Label 14, Button 4 |
+| licenses (Settings tab) | 68 | Label 61, Button, Tab 4, TabList |
 
 `console-start-captions.png` proves the console -> live click path; the keyboard
 walk on the console reaches 4 distinct stops.
@@ -113,8 +116,14 @@ tone against every surface with the palette.
   exposes no level, so the cadence dot stands in for it.
 - **Finished transcript:** the summary no longer lists it (Mac parity). Export
   is the only way to keep a session.
-- **Fonts:** Windows uses Segoe UI/Consolas from the system; bundling Noto Sans
-  remains a packaging task.
+- **Fonts:** Windows uses Segoe UI/Consolas for chrome; the bundled M PLUS
+  Rounded 1c covers Latin/Cyrillic/Kana captions and falls back to the system
+  face for other scripts. Bundling Noto Sans remains a packaging task.
+- **Rounded coverage:** M PLUS Rounded 1c has no Arabic/Devanagari/Chinese
+  coverage; those captions fall back to the platform face, as SF Rounded does
+  on Apple platforms.
+- **Icons:** 21 Lucide paths, not the full SF Symbols set; the language menu is
+  a native Select popover, not searchable (the onboarding picker still is).
 - **Capture canvas:** the GPUIX test renderer is fixed at 1536x1061 physical
   pixels, so the PNGs do not show the production window sizes; those are
   asserted by `windowSize.test.ts` and set in `main.tsx`.
