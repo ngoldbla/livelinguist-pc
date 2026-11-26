@@ -5,6 +5,7 @@ import { useGpuixRequired } from "@gpuix/react";
 import { useEffect, useRef, useState } from "react";
 import { AuroraField, Toast } from "./aurora/components";
 import { colors } from "./aurora/theme";
+import { WindowChrome } from "./aurora/WindowChrome";
 import {
   createTransport,
   readWorkArea,
@@ -482,12 +483,43 @@ export function App() {
         width: "100%",
         height: "100%",
         position: "relative",
+        display: "flex",
+        flexDirection: "column",
         overflow: "hidden",
         backgroundColor: colors.bg,
       }}
     >
       <AuroraField active={screen === "live"} />
-      <div style={{ position: "relative", width: "100%", height: "100%" }}>{screenContent}</div>
+      {windowMode === "overlay" ? null : (
+        <WindowChrome
+          onDrag={() => void ensureTransport().beginDrag()}
+          onMinimize={() => {
+            try {
+              renderer.minimizeWindow?.();
+            } catch {
+              // No native window in the renderer harness.
+            }
+          }}
+          onToggleMax={() => {
+            try {
+              renderer.zoomWindow?.();
+            } catch {
+              // No native window in the renderer harness.
+            }
+          }}
+          onClose={() => {
+            void ensureTransport()
+              .closeWindow()
+              .then((closed) => {
+                if (!closed) process.exit(0);
+              })
+              .catch(() => process.exit(0));
+          }}
+        />
+      )}
+      <div style={{ position: "relative", flexGrow: 1, minHeight: 0, width: "100%" }}>
+        {screenContent}
+      </div>
       {toast ? (
         <div
           style={{

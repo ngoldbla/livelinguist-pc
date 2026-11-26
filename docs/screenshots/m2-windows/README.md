@@ -33,6 +33,10 @@ those captures share that canvas. `settings-developer.png` shows
 `Renderer: directx · GPU` and `Adapter: NVIDIA GeForce RTX 5060 Ti`, measured by
 DXGI.
 
+Every capture except `overlay.png` includes the custom title bar (drag region,
+minimize / maximize / close) added in ADR 0027; the overlay stays frameless and
+keeps its own Move control.
+
 Reproduce from an elevated PowerShell on the logged-on desktop:
 
 ```powershell

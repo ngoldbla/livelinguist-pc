@@ -70,6 +70,7 @@ export interface Transport {
   downloadModels(onEvent: (envelope: Envelope) => void): Promise<void>;
   cancelDownload(): Promise<boolean>;
   beginDrag(): Promise<boolean>;
+  closeWindow(): Promise<boolean>;
   exportTranscript(format: "markdown" | "plain" | "csv", path: string): Promise<string>;
   listSources(): Promise<AudioSourceInfo[]>;
   applyRuntimeConfig(layer: unknown): Promise<RuntimeStatus>;
@@ -96,6 +97,7 @@ interface NativeClient {
   downloadModels(onEvent: (error: Error | null, value: string) => void): void;
   cancelDownload(): boolean;
   beginDrag(): boolean;
+  closeWindow?(): boolean;
   export(format: string, path: string): string;
   listAudioSources(): string;
   applyRuntimeConfig(layerJson: string): string;
@@ -279,6 +281,11 @@ class NativeTransport implements Transport {
 
   async beginDrag(): Promise<boolean> {
     return this.client.beginDrag();
+  }
+
+  async closeWindow(): Promise<boolean> {
+    // The installed addon may predate this method; the UI falls back to quit.
+    return typeof this.client.closeWindow === "function" ? this.client.closeWindow() : false;
   }
 
   async exportTranscript(format: "markdown" | "plain" | "csv", path: string): Promise<string> {
@@ -519,6 +526,10 @@ class DemoTransport implements Transport {
   }
 
   async beginDrag(): Promise<boolean> {
+    return false;
+  }
+
+  async closeWindow(): Promise<boolean> {
     return false;
   }
 
