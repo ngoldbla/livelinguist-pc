@@ -42,6 +42,15 @@ installing: unzip it into a folder and open `livelinguist.exe`.
 **Something didn't work?** [Open an issue](https://github.com/{{REPO}}/issues/new/choose).
 Never paste captions or transcripts into an issue.
 
+### Code signing policy
+
+Free code signing is provided by [SignPath.io](https://signpath.io), certificate
+by [SignPath Foundation](https://signpath.org). Builds published so far are
+unsigned; once signing is live, Windows shows **SignPath Foundation** as the
+publisher. Only binaries built from this repository by GitHub Actions are
+signed, and a maintainer approves each signing request. Signed files, team roles
+and verification steps: [`CODE_SIGNING.md`](https://github.com/{{REPO}}/blob/main/CODE_SIGNING.md).
+
 ### Check the download (optional)
 
 These files were built by GitHub Actions from the tagged source. To check that

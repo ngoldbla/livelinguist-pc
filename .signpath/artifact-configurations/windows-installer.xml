@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  SignPath artifact configuration: "windows-installer"
+
+  Input is the GitHub Actions artifact `signpath-installer`, a ZIP holding the
+  NSIS setup executable after packaging from the already-signed payload.
+  Signing the outer installer last is required: Authenticode changes the bytes,
+  so nothing may be packaged after this step.
+-->
+<artifact-configuration xmlns="http://signpath.io/artifact-configuration/v1">
+  <zip-file>
+    <!-- Visible name/version come from packaging/nsis/livelinguist.nsi
+         (VIProductVersion + ProductName). -->
+    <pe-file path="LiveLinguist-*-setup.exe" product-name="Live Linguist">
+      <authenticode-sign/>
+    </pe-file>
+  </zip-file>
+</artifact-configuration>

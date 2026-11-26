@@ -242,6 +242,18 @@ payload/installed/upgraded/portable self-tests `gpuix ok, core ok`, shortcuts,
 Installed apps entry, uninstall cleanup, models kept. Not yet run on a real
 PC with a GPU window and the model download.
 
+**2026-11-25 code signing prepared (unreleased):** Windows still shows "unknown
+publisher" because no build is signed. ADR 0020 now has its implementation:
+`CODE_SIGNING.md` carries the policy the SignPath Foundation requires (signed
+file list, author/reviewer/approver roles, manual approval, privacy statement),
+`README.md` and the release notes link it, `scripts/build-windows.ps1` gained
+`-Stage payload|package|sums` so the payload is signed before packaging and the
+installer after it, and `.github/workflows/release.yml` submits the two SignPath
+requests, gated on `vars.SIGNPATH_PROJECT_SLUG` (empty means an unsigned release,
+exactly as before). `docs/signpath-application.md` holds the application text.
+Nothing is signed yet: the owner submits <https://signpath.org/apply>, then a
+maintainer approves two requests per release.
+
 **Linux work still open (resume here):**
 1. Owner decisions: es-ES
    matrix guard false negative (T22); confirm the ` /no_think` soft switch in
@@ -257,9 +269,10 @@ PC with a GPU window and the model download.
 - **One display; multi-monitor/mixed-DPI are descoped for 1.0.** The single-screen
   overlay matrix passes at 100/125/150%. The harness is ready if a second display
   is attached post-1.0.
-- **No microphone endpoint; loopback first.** Two render endpoints exist, so
-  WASAPI system-audio loopback (the initial call/video use case) is testable.
-  Microphone capture is deferred.
+- **Microphone endpoint present (2026-11-25).** The host exposes a Realtek
+  microphone next to two render endpoints. Microphone capture and endpoint
+  selection are implemented (ADR 0028); spoken WER/latency, the
+  permission-denied path and hot-plug beyond default-change are unmeasured.
 - The agent shell can be in session 0 (services) or the interactive desktop.
   DXGI/CUDA/Rust/UI tests work in either; GPUIX window creation needs the
   desktop, so session-0 agents use `scripts/run-in-interactive-session.ps1`.

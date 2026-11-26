@@ -35,9 +35,10 @@ under **Assets**, get `LiveLinguist-<version>-setup.exe` for the installer or th
 portable ZIP. The current candidate is **`v1.0.0-rc.5`**. Open the file and click
 **Install**; no admin rights are needed.
 
-- **"Windows protected your PC"?** The app is not code-signed yet. Click
-  **More info**, then **Run anyway**. Each release lists SHA-256 hashes so you
-  can check the file.
+- **"Windows protected your PC"?** Builds published so far are not code-signed
+  yet; free signing for open-source projects is pending. Click **More info**,
+  then **Run anyway**. Each release lists SHA-256 hashes so you can check the
+  file. See the [code signing policy](#code-signing-policy).
 - **First start:** it downloads the speech and simplification models once
   (about 1.1 GB), then works offline. Audio never leaves your PC.
 - **Needs:** Windows 11, 64-bit Intel or AMD PC, 8 GB memory, about 2.5 GB disk.
@@ -178,6 +179,22 @@ strings are English placeholders in the 28 non-English UI catalogs.
 
 - Mac/iOS implementation: <https://github.com/ngoldbla/live-linguist>
 - Product spec: `PRD.md` in the reference repo
+
+## Privacy
+
+Audio and captions never leave your PC: capture, transcription and rewriting
+run locally, and nothing is recorded, logged or uploaded. The only network use
+is the one-time model download the user starts from the app (from Hugging Face),
+plus an optional update check that is **off by default** and sends nothing but
+the release list request. No analytics, telemetry or crash reporting.
+
+## Code signing policy
+
+Free code signing provided by [SignPath.io](https://signpath.io), certificate by
+[SignPath Foundation](https://signpath.org). Signed Windows releases name
+**SignPath Foundation** as the publisher and are built only from this
+repository's source by GitHub Actions. Full policy, signed file list, team roles
+and verification steps: [`CODE_SIGNING.md`](CODE_SIGNING.md).
 
 ## License
 

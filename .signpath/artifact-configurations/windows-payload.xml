@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  SignPath artifact configuration: "windows-payload"
+
+  Input is the GitHub Actions artifact `signpath-payload`, a ZIP holding only the
+  two application binaries this project builds and signs. The third-party GPUIX
+  runtime, fonts and licenses are not part of this request: they are never
+  re-signed with this project's certificate.
+
+  Signed before packaging, so the installer and the portable ZIP both ship
+  signed application files.
+-->
+<artifact-configuration xmlns="http://signpath.io/artifact-configuration/v1">
+  <zip-file>
+    <!-- VERSIONINFO carries ProductName "Live Linguist" (see scripts/build-windows.ps1). -->
+    <pe-file path="livelinguist.exe" product-name="Live Linguist">
+      <authenticode-sign/>
+    </pe-file>
+    <!-- Rust cdylib renamed to .node; it defines no version resource, so no
+         product-name constraint here. -->
+    <pe-file path="livelinguist-core.node">
+      <authenticode-sign/>
+    </pe-file>
+  </zip-file>
+</artifact-configuration>
